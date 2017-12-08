@@ -1,4 +1,8 @@
-/// Author & Copyright (C) 2017 Johannes Bernhard Steffens. All rights reserved.
+/** Vectors and Related Objects
+ *  Author: Johannes Bernhard Steffens
+ *
+ *  Copyright (c) 2017 Johannes Bernhard Steffens. All rights reserved.
+ */
 
 #include "scene.h"
 #include "bcore_sinks.h"

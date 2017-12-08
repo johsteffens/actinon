@@ -1,6 +1,8 @@
-/// Author & Copyright (C) 2017 Johannes Bernhard Steffens. All rights reserved.
-
-/// Vectors and related objects
+/** Vectors and Related Objects
+ *  Author: Johannes Bernhard Steffens
+ *
+ *  Copyright (c) 2017 Johannes Bernhard Steffens. All rights reserved.
+ */
 
 #ifndef VECTORS_H
 #define VECTORS_H
@@ -16,7 +18,8 @@
 
 /**********************************************************************************************************************/
 // consts and types
-#define f3_inf 1E300 // pseudo-infinity
+#define f3_inf INFINITY
+///1E300 // pseudo-infinity
 #define f3_mag 1E+30 // very large number
 #define f3_eps 1E-30 // epsilon           (used as pseudo-infinitesimal)
 
@@ -333,6 +336,10 @@ static inline void image_cl_s_add_pixel( image_cl_s* o, sz_t x, sz_t y, cl_s cl 
 {
     v3d_s_o_add( &o->data[ y * o->w + x ], cl );
 }
+
+/**********************************************************************************************************************/
+// quicktypes
+#define TYPEOF_v3d_s typeof( "v3d_s" )
 
 /**********************************************************************************************************************/
 

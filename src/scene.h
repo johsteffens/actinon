@@ -1,4 +1,8 @@
-/// Author & Copyright (C) 2017 Johannes Bernhard Steffens. All rights reserved.
+/** Rayflux Scene
+ *  Author: Johannes Bernhard Steffens
+ *
+ *  Copyright (c) 2017 Johannes Bernhard Steffens. All rights reserved.
+ */
 
 #ifndef SCENE_H
 #define SCENE_H
