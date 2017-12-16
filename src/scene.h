@@ -8,6 +8,8 @@
 #define SCENE_H
 
 #include "vectors.h"
+#include "interpreter.h"
+#include "quicktypes.h"
 
 /**********************************************************************************************************************/
 
@@ -21,9 +23,16 @@ void image_cps_s_write_pnm( const image_cps_s* o, sc_t file );
 typedef struct scene_s scene_s;
 DECLARE_FUNCTIONS_OBJ( scene_s )
 
+/// clears light & matter
+void scene_s_clear( scene_s* o );
+
+/// appends light & matter from object; returns number of atomic objects pushed
+sz_t scene_s_push( scene_s* o, const sr_s* object );
+
+sr_s scene_s_meval_key( sr_s* o, meval_s* ev, tp_t key );
+
 void scene_s_create_photon_map( scene_s* scene );
 image_cps_s* scene_s_show_photon_map( const scene_s* scene );
-
 image_cps_s* scene_s_create_image( const scene_s* scene );
 
 /**********************************************************************************************************************/

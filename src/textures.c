@@ -10,6 +10,7 @@
 #include "bcore_life.h"
 #include "bcore_spect.h"
 #include "textures.h"
+#include "quicktypes.h"
 
 /**********************************************************************************************************************/
 /// spect_txm_s  (texture-map)
@@ -17,7 +18,6 @@
 typedef cl_s (*clr_fp )( vc_t o, vc_t obj, v3d_s pos ); // converts position into color
 v2d_s obj_prj( vc_t o, v3d_s pos );
 
-#define TYPEOF_spect_txm_s typeof( "spect_txm_s" )
 typedef struct spect_txm_s
 {
     aware_t p_type;
@@ -77,6 +77,13 @@ static sc_t txm_plain_s_def =
 
 DEFINE_FUNCTIONS_OBJ_INST( txm_plain_s )
 
+static void txm_plain_s_init_a( vd_t nc )
+{
+    struct { ap_t a; vc_t p; txm_plain_s* o; } * nc_l = nc;
+    nc_l->a( nc ); // default
+    nc_l->o->color = ( cl_s ) { 0.7, 0.7, 0.7 };
+}
+
 static cl_s txm_plain_s_clr( const txm_plain_s* o, vc_t obj, v3d_s pos )
 {
     return o->color;
@@ -91,6 +98,7 @@ cl_s txm_plain_clr( vc_t o )
 static bcore_flect_self_s* txm_plain_s_create_self( void )
 {
     bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( txm_plain_s_def, sizeof( txm_plain_s ) );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )txm_plain_s_init_a, "ap_t", "init" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )txm_plain_s_clr, "clr_fp", "clr" );
     return self;
 }

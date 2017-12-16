@@ -8,6 +8,13 @@
 #define TEXTURES_H
 
 #include "vectors.h"
+#include "quicktypes.h"
+
+typedef struct txm_plain_s txm_plain_s;
+DECLARE_FUNCTIONS_OBJ( txm_plain_s )
+
+typedef struct txm_chess_s txm_chess_s;
+DECLARE_FUNCTIONS_OBJ( txm_chess_s )
 
 /**********************************************************************************************************************/
 
@@ -18,10 +25,6 @@ cl_s txm_clr( vc_t o, vc_t obj, v3d_s pos );
 cl_s txm_plain_clr( vc_t o );
 
 /**********************************************************************************************************************/
-// quicktypes
-#define TYPEOF_spect_txm_s typeof( "spect_txm_s" )
-#define TYPEOF_txm_plain_s typeof( "txm_plain_s" )
-#define TYPEOF_txm_chess_s typeof( "txm_chess_s" )
 
 vd_t textures_signal( tp_t target, tp_t signal, vd_t object );
 

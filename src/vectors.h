@@ -14,6 +14,8 @@
 #include "bcore_name_manager.h"
 #include "bcore_spect_inst.h"
 
+#include "quicktypes.h"
+
 /**********************************************************************************************************************/
 
 /**********************************************************************************************************************/
@@ -175,19 +177,46 @@ static inline v3d_s m3d_s_mlv( const m3d_s* o, v3d_s v )
     return ( v3d_s ) { .x = v3d_s_mlv( o->x, v ), .y = v3d_s_mlv( o->y, v ), .z = v3d_s_mlv( o->z, v ) };
 }
 
+static inline m3d_s m3d_s_mlm( const m3d_s* o, const m3d_s* a )
+{
+    return ( m3d_s ) { .x = m3d_s_mlv( o, a->x ), .y = m3d_s_mlv( o, a->y ), .z = m3d_s_mlv( o, a->z ) };
+}
+
+static inline m3d_s m3d_s_mlf( const m3d_s* o, f3_t f )
+{
+    return ( m3d_s ) { .x = v3d_s_mlf( o->x, f ), .y = v3d_s_mlf( o->y, f ), .z = v3d_s_mlf( o->z, f ) };
+}
+
+// returns identity
+static inline m3d_s m3d_s_ident()
+{
+    return ( m3d_s ) { .x = ( v3d_s ){ 1, 0, 0 }, .y = ( v3d_s ){ 0, 1, 0 }, .z = ( v3d_s ){ 0, 0, 1 } };
+}
+
+// returns rotation around x
+static inline m3d_s m3d_s_rot_x( f3_t a )
+{
+    f3_t sa = sin( a ), ca = cos( a );
+    return ( m3d_s ) { .x = ( v3d_s ){ 1, 0, 0 }, .y = ( v3d_s ){ 0, ca, -sa }, .z = ( v3d_s ){ 0, sa, ca } };
+}
+
+// returns rotation around y
+static inline m3d_s m3d_s_rot_y( f3_t a )
+{
+    f3_t sa = sin( a ), ca = cos( a );
+    return ( m3d_s ) { .x = ( v3d_s ){ ca, 0, sa }, .y = ( v3d_s ){ 0, 1, 0 }, .z = ( v3d_s ){ -sa, 0, ca } };
+}
+
+// returns rotation around z
+static inline m3d_s m3d_s_rot_z( f3_t a )
+{
+    f3_t sa = sin( a ), ca = cos( a );
+    return ( m3d_s ) { .x = ( v3d_s ){ ca, -sa, 0 }, .y = ( v3d_s ){ sa, ca, 0 }, .z = ( v3d_s ){ 0, 0, 1 } };
+}
+
 static inline m3d_s m3d_s_transposed( m3d_s o )
 {
-    m3d_s m;
-    m.x.x = o.x.x;
-    m.x.y = o.y.x;
-    m.x.z = o.z.x;
-    m.y.x = o.x.y;
-    m.y.y = o.y.y;
-    m.y.z = o.z.y;
-    m.z.x = o.x.z;
-    m.z.y = o.y.z;
-    m.z.z = o.z.z;
-    return m;
+    return ( m3d_s ) { .x = ( v3d_s ){ o.x.x, o.y.x, o.z.x }, .y = ( v3d_s ){ o.x.y, o.y.y, o.z.y }, .z = ( v3d_s ){ o.x.z, o.y.z, o.z.z } };
 }
 
 /// creates a canonic orthonormal system from v with z-row parallel to v
@@ -243,6 +272,7 @@ static inline f3_t areal_coverage( f3_t cos_rs ) { return 1 - cos_rs; }
 /**********************************************************************************************************************/
 /// cl_s RGB Color expressed as 3D vector (x=red, y=green, z=blue)
 
+#define TYPEOF_cl_s typeof( "cl_s" )
 typedef v3d_s cl_s;
 DECLARE_FUNCTIONS_OBJ( cl_s )
 
@@ -336,10 +366,6 @@ static inline void image_cl_s_add_pixel( image_cl_s* o, sz_t x, sz_t y, cl_s cl 
 {
     v3d_s_o_add( &o->data[ y * o->w + x ], cl );
 }
-
-/**********************************************************************************************************************/
-// quicktypes
-#define TYPEOF_v3d_s typeof( "v3d_s" )
 
 /**********************************************************************************************************************/
 

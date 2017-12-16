@@ -12,10 +12,12 @@
 #include "bcore_spect.h"
 #include "bcore_spect_array.h"
 #include "bcore_txt_ml.h"
+#include "bcore_trait.h"
 
 #include "scene.h"
 #include "textures.h"
 #include "objects.h"
+#include "container.h"
 
 
 /**********************************************************************************************************************/
@@ -165,7 +167,6 @@ tp_t image_cps_s_hash( const image_cps_s* o )
 /**********************************************************************************************************************/
 /// scene_s
 
-#define TYPEOF_scene_s typeof( "scene_s" )
 typedef struct scene_s
 {
     aware_t _;
@@ -221,6 +222,78 @@ static sc_t scene_s_def =
 
 DEFINE_FUNCTIONS_OBJ_INST( scene_s )
 DEFINE_CREATE_SELF( scene_s, scene_s_def )
+
+void scene_s_clear( scene_s* o )
+{
+    compound_s_clear( &o->light );
+    compound_s_clear( &o->matter );
+}
+
+sz_t scene_s_push( scene_s* o, const sr_s* object )
+{
+    tp_t type = sr_s_type( object );
+    if( bcore_trait_is( type, typeof( "spect_obj" ) ) )
+    {
+        if( obj_radiance( object->o ) > 0 )
+        {
+            compound_s_push_q( &o->light, object );
+        }
+        else
+        {
+            compound_s_push_q( &o->matter, object );
+        }
+        return 1;
+    }
+    else if( type == typeof( "map_s" ) )
+    {
+        map_s* map = object->o;
+        sz_t size = bcore_hmap_tp_sr_s_size( &map->m );
+        for( sz_t i = 0; i < size; i++ )
+        {
+            if( bcore_hmap_tp_sr_s_idx_key( &map->m, i ) )
+            {
+                scene_s_push( o, bcore_hmap_tp_sr_s_idx_val( &map->m, i ) );
+            }
+        }
+    }
+    else if( type == typeof( "arr_s" ) )
+    {
+        arr_s* arr = object->o;
+        sz_t size = arr_s_get_size( arr );
+        for( sz_t i = 0; i < size; i++ )
+        {
+            scene_s_push( o, arr_s_get( arr, i ) );
+        }
+    }
+    return 0;
+}
+
+sr_s scene_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
+{
+    assert( sr_s_type( sr_o ) == TYPEOF_scene_s );
+    scene_s* o = sr_o->o;
+    if( key == TYPEOF_clear )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+        scene_s_clear( o );
+        return sr_null();
+    }
+    else if( key == TYPEOF_push )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        sr_s obj = meval_s_eval( ev, sr_null() );
+        scene_s_push( o, &obj );
+        sr_down( obj );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+        return sr_null();
+    }
+    else
+    {
+        meval_s_err_fa( ev, "scene_s has no member '#sc_t'.", meval_s_get_name( ev, key ) );
+    }
+    return sr_null();
+}
 
 f3_t scene_s_hit( const scene_s* o, const ray_s* r, vc_t* hit_obj, bl_t* is_light )
 {

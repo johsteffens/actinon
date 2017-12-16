@@ -10,6 +10,8 @@
 #include "bcore_arr.h"
 
 #include "vectors.h"
+#include "interpreter.h"
+#include "quicktypes.h"
 
 /**********************************************************************************************************************/
 /// properties_s  (object's properties)
@@ -56,6 +58,14 @@ bl_t obj_is_in_fov( vc_t o, const ray_cone_s* fov );
 /// returns object's hit position (offset) or f3_inf if not hit.
 f3_t obj_hit( vc_t o, const ray_s* ray );
 
+f3_t obj_radiance( vc_t o );
+
+sr_s obj_meval_key( sr_s* o, meval_s* ev, tp_t key );
+
+void obj_move(   vd_t o, const v3d_s* vec );
+void obj_rotate( vd_t o, const m3d_s* mat );
+void obj_scale(  vd_t o, f3_t fac );
+
 /**********************************************************************************************************************/
 /// compound_s (array of objects)
 
@@ -74,8 +84,14 @@ typedef struct compound_s
     };
 } compound_s;
 
+/// empties compound
+void compound_s_clear( compound_s* o );
+
 /// pushes an object to compound
 vd_t compound_s_push( compound_s* o, tp_t type );
+
+/// pushes an object to compound (copies object)
+vd_t compound_s_push_q( compound_s* o, const sr_s* object );
 
 /// computes an object hit by given ray; returns f3_inf in case of no hit
 f3_t compound_s_hit( const compound_s* o, const ray_s* r, vc_t* hit_obj );
@@ -85,11 +101,6 @@ bcore_arr_sz_s* compound_s_in_fov_arr( const compound_s* o, const ray_cone_s* fo
 
 /// above hit function on a subset specified by idx_arr
 f3_t compound_s_idx_hit( const compound_s* o, const bcore_arr_sz_s* idx_arr, const ray_s* r, vc_t* hit_obj );
-
-/**********************************************************************************************************************/
-// quicktypes
-#define TYPEOF_properties_s typeof( "properties_s" )
-#define TYPEOF_compound_s   typeof( "compound_s" )
 
 /**********************************************************************************************************************/
 

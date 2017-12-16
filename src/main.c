@@ -17,6 +17,9 @@
 #include "textures.h"
 #include "scene.h"
 #include "interpreter.h"
+#include "container.h"
+#include "closures.h"
+#include "quicktypes.h"
 
 void selftest( const char* name )
 {
@@ -32,25 +35,27 @@ vd_t signal( tp_t target, tp_t signal, vd_t object )
     if( ( ret = objects_signal(     target, signal, object ) ) ) return ret;
     if( ( ret = scene_signal(       target, signal, object ) ) ) return ret;
     if( ( ret = interpreter_signal( target, signal, object ) ) ) return ret;
+    if( ( ret = container_signal(   target, signal, object ) ) ) return ret;
+    if( ( ret = closures_signal(    target, signal, object ) ) ) return ret;
     return ret;
 }
 
 int main( int argc, const char** argv )
 {
     bcore_library_init( signal );
-
     {
-        st_s_print_d( signal( typeof( "all" ), typeof( "selftest" ), NULL ) );
-        bcore_library_down( false );
-        return 0;
+//        st_s_print_d( signal( typeof( "all" ), typeof( "selftest" ), NULL ) );
+//        quicktypes_to_stdout( NULL );
+//        bcore_library_down( false );
+//        return 0;
     }
 
-    bcore_msg( "RAYS: Ray-tracing aided design.\n" );
+    bcore_msg( "RAYFLUX: Ray-tracer.\n" );
     bcore_msg( "Copyright (C) 2017 Johannes B. Steffens.\n\n" );
 
     if( argc < 2 )
     {
-        bcore_msg( "Format: rays <config file>\n" );
+        bcore_msg( "Format: rayflux <config file>\n" );
         return 1;
     }
 
@@ -70,6 +75,9 @@ int main( int argc, const char** argv )
     }
 
     scene_s* scene = obj.o;
+
+//    bcore_txt_ml_to_stdout( sr_awc( scene ) );
+//    return 0;
 
     bcore_msg_fa( "creating photon map:" );
     scene_s_create_photon_map( scene );

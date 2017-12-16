@@ -46,14 +46,37 @@ DEFINE_CREATE_SELF( ray_cone_s, "ray_cone_s = bcore_inst { ray_s ray; f3_t cos_r
 /**********************************************************************************************************************/
 /// cl_s
 
+typedef void (*bcore_fp_copy_typed   )( vd_t o, tp_t type, vc_t src ); // deep conversion & copy
+void cl_s_copy_typed( cl_s* o, tp_t type, vc_t src )
+{
+    if( type == TYPEOF_cl_s )
+    {
+        *o = *( cl_s* )src;
+    }
+    else if( type == TYPEOF_v3d_s )
+    {
+        *o = *( v3d_s* )src;
+    }
+    else
+    {
+        ERR( "Cannot convert '%s' to 'cl_s'.", ifnameof( type ) );
+    }
+}
+
 DEFINE_FUNCTIONS_OBJ_FLAT( cl_s )
-DEFINE_CREATE_SELF( cl_s, "cl_s = v3d_s" )
+static bcore_flect_self_s* cl_s_create_self( void )
+{
+    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( "cl_s = v3d_s", sizeof( cl_s ) );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )cl_s_copy_typed, "bcore_fp_copy_typed", "copy_typed" );
+    return self;
+}
 
 /**********************************************************************************************************************/
 /// row_cl_s
 
 DEFINE_FUNCTIONS_OBJ_INST( row_cl_s )
 DEFINE_CREATE_SELF( row_cl_s, "row_cl_s = bcore_inst { aware_t _; cl_s [] arr; }" )
+
 
 void row_cl_s_set_size( row_cl_s* o, sz_t size, cl_s color )
 {
