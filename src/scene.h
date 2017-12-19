@@ -28,6 +28,7 @@ void scene_s_clear( scene_s* o );
 
 /// appends light & matter from object; returns number of atomic objects pushed
 sz_t scene_s_push( scene_s* o, const sr_s* object );
+sz_t scene_s_objects( const scene_s* o ); // number of objects
 
 sr_s scene_s_meval_key( sr_s* o, meval_s* ev, tp_t key );
 

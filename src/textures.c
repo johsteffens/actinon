@@ -16,7 +16,7 @@
 /// spect_txm_s  (texture-map)
 
 typedef cl_s (*clr_fp )( vc_t o, vc_t obj, v3d_s pos ); // converts position into color
-v2d_s obj_prj( vc_t o, v3d_s pos );
+v2d_s obj_projection( vc_t o, v3d_s pos );
 
 typedef struct spect_txm_s
 {
@@ -129,7 +129,7 @@ DEFINE_FUNCTIONS_OBJ_INST( txm_chess_s )
 
 static cl_s txm_chess_s_clr( const txm_chess_s* o, vc_t obj, v3d_s pos )
 {
-    v2d_s p = obj_prj( obj, pos );
+    v2d_s p = obj_projection( obj, pos );
     s3_t x = llrint( p.x * o->scale );
     s3_t y = llrint( p.y * o->scale );
     return ( ( x ^ y ) & 1 ) ? o->color1 : o->color2;

@@ -44,10 +44,10 @@ typedef struct obj_hdr_s
 /**********************************************************************************************************************/
 
 /// projects on object's surface
-v2d_s obj_prj( vc_t o, v3d_s pos );
+v2d_s obj_projection( vc_t o, v3d_s pos );
 
 /// object's surface-normal at given position
-v3d_s obj_nor( vc_t o, v3d_s pos );
+v3d_s obj_normal( vc_t o, v3d_s pos );
 
 /// returns a (minimal) ray-cone with entire object in field of view
 ray_cone_s obj_fov( vc_t o, v3d_s pos );
@@ -56,7 +56,7 @@ ray_cone_s obj_fov( vc_t o, v3d_s pos );
 bl_t obj_is_in_fov( vc_t o, const ray_cone_s* fov );
 
 /// returns object's hit position (offset) or f3_inf if not hit.
-f3_t obj_hit( vc_t o, const ray_s* ray );
+f3_t obj_fwd_hit( vc_t o, const ray_s* ray );
 
 f3_t obj_radiance( vc_t o );
 
@@ -94,13 +94,13 @@ vd_t compound_s_push( compound_s* o, tp_t type );
 vd_t compound_s_push_q( compound_s* o, const sr_s* object );
 
 /// computes an object hit by given ray; returns f3_inf in case of no hit
-f3_t compound_s_hit( const compound_s* o, const ray_s* r, vc_t* hit_obj );
+f3_t compound_s_fwd_hit( const compound_s* o, const ray_s* r, vc_t* hit_obj );
 
 /// computes a subset of objects in given field of view
 bcore_arr_sz_s* compound_s_in_fov_arr( const compound_s* o, const ray_cone_s* fov );
 
 /// above hit function on a subset specified by idx_arr
-f3_t compound_s_idx_hit( const compound_s* o, const bcore_arr_sz_s* idx_arr, const ray_s* r, vc_t* hit_obj );
+f3_t compound_s_idx_fwd_hit( const compound_s* o, const bcore_arr_sz_s* idx_arr, const ray_s* r, vc_t* hit_obj );
 
 /**********************************************************************************************************************/
 

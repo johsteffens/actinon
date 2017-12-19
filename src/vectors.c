@@ -38,6 +38,12 @@ DEFINE_FUNCTIONS_OBJ_FLAT( ray_s )
 DEFINE_CREATE_SELF( ray_s, "ray_s = bcore_inst { v3d_s p; v3d_s d; }" )
 
 /**********************************************************************************************************************/
+/// risect_s
+
+DEFINE_FUNCTIONS_OBJ_FLAT( risect_s )
+DEFINE_CREATE_SELF( risect_s, "risect_s = bcore_inst { f3_t h; f3_t l; }" )
+
+/**********************************************************************************************************************/
 /// ray_cone_s
 
 DEFINE_FUNCTIONS_OBJ_FLAT( ray_cone_s )
@@ -110,6 +116,7 @@ vd_t vectors_signal( tp_t target, tp_t signal, vd_t object )
         bcore_flect_define_creator( typeof( "v3d_s"       ), v3d_s_create_self );
         bcore_flect_define_creator( typeof( "m3d_s"       ), m3d_s_create_self );
         bcore_flect_define_creator( typeof( "ray_s"       ), ray_s_create_self );
+        bcore_flect_define_creator( typeof( "risect_s"    ), risect_s_create_self );
         bcore_flect_define_creator( typeof( "ray_cone_s"  ), ray_cone_s_create_self );
         bcore_flect_define_creator( typeof( "cl_s"        ), cl_s_create_self  );
         bcore_flect_define_creator( typeof( "row_cl_s"    ), row_cl_s_create_self   );

@@ -23,7 +23,7 @@
 #define f3_inf INFINITY
 ///1E300 // pseudo-infinity
 #define f3_mag 1E+30 // very large number
-#define f3_eps 1E-30 // epsilon           (used as pseudo-infinitesimal)
+#define f3_eps 1E-10 // epsilon (used to simulate a miniscule shell-thickness of the surface to prevent near-degenerate conditions)
 
 #ifndef M_PI
 #define M_PI 3.141592654
@@ -166,6 +166,20 @@ static inline v3d_s v3d_s_rsc( u2_t* rv, f3_t h )
     return v;
 }
 
+/** Returns the orthogonal projection onto the plane with normale nor:
+ *  o - nor * ( o * nor )
+ */
+static inline v3d_s v3d_s_orthogonal_projection( v3d_s o, v3d_s nor )
+{
+    f3_t f = v3d_s_mlv( o, nor );
+    return ( v3d_s )
+    {
+        .x = o.x - nor.x * f,
+        .y = o.y - nor.y * f,
+        .z = o.z - nor.z * f
+    };
+}
+
 /**********************************************************************************************************************/
 
 /// m3d_s  (3x3 matrix)
@@ -257,6 +271,15 @@ static inline v3d_s ray_s_pos( const ray_s* o, f3_t offs )
 {
     return v3d_s_add( o->p, v3d_s_mlf( o->d, offs ) );
 }
+
+/**********************************************************************************************************************/
+/** risect_s - intersection-offsets of a given ray with an object
+ *  h: high-offset
+ *  l: low-offset
+ */
+
+typedef struct risect_s { f3_t h; f3_t l; } risect_s;
+DECLARE_FUNCTIONS_OBJ( risect_s )
 
 /**********************************************************************************************************************/
 /// ray_cone_s (defines a bundle of rays given by a principal ray and a radius at distance 1)

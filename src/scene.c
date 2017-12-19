@@ -187,6 +187,7 @@ typedef struct scene_s
     sz_t path_samples;
     sz_t photon_samples;
     f3_t photon_min_distance;
+    f3_t photon_max_travel_distance;
 
     compound_s light;  // light sources
     compound_s matter; // passive objects
@@ -214,6 +215,7 @@ static sc_t scene_s_def =
     "sz_t path_samples        = 0;"  // requires trace_depth > 10
     "sz_t photon_samples      = 0;"
     "f3_t photon_min_distance = 0.05;"
+    "f3_t photon_max_travel_distance = 1E300;"
 
     "compound_s light;"
     "compound_s matter;"
@@ -268,6 +270,11 @@ sz_t scene_s_push( scene_s* o, const sr_s* object )
     return 0;
 }
 
+sz_t scene_s_objects( const scene_s* o )
+{
+    return o->light.size + o->matter.size;
+}
+
 sr_s scene_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
 {
     assert( sr_s_type( sr_o ) == TYPEOF_scene_s );
@@ -301,14 +308,14 @@ f3_t scene_s_hit( const scene_s* o, const ray_s* r, vc_t* hit_obj, bl_t* is_ligh
     f3_t a;
     vc_t hit_obj_l;
 
-    if( ( a = compound_s_hit( &o->light, r, &hit_obj_l ) ) < min_a )
+    if( ( a = compound_s_fwd_hit( &o->light, r, &hit_obj_l ) ) < min_a )
     {
         min_a = a;
         if( hit_obj ) *hit_obj = hit_obj_l;
         if( is_light ) *is_light = true;
     }
 
-    if( ( a = compound_s_hit( &o->matter, r, &hit_obj_l ) ) < min_a )
+    if( ( a = compound_s_fwd_hit( &o->matter, r, &hit_obj_l ) ) < min_a )
     {
         min_a = a;
         if( hit_obj ) *hit_obj = hit_obj_l;
@@ -323,8 +330,8 @@ void scene_s_send_photon( scene_s* scene, const ray_s* ray, cl_s color, sz_t dep
 {
     if( depth == 0 ) return;
     obj_hdr_s* hit_obj;
-    f3_t a = compound_s_hit( &scene->matter, ray, ( vc_t* )&hit_obj );
-    if( a >= f3_inf ) return;
+    f3_t a = compound_s_fwd_hit( &scene->matter, ray, ( vc_t* )&hit_obj );
+    if( a >= scene->photon_max_travel_distance ) return;
     v3d_s pos = ray_s_pos( ray, a );
 
     f3_t reflectance = 0;
@@ -332,7 +339,7 @@ void scene_s_send_photon( scene_s* scene, const ray_s* ray, cl_s color, sz_t dep
     /// reflections
     if( hit_obj->prp.n > 1.0 )
     {
-        v3d_s nor = obj_nor( hit_obj, pos );
+        v3d_s nor = obj_normal( hit_obj, pos );
         ray_s out;
         out.p = pos;
         out.d = v3d_s_of_length( v3d_s_sub( ray->d, v3d_s_mlf( nor, 2.0 * v3d_s_mlv( ray->d, nor ) ) ), 1.0 );
@@ -377,7 +384,7 @@ cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, 
     /// reflections
     if( obj->prp.n > 1.0 )
     {
-        v3d_s nor = obj_nor( obj, pos );
+        v3d_s nor = obj_normal( obj, pos );
         ray_s out;
         out.p = pos;
         out.d = v3d_s_of_length( v3d_s_sub( ray->d, v3d_s_mlf( nor, 2.0 * v3d_s_mlv( ray->d, nor ) ) ), 1.0 );
@@ -388,6 +395,10 @@ cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, 
         {
             lum = v3d_s_mlf( scene_s_lum( scene, hit_obj, &out, a, depth - 1 ), reflectance );
         }
+        else
+        {
+            lum = v3d_s_mlf( scene->background_color, reflectance );
+        }
     }
 
     f3_t transmittance = 1.0 - reflectance; // only surface transmittance
@@ -395,7 +406,7 @@ cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, 
     /// direct light
     if( scene->direct_samples > 0 )
     {
-        ray_s surface = { .p = pos, .d = obj_nor( obj, surface.p ) };
+        ray_s surface = { .p = pos, .d = obj_normal( obj, surface.p ) };
 
         /// random seed
         u2_t rv = surface.p.x * 32944792 + surface.p.y * 76403048 + surface.p.z * 24349373;
@@ -424,9 +435,9 @@ cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, 
                 f3_t weight = v3d_s_mlv( out.d, surface.d );
                 if( weight <= 0 ) continue;
 
-                f3_t a = obj_hit( light_src, &out );
+                f3_t a = obj_fwd_hit( light_src, &out );
                 if( a >= f3_inf ) continue;
-                if( compound_s_idx_hit( &scene->matter, idx_arr, &out, NULL ) > a )
+                if( compound_s_idx_fwd_hit( &scene->matter, idx_arr, &out, NULL ) > a )
                 {
                     v3d_s hit_pos = ray_s_pos( &out, a );
 
@@ -457,7 +468,7 @@ cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, 
                 f3_t weight = v3d_s_mlv( out.d, surface.d );
                 if( weight <= 0 ) continue;
                 vc_t hit_obj = NULL;
-                f3_t a = compound_s_hit( &scene->matter, &out, &hit_obj );
+                f3_t a = compound_s_fwd_hit( &scene->matter, &out, &hit_obj );
                 if( a < f3_inf && hit_obj )
                 {
                     cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( scene_s_lum( scene, hit_obj, &out, a, depth - 10 ), weight ) );
@@ -488,7 +499,7 @@ cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, 
                 if( weight <= 0 ) continue;
 
                 vc_t hit_obj = NULL;
-                f3_t a = compound_s_hit( &scene->matter, &out, &hit_obj );
+                f3_t a = compound_s_fwd_hit( &scene->matter, &out, &hit_obj );
 
                 if( a >= f3_inf || hit_obj == obj )
                 {
@@ -529,7 +540,7 @@ void scene_s_create_photon_map( scene_s* scene )
             scene_s_send_photon( scene, &out, color, scene->trace_depth );
         }
     }
-    st_s_print_fa( " #<sz_t> photons\n", scene->photon_map.size );
+    st_s_print_fa( " #<sz_t> collected photons\n", scene->photon_map.size );
 }
 
 /**********************************************************************************************************************/
@@ -662,9 +673,9 @@ vd_t image_creator_s_func( image_creator_s* o )
 
             if( offs < f3_inf && hit_obj )
             {
-                lum = cl_s_sat( scene_s_lum( o->scene, hit_obj, &ray, offs, o->scene->trace_depth ), o->scene->gamma );
+                lum = scene_s_lum( o->scene, hit_obj, &ray, offs, o->scene->trace_depth );
             }
-            row->data[ i ] = lum;
+            row->data[ i ] = cl_s_sat( lum, o->scene->gamma );
         }
         image_creator_s_set_row( o, row_num, row );
 

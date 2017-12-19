@@ -103,7 +103,6 @@ v3d_s meval_s_eval_v3d(        meval_s* o ); // error if expression does not yie
 f3_t  meval_s_eval_f3 (        meval_s* o ); // error if expression does not yield f3_t
 m3d_s meval_s_eval_rot(        meval_s* o ); // error if expression does not yield a rotation matrix
 sr_s  meval_s_eval(            meval_s* o, sr_s front_obj );
-sr_s  meval_s_interpret( const meval_s* const_o, sr_s source );
 
 /**********************************************************************************************************************/
 

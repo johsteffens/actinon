@@ -4,6 +4,8 @@
  *  Copyright (c) 2017 Johannes Bernhard Steffens. All rights reserved.
  */
 
+#include <time.h>
+
 #include "bcore.h"
 #include "bcore_signal.h"
 #include "bcore_st.h"
@@ -19,6 +21,7 @@
 #include "interpreter.h"
 #include "container.h"
 #include "closures.h"
+#include "gmath.h"
 #include "quicktypes.h"
 
 void selftest( const char* name )
@@ -37,6 +40,7 @@ vd_t signal( tp_t target, tp_t signal, vd_t object )
     if( ( ret = interpreter_signal( target, signal, object ) ) ) return ret;
     if( ( ret = container_signal(   target, signal, object ) ) ) return ret;
     if( ( ret = closures_signal(    target, signal, object ) ) ) return ret;
+    if( ( ret = gmath_signal(       target, signal, object ) ) ) return ret;
     return ret;
 }
 
@@ -79,14 +83,25 @@ int main( int argc, const char** argv )
 //    bcore_txt_ml_to_stdout( sr_awc( scene ) );
 //    return 0;
 
+    bcore_msg_fa( "number of objects: #<sz_t>\n", scene_s_objects( scene ) );
+
+
     bcore_msg_fa( "creating photon map:" );
+    clock_t time = clock();
     scene_s_create_photon_map( scene );
+    time = clock() - time;
+    bcore_msg( "time = %5.3g cs\n", ( f3_t )time / ( CLOCKS_PER_SEC ) );
+
 //    image_cps_s* photon_image = scene_s_show_photon_map( scene );
 //    bcore_msg_fa( "writing '#<st_s*>'\n", map_file  );
 //    image_cps_s_write_pnm( photon_image, map_file->sc );
 //    image_cps_s_discard( photon_image );
 
+    bcore_msg_fa( "creating image:" );
+    time = clock();
     image_cps_s* image = scene_s_create_image( scene );
+    time = clock() - time;
+    bcore_msg( "time = %5.3g cs\n", ( f3_t )time / ( CLOCKS_PER_SEC ) );
     bcore_msg_fa( "writing '#<st_s*>'\n", png_file  );
     image_cps_s_write_pnm( image, png_file->sc );
     image_cps_s_discard( image );

@@ -13,6 +13,7 @@
 
 #include "textures.h"
 #include "objects.h"
+#include "gmath.h"
 
 /**********************************************************************************************************************/
 /// properties_s  (object's properties)
@@ -67,30 +68,30 @@ static bcore_flect_self_s* properties_s_create_self( void )
 /**********************************************************************************************************************/
 /// spect_obj_s
 
-typedef v2d_s (*prj_fp )( vc_t o, v3d_s pos );
-typedef v3d_s (*nor_fp )( vc_t o, v3d_s pos );
-typedef f3_t  (*hit_fp )( vc_t o, const ray_s* ray );
-typedef ray_cone_s (*fov_fp )( vc_t o, v3d_s pos );
-typedef bl_t  (*is_in_fov_fp )( vc_t o, const ray_cone_s* fov );
+typedef v2d_s      (*projection_fp )( vc_t o, v3d_s pos );
+typedef v3d_s      (*normal_fp     )( vc_t o, v3d_s pos );
+typedef f3_t       (*fwd_hit_fp    )( vc_t o, const ray_s* ray );
+typedef ray_cone_s (*fov_fp        )( vc_t o, v3d_s pos );
+typedef bl_t       (*is_in_fov_fp  )( vc_t o, const ray_cone_s* fov );
 
-typedef void (*move_fp)(   vd_t o, const v3d_s* vec );
+typedef void (*move_fp  )( vd_t o, const v3d_s* vec );
 typedef void (*rotate_fp)( vd_t o, const m3d_s* mat );
-typedef void (*scale_fp)(  vd_t o, f3_t fac );
+typedef void (*scale_fp )( vd_t o, f3_t fac );
 
 typedef struct spect_obj_s
 {
     aware_t p_type;
     tp_t    o_type;
-    prj_fp  fp_prj;
-    nor_fp  fp_nor;
-    fov_fp  fp_fov;
-    hit_fp  fp_hit;
+    projection_fp fp_projection;
+    normal_fp    fp_normal;
+    fov_fp        fp_fov;
+    fwd_hit_fp    fp_fwd_hit;
 
-    move_fp   fp_move;
-    rotate_fp fp_rotate;
-    scale_fp  fp_scale;
+    move_fp       fp_move;
+    rotate_fp     fp_rotate;
+    scale_fp      fp_scale;
 
-    is_in_fov_fp fp_is_in_fov;
+    is_in_fov_fp  fp_is_in_fov;
 } spect_obj_s;
 
 DEFINE_FUNCTIONS_OBJ_INST( spect_obj_s )
@@ -102,29 +103,26 @@ static spect_obj_s* spect_obj_s_create_from_self( const bcore_flect_self_s* self
     assert( self != NULL );
     spect_obj_s* o = spect_obj_s_create();
     o->o_type = self->type;
-    o->fp_prj = ( prj_fp )bcore_flect_self_s_get_external_fp( self, bcore_name_enroll( "prj_fp" ), 0 );
-    o->fp_nor = ( nor_fp )bcore_flect_self_s_get_external_fp( self, bcore_name_enroll( "nor_fp" ), 0 );
-    o->fp_fov = ( fov_fp )bcore_flect_self_s_get_external_fp( self, bcore_name_enroll( "fov_fp" ), 0 );
-    o->fp_hit = ( hit_fp )bcore_flect_self_s_get_external_fp( self, bcore_name_enroll( "hit_fp" ), 0 );
-    o->fp_is_in_fov = ( is_in_fov_fp )bcore_flect_self_s_get_external_fp( self, bcore_name_enroll( "is_in_fov_fp" ), 0 );
-
-    o->fp_move   = ( move_fp   )bcore_flect_self_s_get_external_fp( self, bcore_name_enroll( "move_fp"   ), 0 );
-    o->fp_rotate = ( rotate_fp )bcore_flect_self_s_get_external_fp( self, bcore_name_enroll( "rotate_fp" ), 0 );
-    o->fp_scale  = ( scale_fp  )bcore_flect_self_s_get_external_fp( self, bcore_name_enroll( "scale_fp"  ), 0 );
-
+    o->fp_projection = ( projection_fp )bcore_flect_self_s_get_external_fp( self, entypeof( "projection_fp" ), 0 );
+    o->fp_normal     = ( normal_fp     )bcore_flect_self_s_get_external_fp( self, entypeof( "normal_fp"     ), 0 );
+    o->fp_fov        = ( fov_fp        )bcore_flect_self_s_get_external_fp( self, entypeof( "fov_fp"        ), 0 );
+    o->fp_fwd_hit    = ( fwd_hit_fp    )bcore_flect_self_s_get_external_fp( self, entypeof( "fwd_hit_fp"    ), 0 );
+    o->fp_is_in_fov  = ( is_in_fov_fp  )bcore_flect_self_s_get_external_fp( self, entypeof( "is_in_fov_fp"  ), 0 );
+    o->fp_move       = ( move_fp       )bcore_flect_self_s_get_external_fp( self, entypeof( "move_fp"       ), 0 );
+    o->fp_rotate     = ( rotate_fp     )bcore_flect_self_s_get_external_fp( self, entypeof( "rotate_fp"     ), 0 );
+    o->fp_scale      = ( scale_fp      )bcore_flect_self_s_get_external_fp( self, entypeof( "scale_fp"      ), 0 );
     return o;
 }
 
-v2d_s      obj_prj( vc_t o, v3d_s pos ) { return obj_get_spect( o )->fp_prj( o, pos ); }
-v3d_s      obj_nor( vc_t o, v3d_s pos ) { return obj_get_spect( o )->fp_nor( o, pos ); }
-ray_cone_s obj_fov( vc_t o, v3d_s pos ) { return obj_get_spect( o )->fp_fov( o, pos ); }
-bl_t       obj_is_in_fov( vc_t o, const ray_cone_s* fov ) { return obj_get_spect( o )->fp_is_in_fov( o, fov ); }
-f3_t       obj_hit( vc_t o, const ray_s* ray ) { return obj_get_spect( o )->fp_hit( o, ray ); }
-f3_t       obj_radiance( vc_t o ) { return ( ( obj_hdr_s* )o )->prp.radiance; }
-
-void obj_move(   vd_t o, const v3d_s* vec ) { obj_get_spect( o )->fp_move(   o, vec ); }
-void obj_rotate( vd_t o, const m3d_s* mat ) { obj_get_spect( o )->fp_rotate( o, mat ); }
-void obj_scale(  vd_t o, f3_t fac         ) { obj_get_spect( o )->fp_scale(  o, fac ); }
+v2d_s      obj_projection( vc_t o, v3d_s pos ) { return obj_get_spect( o )->fp_projection( o, pos ); }
+v3d_s      obj_normal    ( vc_t o, v3d_s pos ) { return obj_get_spect( o )->fp_normal( o, pos ); }
+ray_cone_s obj_fov       ( vc_t o, v3d_s pos ) { return obj_get_spect( o )->fp_fov( o, pos ); }
+f3_t       obj_fwd_hit   ( vc_t o, const ray_s* ray ) { return obj_get_spect( o )->fp_fwd_hit( o, ray ); }
+f3_t       obj_radiance  ( vc_t o                   ) { return ( ( obj_hdr_s* )o )->prp.radiance; }
+void       obj_move      ( vd_t o, const v3d_s* vec ) { obj_get_spect( o )->fp_move(   o, vec ); }
+void       obj_rotate    ( vd_t o, const m3d_s* mat ) { obj_get_spect( o )->fp_rotate( o, mat ); }
+void       obj_scale     ( vd_t o, f3_t fac         ) { obj_get_spect( o )->fp_scale(  o, fac ); }
+bl_t obj_is_in_fov ( vc_t o, const ray_cone_s* fov )  { return obj_get_spect( o )->fp_is_in_fov( o, fov ); }
 
 sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
 {
@@ -199,13 +197,16 @@ static void obj_plane_s_init_a( vd_t nc )
     nc_l->o->prp.txm = txm_plain_s_create();
 }
 
-v2d_s obj_plane_s_prj( const obj_plane_s* o, v3d_s pos )
+v2d_s obj_plane_s_projection( const obj_plane_s* o, v3d_s pos )
 {
     v3d_s p = v3d_s_sub( pos, o->prp.pos );
     return ( v2d_s ) { v3d_s_mlv( p, o->prp.pax.x ), v3d_s_mlv( p, o->prp.pax.y ) };
 }
 
-v3d_s obj_plane_s_nor( const obj_plane_s* o, v3d_s pos ) { return o->prp.pax.z; }
+v3d_s obj_plane_s_normal( const obj_plane_s* o, v3d_s pos )
+{
+    return plane_observer_normal( o->prp.pos, o->prp.pax.z, pos );
+}
 
 ray_cone_s obj_plane_s_fov( const obj_plane_s* o, v3d_s pos )
 {
@@ -216,17 +217,14 @@ ray_cone_s obj_plane_s_fov( const obj_plane_s* o, v3d_s pos )
     return cne;
 }
 
-f3_t obj_plane_s_hit( const obj_plane_s* o, const ray_s* r )
+f3_t obj_plane_s_fwd_hit( const obj_plane_s* o, const ray_s* r )
 {
-    f3_t div = v3d_s_mlv( o->prp.pax.z, r->d );
-    if( div >= 0 ) return f3_inf; // plane can only be hit from the positive surface area
-    f3_t offset = v3d_s_sub_mlv( o->prp.pos, r->p, o->prp.pax.z ) / div;
-    return ( offset > 0 ) ? offset : f3_inf;
+    return plane_ray_offset( o->prp.pos, o->prp.pax.z, r );
 }
 
 bl_t obj_plane_s_is_in_fov( const obj_plane_s* o, const ray_cone_s* fov )
 {
-    if( obj_plane_s_hit( o, &fov->ray ) < f3_inf ) return true;
+    if( obj_plane_s_fwd_hit( o, &fov->ray ) < f3_inf ) return true;
     f3_t sin_a = v3d_s_mlv( o->prp.pax.z, fov->ray.d );
     sin_a = sin_a < 1.0 ? sin_a : 1.0;
     f3_t cos_a = sqrt( 1.0 - sin_a * sin_a );
@@ -240,15 +238,15 @@ void obj_plane_s_scale(  obj_plane_s* o, f3_t fac         ) { properties_s_scale
 static bcore_flect_self_s* obj_plane_s_create_self( void )
 {
     bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_plane_s_def, sizeof( obj_plane_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_init_a, "ap_t", "init" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_prj, "prj_fp", "prj" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_nor, "nor_fp", "nor" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_fov, "fov_fp", "fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_hit, "hit_fp", "hit" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_is_in_fov, "is_in_fov_fp", "is_in_fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_move,   "move_fp",   "move" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_rotate, "rotate_fp", "rotate" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_scale,  "scale_fp",  "scale" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_init_a,     "ap_t",          "init" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_projection, "projection_fp", "projection" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_normal,     "normal_fp",     "normal" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_fov,        "fov_fp",        "fov" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_fwd_hit,    "fwd_hit_fp",    "fwd_hit" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_is_in_fov,  "is_in_fov_fp",  "is_in_fov" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_move,       "move_fp",       "move" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_rotate,     "rotate_fp",     "rotate" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_scale,      "scale_fp",      "scale" );
     return self;
 }
 
@@ -289,7 +287,7 @@ static void obj_sphere_s_init_a( vd_t nc )
     nc_l->o->prp.txm = txm_plain_s_create();
 }
 
-v2d_s obj_sphere_s_prj( const obj_sphere_s* o, v3d_s pos )
+v2d_s obj_sphere_s_projection( const obj_sphere_s* o, v3d_s pos )
 {
     v3d_s r = v3d_s_of_length( v3d_s_sub( pos, o->prp.pos ), 1.0 );
     f3_t x = v3d_s_mlv( r, o->prp.pax.x );
@@ -306,7 +304,10 @@ v2d_s obj_sphere_s_prj( const obj_sphere_s* o, v3d_s pos )
     return ( v2d_s ) { azimuth, elevation };
 }
 
-v3d_s obj_sphere_s_nor( const obj_sphere_s* o, v3d_s pos ) { return v3d_s_of_length( v3d_s_sub( pos, o->prp.pos ), 1.0 ); }
+v3d_s obj_sphere_s_normal( const obj_sphere_s* o, v3d_s pos )
+{
+    return sphere_observer_normal( o->prp.pos, o->radius, pos );
+}
 
 ray_cone_s obj_sphere_s_fov( const obj_sphere_s* o, v3d_s pos )
 {
@@ -342,17 +343,9 @@ bl_t obj_sphere_s_is_in_fov( const obj_sphere_s* o, const ray_cone_s* fov )
     return acos( cos_ang0 ) - acos( cos_ang1 ) < acos( fov->cos_rs );
 }
 
-f3_t obj_sphere_s_hit( const obj_sphere_s* o, const ray_s* r )
+f3_t obj_sphere_s_fwd_hit( const obj_sphere_s* o, const ray_s* r )
 {
-    v3d_s p = v3d_s_sub( r->p, o->prp.pos );
-    f3_t _p = v3d_s_mlv( p, r->d );
-    f3_t q = ( v3d_s_sqr( p ) - ( o->radius * o->radius ) );
-    f3_t v = _p * _p;
-    if( v < q ) return f3_inf; // missing the sphere
-    if( q < 0 ) return f3_inf; // inside the sphere
-    f3_t offset = -_p - sqrt( v - q );
-
-    return ( offset > 0 ) ? offset : f3_inf;
+    return sphere_ray_offset( o->prp.pos, o->radius, r );
 }
 
 void obj_sphere_s_move(   obj_sphere_s* o, const v3d_s* vec ) { properties_s_move  ( &o->prp, vec ); }
@@ -362,15 +355,201 @@ void obj_sphere_s_scale(  obj_sphere_s* o, f3_t fac         ) { properties_s_sca
 static bcore_flect_self_s* obj_sphere_s_create_self( void )
 {
     bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_sphere_s_def, sizeof( obj_sphere_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_init_a, "ap_t", "init" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_prj, "prj_fp", "prj" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_nor, "nor_fp", "nor" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_fov, "fov_fp", "fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_hit, "hit_fp", "hit" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_is_in_fov, "is_in_fov_fp", "is_in_fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_move,   "move_fp",   "move" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_rotate, "rotate_fp", "rotate" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_scale,  "scale_fp",  "scale" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_init_a,     "ap_t",          "init" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_projection, "projection_fp", "projection" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_normal,     "normal_fp",     "normal" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_fov,        "fov_fp",        "fov" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_fwd_hit,    "fwd_hit_fp",    "fwd_hit" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_is_in_fov,  "is_in_fov_fp",  "is_in_fov" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_move,       "move_fp",       "move" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_rotate,     "rotate_fp",     "rotate" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_scale,      "scale_fp",      "scale" );
+    return self;
+}
+
+/**********************************************************************************************************************/
+/// obj_cylinder_s
+
+#define TYPEOF_obj_cylinder_s typeof( "obj_cylinder_s" )
+typedef struct obj_cylinder_s
+{
+    union
+    {
+        obj_hdr_s hdr;
+        struct
+        {
+            aware_t _;
+            const spect_obj_s* p;
+            properties_s prp;
+        };
+    };
+    f3_t radius;
+} obj_cylinder_s;
+
+static sc_t obj_cylinder_s_def =
+"obj_cylinder_s = spect_obj"
+"{"
+    "aware_t _;"
+    "spect spect_obj_s* p;"
+    "properties_s prp;"
+    "f3_t radius = 1.0;"
+"}";
+
+DEFINE_FUNCTIONS_OBJ_INST( obj_cylinder_s )
+
+static void obj_cylinder_s_init_a( vd_t nc )
+{
+    struct { ap_t a; vc_t p; obj_cylinder_s* o; } * nc_l = nc;
+    nc_l->a( nc ); // default
+    nc_l->o->prp.txm = txm_plain_s_create();
+}
+
+v2d_s obj_cylinder_s_projection( const obj_cylinder_s* o, v3d_s pos )
+{
+    v3d_s r = v3d_s_of_length( v3d_s_sub( pos, o->prp.pos ), 1.0 );
+    f3_t x = v3d_s_mlv( r, o->prp.pax.x );
+    f3_t y = v3d_s_mlv( r, v3d_s_mlx( o->prp.pax.z, o->prp.pax.x ) );
+    f3_t z = v3d_s_mlv( r, o->prp.pax.z );
+
+    f3_t azimuth = atan2( x, y );
+
+    return ( v2d_s ) { azimuth, z };
+}
+
+v3d_s obj_cylinder_s_normal( const obj_cylinder_s* o, v3d_s pos )
+{
+    return cylinder_observer_normal( o->prp.pos, o->prp.pax.z, o->radius, pos );
+}
+
+ray_cone_s obj_cylinder_s_fov( const obj_cylinder_s* o, v3d_s pos )
+{
+    ray_cone_s cne;
+    cne.ray.p  = pos;
+    cne.ray.d  = v3d_s_neg( obj_cylinder_s_normal( o, pos ) );
+    cne.cos_rs = 0;
+    return cne;
+}
+
+bl_t obj_cylinder_s_is_in_fov( const obj_cylinder_s* o, const ray_cone_s* fov )
+{
+    /// TODO: provide exact calculation
+    return true;
+}
+
+f3_t obj_cylinder_s_fwd_hit( const obj_cylinder_s* o, const ray_s* r )
+{
+    return cylinder_ray_offset( o->prp.pos, o->prp.pax.z, o->radius, r );
+}
+
+void obj_cylinder_s_move(   obj_cylinder_s* o, const v3d_s* vec ) { properties_s_move  ( &o->prp, vec ); }
+void obj_cylinder_s_rotate( obj_cylinder_s* o, const m3d_s* mat ) { properties_s_rotate( &o->prp, mat ); }
+void obj_cylinder_s_scale(  obj_cylinder_s* o, f3_t fac         ) { properties_s_scale ( &o->prp, fac ); o->radius *= fac; }
+
+static bcore_flect_self_s* obj_cylinder_s_create_self( void )
+{
+    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_cylinder_s_def, sizeof( obj_cylinder_s ) );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_init_a,     "ap_t",          "init" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_projection, "projection_fp", "projection" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_normal,     "normal_fp",     "normal" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_fov,        "fov_fp",        "fov" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_fwd_hit,    "fwd_hit_fp",    "fwd_hit" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_is_in_fov,  "is_in_fov_fp",  "is_in_fov" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_move,       "move_fp",       "move" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_rotate,     "rotate_fp",     "rotate" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_scale,      "scale_fp",      "scale" );
+    return self;
+}
+
+/**********************************************************************************************************************/
+/// obj_cone_s
+
+#define TYPEOF_obj_cone_s typeof( "obj_cone_s" )
+typedef struct obj_cone_s
+{
+    union
+    {
+        obj_hdr_s hdr;
+        struct
+        {
+            aware_t _;
+            const spect_obj_s* p;
+            properties_s prp;
+        };
+    };
+    f3_t cosa;
+} obj_cone_s;
+
+static sc_t obj_cone_s_def =
+"obj_cone_s = spect_obj"
+"{"
+    "aware_t _;"
+    "spect spect_obj_s* p;"
+    "properties_s prp;"
+    "f3_t cosa = 0.5;"
+"}";
+
+DEFINE_FUNCTIONS_OBJ_INST( obj_cone_s )
+
+static void obj_cone_s_init_a( vd_t nc )
+{
+    struct { ap_t a; vc_t p; obj_cone_s* o; } * nc_l = nc;
+    nc_l->a( nc ); // default
+    nc_l->o->prp.txm = txm_plain_s_create();
+}
+
+v2d_s obj_cone_s_projection( const obj_cone_s* o, v3d_s pos )
+{
+    v3d_s r = v3d_s_of_length( v3d_s_sub( pos, o->prp.pos ), 1.0 );
+    f3_t x = v3d_s_mlv( r, o->prp.pax.x );
+    f3_t y = v3d_s_mlv( r, v3d_s_mlx( o->prp.pax.z, o->prp.pax.x ) );
+    f3_t z = v3d_s_mlv( r, o->prp.pax.z );
+
+    f3_t azimuth = atan2( x, y );
+
+    return ( v2d_s ) { azimuth, z };
+}
+
+v3d_s obj_cone_s_normal( const obj_cone_s* o, v3d_s pos )
+{
+    return cone_observer_normal( o->prp.pos, o->prp.pax.z, o->cosa, pos );
+}
+
+ray_cone_s obj_cone_s_fov( const obj_cone_s* o, v3d_s pos )
+{
+    ray_cone_s cne;
+    cne.ray.p  = pos;
+    cne.ray.d  = v3d_s_neg( obj_cone_s_normal( o, pos ) );
+    cne.cos_rs = 0;
+    return cne;
+}
+
+bl_t obj_cone_s_is_in_fov( const obj_cone_s* o, const ray_cone_s* fov )
+{
+    /// TODO: provide exact calculation
+    return true;
+}
+
+f3_t obj_cone_s_fwd_hit( const obj_cone_s* o, const ray_s* r )
+{
+    return cone_ray_offset( o->prp.pos, o->prp.pax.z, o->cosa, r );
+}
+
+void obj_cone_s_move(   obj_cone_s* o, const v3d_s* vec ) { properties_s_move  ( &o->prp, vec ); }
+void obj_cone_s_rotate( obj_cone_s* o, const m3d_s* mat ) { properties_s_rotate( &o->prp, mat ); }
+void obj_cone_s_scale(  obj_cone_s* o, f3_t fac         ) { properties_s_scale ( &o->prp, fac ); }
+
+static bcore_flect_self_s* obj_cone_s_create_self( void )
+{
+    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_cone_s_def, sizeof( obj_cone_s ) );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_init_a,     "ap_t",          "init" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_projection, "projection_fp", "projection" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_normal,     "normal_fp",     "normal" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_fov,        "fov_fp",        "fov" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_fwd_hit,    "fwd_hit_fp",    "fwd_hit" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_is_in_fov,  "is_in_fov_fp",  "is_in_fov" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_move,       "move_fp",       "move" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_rotate,     "rotate_fp",     "rotate" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_scale,      "scale_fp",      "scale" );
     return self;
 }
 
@@ -407,12 +586,12 @@ vd_t compound_s_push_q( compound_s* o, const sr_s* object )
     return dst;
 }
 
-f3_t compound_s_hit( const compound_s* o, const ray_s* r, vc_t* hit_obj )
+f3_t compound_s_fwd_hit( const compound_s* o, const ray_s* r, vc_t* hit_obj )
 {
     f3_t min_a = f3_inf;
     for( sz_t i = 0; i < o->size; i++ )
     {
-        f3_t a = obj_hit( o->data[ i ], r );
+        f3_t a = obj_fwd_hit( o->data[ i ], r );
         if( a < min_a )
         {
             min_a = a;
@@ -422,13 +601,13 @@ f3_t compound_s_hit( const compound_s* o, const ray_s* r, vc_t* hit_obj )
     return min_a;
 }
 
-f3_t compound_s_idx_hit( const compound_s* o, const bcore_arr_sz_s* idx_arr, const ray_s* r, vc_t* hit_obj )
+f3_t compound_s_idx_fwd_hit( const compound_s* o, const bcore_arr_sz_s* idx_arr, const ray_s* r, vc_t* hit_obj )
 {
     f3_t min_a = f3_inf;
     for( sz_t i = 0; i < idx_arr->size; i++ )
     {
         sz_t idx = idx_arr->data[ i ];
-        f3_t a = obj_hit( o->data[ idx ], r );
+        f3_t a = obj_fwd_hit( o->data[ idx ], r );
         if( a < min_a )
         {
             min_a = a;
@@ -464,11 +643,13 @@ vd_t objects_signal( tp_t target, tp_t signal, vd_t object )
     {
         bcore_trait_set( entypeof( "spect_obj" ), entypeof( "bcore_inst" ) );
 
-        bcore_flect_define_creator( typeof( "properties_s" ), properties_s_create_self );
-        bcore_flect_define_creator( typeof( "spect_obj_s"  ), spect_obj_s_create_self  );
-        bcore_flect_define_creator( typeof( "obj_plane_s"  ), obj_plane_s_create_self  );
-        bcore_flect_define_creator( typeof( "obj_sphere_s" ), obj_sphere_s_create_self );
-        bcore_flect_define_creator( typeof( "compound_s"   ), compound_s_create_self   );
+        bcore_flect_define_creator( typeof( "properties_s"   ), properties_s_create_self );
+        bcore_flect_define_creator( typeof( "spect_obj_s"    ), spect_obj_s_create_self  );
+        bcore_flect_define_creator( typeof( "obj_plane_s"    ), obj_plane_s_create_self  );
+        bcore_flect_define_creator( typeof( "obj_sphere_s"   ), obj_sphere_s_create_self );
+        bcore_flect_define_creator( typeof( "obj_cylinder_s" ), obj_cylinder_s_create_self );
+        bcore_flect_define_creator( typeof( "obj_cone_s"     ), obj_cone_s_create_self );
+        bcore_flect_define_creator( typeof( "compound_s"     ), compound_s_create_self   );
     }
 
     return NULL;
