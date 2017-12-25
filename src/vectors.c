@@ -1,7 +1,18 @@
-/** Vectors and Related Objects
- *  Author: Johannes Bernhard Steffens
+/** Vectors and Related Objects */
+
+/** Copyright 2017 Johannes Bernhard Steffens
  *
- *  Copyright (c) 2017 Johannes Bernhard Steffens. All rights reserved.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
 
 #include "scene.h"
@@ -36,12 +47,6 @@ DEFINE_CREATE_SELF( m3d_s, "m3d_s = bcore_inst { v3d_s x; v3d_s y; v3d_s z; }" )
 
 DEFINE_FUNCTIONS_OBJ_FLAT( ray_s )
 DEFINE_CREATE_SELF( ray_s, "ray_s = bcore_inst { v3d_s p; v3d_s d; }" )
-
-/**********************************************************************************************************************/
-/// risect_s
-
-DEFINE_FUNCTIONS_OBJ_FLAT( risect_s )
-DEFINE_CREATE_SELF( risect_s, "risect_s = bcore_inst { f3_t h; f3_t l; }" )
 
 /**********************************************************************************************************************/
 /// ray_cone_s
@@ -121,7 +126,6 @@ vd_t vectors_signal( tp_t target, tp_t signal, vd_t object )
         bcore_flect_define_creator( typeof( "v3d_s"       ), v3d_s_create_self );
         bcore_flect_define_creator( typeof( "m3d_s"       ), m3d_s_create_self );
         bcore_flect_define_creator( typeof( "ray_s"       ), ray_s_create_self );
-        bcore_flect_define_creator( typeof( "risect_s"    ), risect_s_create_self );
         bcore_flect_define_creator( typeof( "ray_cone_s"  ), ray_cone_s_create_self );
         bcore_flect_define_creator( typeof( "cl_s"        ), cl_s_create_self  );
         bcore_flect_define_creator( typeof( "row_cl_s"    ), row_cl_s_create_self   );

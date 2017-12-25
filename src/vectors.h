@@ -1,7 +1,18 @@
-/** Vectors and Related Objects
- *  Author: Johannes Bernhard Steffens
+/** Vectors and Related Objects */
+
+/** Copyright 2017 Johannes Bernhard Steffens
  *
- *  Copyright (c) 2017 Johannes Bernhard Steffens. All rights reserved.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
 
 #ifndef VECTORS_H
@@ -271,15 +282,6 @@ static inline v3d_s ray_s_pos( const ray_s* o, f3_t offs )
 {
     return v3d_s_add( o->p, v3d_s_mlf( o->d, offs ) );
 }
-
-/**********************************************************************************************************************/
-/** risect_s - intersection-offsets of a given ray with an object
- *  h: high-offset
- *  l: low-offset
- */
-
-typedef struct risect_s { f3_t h; f3_t l; } risect_s;
-DECLARE_FUNCTIONS_OBJ( risect_s )
 
 /**********************************************************************************************************************/
 /// ray_cone_s (defines a bundle of rays given by a principal ray and a radius at distance 1)
