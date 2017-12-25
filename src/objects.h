@@ -18,11 +18,18 @@
 
 typedef struct properties_s
 {
-    v3d_s pos;      // position of origin
-    m3d_s pax;      // object's principal axes
-    vd_t  txm;      // texture map
-    f3_t  radiance; // radiance (>0: object is active light source)
-    f3_t  n;        // refractive index
+    v3d_s pos;              // reference position of object
+    m3d_s rax;              // object's local orthonormal system (reference-axes)
+    vd_t  texture_field;    // 3D texture field
+    f3_t  radiance;         // radiance (>0: object is active light source)
+    f3_t  refractive_index;
+    bl_t  transparent;
+
+    /** Color of the object in absence of a texture field.
+     *  For transparent material the color components are interpreted as absorption-distance:
+     *  Distance at which the corresponding color intensity is halved.
+     */
+    cl_s color;
 } properties_s;
 
 /**********************************************************************************************************************/
@@ -43,16 +50,22 @@ typedef struct obj_hdr_s
 
 /**********************************************************************************************************************/
 
+/// color on object's surface
+cl_s obj_color( vc_t o, v3d_s pos );
+
 /// projects on object's surface
 v2d_s obj_projection( vc_t o, v3d_s pos );
 
 /// object's surface-normal at given position
 v3d_s obj_normal( vc_t o, v3d_s pos );
 
+/// position is outside or inside object
+bl_t obj_outside( vc_t o, v3d_s pos );
+
 /// returns a (minimal) ray-cone with entire object in field of view
 ray_cone_s obj_fov( vc_t o, v3d_s pos );
 
-/// tests is object is (at least partially) in field of view
+/// tests if object is (at least partially) in field of view
 bl_t obj_is_in_fov( vc_t o, const ray_cone_s* fov );
 
 /// returns object's hit position (offset) or f3_inf if not hit.
@@ -65,6 +78,11 @@ sr_s obj_meval_key( sr_s* o, meval_s* ev, tp_t key );
 void obj_move(   vd_t o, const v3d_s* vec );
 void obj_rotate( vd_t o, const m3d_s* mat );
 void obj_scale(  vd_t o, f3_t fac );
+void obj_set_color           ( vd_t o, cl_s color );
+void obj_set_refractive_index( vd_t o, f3_t val );
+void obj_set_radiance        ( vd_t o, f3_t val );
+void obj_set_transparent     ( vd_t o, bl_t flag );
+void obj_set_texture_field   ( vd_t o, vc_t texture_field );
 
 /**********************************************************************************************************************/
 /// compound_s (array of objects)

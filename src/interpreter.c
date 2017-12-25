@@ -308,7 +308,7 @@ void mcode_s_parse( mcode_s* o, sr_s* src )
             char c = bcore_source_q_get_u0( src );
             switch( c )
             {
-                case ':': mcode_s_push_code( o, CL_COLON                ); break;
+                case ':': mcode_s_push_code( o, CL_COLON ); break;
 
                 case ';':
                 {
@@ -317,7 +317,7 @@ void mcode_s_parse( mcode_s* o, sr_s* src )
                         sz_t idx = bcore_arr_sz_s_pop( jmp_buf );
                         o->code.data[ idx ] = o->code.size;
                     }
-                    if( jmp_buf->size > 0 ) bcore_source_q_parse_err_fa( src, "Trailing jump addresses at end of statement." );
+                    if( jmp_buf->size > 0 ) bcore_source_q_parse_err_fa( src, "Trailing jump address at end of statement." );
                     mcode_s_push_code( o, CL_SEMICOLON );
                 }
                 break;
@@ -533,6 +533,16 @@ static sr_s meval_s_mul( meval_s* o, sr_s v1, sr_s v2 )
             case TYPEOF_v3d_s: r = sr_f3( v3d_s_mlv( *( v3d_s* )v1.o, *( v3d_s* )v2.o ) ); break;
         }
         break;
+
+        case TYPEOF_m3d_s:
+        switch( t2 )
+        {
+            case TYPEOF_s3_t:  r = sr_create( TYPEOF_m3d_s ); *( m3d_s* )r.o = m3d_s_mlf( v1.o, *( s3_t*  )v2.o ); break;
+            case TYPEOF_f3_t:  r = sr_create( TYPEOF_m3d_s ); *( m3d_s* )r.o = m3d_s_mlf( v1.o, *( f3_t*  )v2.o ); break;
+            case TYPEOF_v3d_s: r = sr_create( TYPEOF_v3d_s ); *( v3d_s* )r.o = m3d_s_mlv( v1.o, *( v3d_s* )v2.o ); break;
+            case TYPEOF_m3d_s: r = sr_create( TYPEOF_m3d_s ); *( m3d_s* )r.o = m3d_s_mlm( v1.o, v2.o ); break;
+        }
+        break;
     }
 
     if( !r.o )
@@ -585,6 +595,18 @@ static sr_s meval_s_add( meval_s* o, sr_s v1, sr_s v2 )
         switch( t2 )
         {
             case TYPEOF_v3d_s: r = sr_create( TYPEOF_v3d_s ); *( v3d_s* )r.o = v3d_s_add( *( v3d_s* )v1.o, *( v3d_s* )v2.o ); break;
+        }
+        break;
+
+        case TYPEOF_st_s:
+        {
+            r = sr_clone( v1 );
+            v1 = sr_null();
+            switch( t2 )
+            {
+                case TYPEOF_st_s: st_s_push_st( r.o, v2.o ); break;
+                case TYPEOF_s3_t: st_s_push_fa( r.o, "#<s3_t>", *( s3_t* )v2.o ); break;
+            }
         }
         break;
     }
@@ -807,8 +829,10 @@ void meval_s_jmp_to( meval_s* o, sz_t address )
 v3d_s meval_s_eval_v3d( meval_s* o )
 {
     sr_s vec = meval_s_eval( o, sr_null() );
-    if( sr_s_type( &vec ) != TYPEOF_v3d_s ) meval_s_err_fa( o, "Vector expected." );
-    v3d_s ret = *( v3d_s* )vec.o;
+    v3d_s ret;
+    if     ( sr_s_type( &vec ) == TYPEOF_v3d_s ) ret = *( v3d_s* )vec.o;
+    else if( sr_s_type( &vec ) == TYPEOF_cl_s  ) ret = *( cl_s* )vec.o;
+    else meval_s_err_fa( o, "Vector expected." );
     sr_down( vec );
     return ret;
 }
@@ -831,32 +855,33 @@ f3_t meval_s_eval_f3( meval_s* o )
     return ret;
 }
 
-m3d_s meval_s_eval_rot( meval_s* o )
+sr_s meval_s_eval_texture_field( meval_s* o )
 {
-    m3d_s rot;
-    if( meval_s_try_name( o, typeof( "rot_x" ) ) )
-    {
-        meval_s_expect_code( o, CL_ROUND_BRACKET_OPEN  );
-        rot = m3d_s_rot_x( meval_s_eval_f3( o ) * M_PI / 180.0 );
-        meval_s_expect_code( o, CL_ROUND_BRACKET_CLOSE  );
-    }
-    else if( meval_s_try_name( o, typeof( "rot_y" ) ) )
-    {
-        meval_s_expect_code( o, CL_ROUND_BRACKET_OPEN  );
-        rot = m3d_s_rot_y( meval_s_eval_f3( o ) * M_PI / 180.0 );
-        meval_s_expect_code( o, CL_ROUND_BRACKET_CLOSE  );
-    }
-    else if( meval_s_try_name( o, typeof( "rot_z" ) ) )
-    {
-        meval_s_expect_code( o, CL_ROUND_BRACKET_OPEN  );
-        rot = m3d_s_rot_z( meval_s_eval_f3( o ) * M_PI / 180.0 );
-        meval_s_expect_code( o, CL_ROUND_BRACKET_CLOSE  );
-    }
+    sr_s val = meval_s_eval( o, sr_null() );
+    if( !bcore_trait_is( sr_s_type( &val ), typeof( "spect_txm" ) ) ) meval_s_err_fa( o, "Texture map expected." );
+    return val;
+}
+
+bl_t meval_s_eval_bl( meval_s* o )
+{
+    sr_s val = meval_s_eval( o, sr_null() );
+    bl_t ret = 0;
+    if( sr_s_type( &val ) == TYPEOF_bl_t ) ret = *( bl_t* )val.o;
     else
     {
-        meval_s_err_fa( o, "Rotation expected." );
+        meval_s_err_fa( o, "Boolean expected." );
     }
-    return rot;
+    sr_down( val );
+    return ret;
+}
+
+m3d_s meval_s_eval_rot( meval_s* o )
+{
+    sr_s mat = meval_s_eval( o, sr_null() );
+    if( sr_s_type( &mat ) != TYPEOF_m3d_s ) meval_s_err_fa( o, "Rotation expected." );
+    m3d_s ret = *( m3d_s* )mat.o;
+    sr_down( mat );
+    return ret;
 }
 
 /// calls a closure
@@ -913,11 +938,19 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
         }
 
         // operators to be immediately processed
-        if( opr == OP_ASSIGN )
+        if( opr > CL_ASSIGN_OPS_BEGIN && opr < CL_ASSIGN_OPS_END )
         {
             if( sr_s_is_const( &front_obj ) ) meval_s_err_fa( o, "Attempt to modify a const object.\n" );
             sr_s obj = meval_s_eval( o, sr_null() );
             if( !obj.p ) meval_s_err_fa( o, "Assignment from empty object.\n" );
+            switch( opr )
+            {
+                case OP_ADD_ASSIGN: obj = meval_s_add( o, sr_cw( front_obj ), obj ); break;
+                case OP_SUB_ASSIGN: obj = meval_s_add( o, sr_cw( front_obj ), meval_s_mul( o, sr_f3( -1 ), obj ) ); break;
+                case OP_MUL_ASSIGN: obj = meval_s_mul( o, sr_cw( front_obj ), obj ); break;
+                case OP_DIV_ASSIGN: obj = meval_s_mul( o, sr_cw( front_obj ), meval_s_inverse( o, obj ) ); break;
+                default: break;
+            }
             bcore_inst_typed_copy_typed( sr_s_type( &front_obj ), front_obj.o, sr_s_type( &obj ), obj.o );
             sr_down( obj );
             return sr_fork( front_obj );
@@ -1004,12 +1037,14 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
         else // name is variable
         {
             sr_s* p_obj = meval_s_get_obj( o, key );
-            if( meval_s_peek_code( o ) == OP_ASSIGN ) // assignment (not consumed here)
+
+            tp_t peek_code = meval_s_peek_code( o );
+            if( peek_code > CL_ASSIGN_OPS_BEGIN && peek_code < CL_ASSIGN_OPS_END ) // assignment (not consumed here)
             {
                 if( !p_obj )
                 {
-                    meval_s_get_code( o );
-                    obj = sr_s_fork( meval_s_set_obj( o, key, meval_s_eval( o, sr_null() ) ) );
+                    meval_s_expect_code( o, OP_ASSIGN );
+                    obj = sr_s_fork( meval_s_set_obj( o, key, sr_clone( meval_s_eval( o, sr_null() ) ) ) );
                 }
                 else
                 {
@@ -1197,7 +1232,6 @@ void mclosure_s_define( mclosure_s* o, bclos_frame_s* frame, bclos_signature_s* 
     bclos_signature_s_discard( o->signature );
     o->mcode         = bcore_fork( mcode );
     o->lexical_frame = frame;
-
     o->signature     = bcore_fork( signature );
     if( !o->signature )
     {
@@ -1246,8 +1280,19 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     mcode_s* mcode = bcore_life_s_push_aware( l, mcode_s_create() );
     mcode_s_parse( mcode, &src );
     bclos_frame_s* frame = bcore_life_s_push_aware( l, bclos_frame_s_create() );
-    bclos_frame_s_set( frame, typeof( "vec"   ), sr_create( typeof( "create_vec_s"   ) ) );
-    bclos_frame_s_set( frame, typeof( "color" ), sr_create( typeof( "create_color_s" ) ) );
+    bclos_frame_s_set( frame, typeof( "vec"       ), sr_create( typeof( "create_vec_s"       ) ) );
+    bclos_frame_s_set( frame, typeof( "vecx"      ), sr_create( typeof( "vecx_s"             ) ) );
+    bclos_frame_s_set( frame, typeof( "vecy"      ), sr_create( typeof( "vecy_s"             ) ) );
+    bclos_frame_s_set( frame, typeof( "vecz"      ), sr_create( typeof( "vecz_s"             ) ) );
+    bclos_frame_s_set( frame, typeof( "rotx"      ), sr_create( typeof( "rotx_s"             ) ) );
+    bclos_frame_s_set( frame, typeof( "roty"      ), sr_create( typeof( "roty_s"             ) ) );
+    bclos_frame_s_set( frame, typeof( "rotz"      ), sr_create( typeof( "rotz_s"             ) ) );
+    bclos_frame_s_set( frame, typeof( "color"     ), sr_create( typeof( "create_color_s"     ) ) );
+    bclos_frame_s_set( frame, typeof( "colr"      ), sr_create( typeof( "colr_s"             ) ) );
+    bclos_frame_s_set( frame, typeof( "colg"      ), sr_create( typeof( "colg_s"             ) ) );
+    bclos_frame_s_set( frame, typeof( "colb"      ), sr_create( typeof( "colb_s"             ) ) );
+
+    bclos_frame_s_set( frame, typeof( "string_fa" ), sr_create( typeof( "create_string_fa_s" ) ) );
     mclosure_s_define( o, frame, NULL, mcode );
     sr_s return_obj = mclosure_s_call( o, NULL, NULL );
     bcore_life_s_discard( l );

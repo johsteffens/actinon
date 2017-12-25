@@ -17,7 +17,7 @@
 
 /// v2d_s
 DEFINE_FUNCTIONS_OBJ_FLAT( v2d_s )
-DEFINE_CREATE_SELF( v2d_s, "v2d_s = bcore_inst { f3_t x; f3_t y }" )
+DEFINE_CREATE_SELF( v2d_s, "v2d_s = bcore_inst { f3_t x; f3_t y; }" )
 
 /**********************************************************************************************************************/
 
@@ -102,6 +102,11 @@ void image_cl_s_set_size( image_cl_s* o, sz_t w, sz_t h, cl_s color )
     for( sz_t i = 0; i < o->size; i++ ) o->data[ i ] = color;
     o->w = w;
     o->h = h;
+}
+
+void image_cl_s_saturate( image_cl_s* o, f3_t gamma )
+{
+    for( sz_t i = 0; i < o->size; i++ ) o->data[ i ] = cl_s_sat( o->data[ i ], gamma );
 }
 
 /**********************************************************************************************************************/

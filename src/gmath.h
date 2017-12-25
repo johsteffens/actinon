@@ -12,6 +12,10 @@
 
 /**********************************************************************************************************************/
 
+void compute_refraction( v3d_s dir_i, v3d_s nor, f3_t rix, f3_t* intensity_r, v3d_s* dir_r, f3_t* intensity_t, v3d_s* dir_t );
+
+/**********************************************************************************************************************/
+
 static inline f3_t plane_ray_offset( v3d_s pos, v3d_s nor, const ray_s* ray )
 {
     f3_t div = v3d_s_mlv( nor, ray->d );
@@ -63,7 +67,8 @@ static inline bl_t sphere_observer_outside( v3d_s pos, f3_t r, v3d_s observer )
 static inline v3d_s sphere_observer_normal( v3d_s pos, f3_t r, v3d_s observer )
 {
     v3d_s diff = v3d_s_sub( observer, pos );
-    return v3d_s_of_length( diff, ( v3d_s_sqr( diff ) > r * r ) ? 1.0 : -1.0 );
+//    return v3d_s_of_length( diff, ( v3d_s_sqr( diff ) > r * r ) ? 1.0 : -1.0 );
+    return v3d_s_of_length( diff, 1.0 );
 }
 
 /**********************************************************************************************************************/
@@ -110,7 +115,7 @@ static inline v3d_s cylinder_observer_normal( v3d_s pos, v3d_s dir, f3_t r, v3d_
 {
     v3d_s p = v3d_s_sub( observer, pos );
     v3d_s pr = v3d_s_orthogonal_projection( p, dir );
-    return v3d_s_of_length( pr, ( v3d_s_sqr( pr ) > r * r ) ? 1.0 : -1.0 );
+    return v3d_s_of_length( pr, 1.0 );
 }
 
 /**********************************************************************************************************************/
@@ -168,8 +173,7 @@ static inline v3d_s cone_observer_normal( v3d_s pos, v3d_s dir, f3_t cosa, v3d_s
     if( p2 == 0 ) return dir;
     f3_t pd = v3d_s_mlv( p, dir );
     v3d_s n = v3d_s_sub( dir, v3d_s_mlf( p, pd / p2 ) );
-    f3_t coso = -pd / sqrt( p2 );
-    return v3d_s_of_length( n, coso < cosa ? 1.0 : -1.0 );
+    return v3d_s_of_length( n, 1.0 );
 }
 
 /**********************************************************************************************************************/

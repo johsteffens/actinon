@@ -1,4 +1,4 @@
-/** Texture Mapping
+/** Texture Fields and Texture Mapping
  *  Author: Johannes Bernhard Steffens
  *
  *  Copyright (c) 2017 Johannes Bernhard Steffens. All rights reserved.
@@ -9,6 +9,7 @@
 #include "bcore_spect_inst.h"
 #include "bcore_life.h"
 #include "bcore_spect.h"
+#include "bcore_trait.h"
 #include "textures.h"
 #include "quicktypes.h"
 
@@ -68,7 +69,7 @@ typedef struct txm_plain_s
 } txm_plain_s;
 
 static sc_t txm_plain_s_def =
-"txm_plain_s = bcore_inst"
+"txm_plain_s = spect_txm"
 "{"
     "aware_t _;"
     "spect spect_txm_s* p;"
@@ -116,13 +117,13 @@ typedef struct txm_chess_s
 } txm_chess_s;
 
 static sc_t txm_chess_s_def =
-"txm_chess_s = bcore_inst"
+"txm_chess_s = spect_txm"
 "{"
     "aware_t _;"
     "spect spect_txm_s* p;"
     "cl_s color1;"
     "cl_s color2;"
-    "f3_t scale;"
+    "f3_t scale = 1.0;"
 "}";
 
 DEFINE_FUNCTIONS_OBJ_INST( txm_chess_s )
@@ -150,6 +151,8 @@ vd_t textures_signal( tp_t target, tp_t signal, vd_t object )
 
     if( signal == typeof( "init1" ) )
     {
+        bcore_trait_set( entypeof( "spect_txm" ), entypeof( "bcore_inst" ) );
+
         bcore_flect_define_creator( typeof( "spect_txm_s" ), spect_txm_s_create_self );
         bcore_flect_define_creator( typeof( "txm_plain_s" ), txm_plain_s_create_self );
         bcore_flect_define_creator( typeof( "txm_chess_s" ), txm_chess_s_create_self );

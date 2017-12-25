@@ -23,7 +23,7 @@
 #define f3_inf INFINITY
 ///1E300 // pseudo-infinity
 #define f3_mag 1E+30 // very large number
-#define f3_eps 1E-10 // epsilon (used to simulate a miniscule shell-thickness of the surface to prevent near-degenerate conditions)
+#define f3_eps 1E-5 // epsilon (used to simulate a miniscule shell-thickness of the surface to prevent near-degenerate conditions)
 
 #ifndef M_PI
 #define M_PI 3.141592654
@@ -389,6 +389,9 @@ static inline void image_cl_s_add_pixel( image_cl_s* o, sz_t x, sz_t y, cl_s cl 
 {
     v3d_s_o_add( &o->data[ y * o->w + x ], cl );
 }
+
+/// finalizing the image: gamma & saturation
+void image_cl_s_saturate( image_cl_s* o, f3_t gamma );
 
 /**********************************************************************************************************************/
 

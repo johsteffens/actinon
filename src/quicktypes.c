@@ -25,6 +25,7 @@ static sr_s typelist()
 {
     sr_s list = bcore_inst_typed_create_sr( bcore_flect_type_parse_fa( "{ st_s * [] arr; }" ) );
     bcore_array_q_push_sc( &list, "v3d_s" );
+    bcore_array_q_push_sc( &list, "m3d_s" );
     bcore_array_q_push_sc( &list, "spect_txm_s" );
     bcore_array_q_push_sc( &list, "txm_plain_s" );
     bcore_array_q_push_sc( &list, "txm_chess_s" );
@@ -37,6 +38,9 @@ static sr_s typelist()
     bcore_array_q_push_sc( &list, "mclosure_s" );
     bcore_array_q_push_sc( &list, "arr_s" );
     bcore_array_q_push_sc( &list, "map_s" );
+    bcore_array_q_push_sc( &list, "lum_s" );
+    bcore_array_q_push_sc( &list, "lum_arr_s" );
+    bcore_array_q_push_sc( &list, "lum_map_s" );
 
     bcore_array_q_push_sc( &list, "clear" );
     bcore_array_q_push_sc( &list, "push" );
@@ -56,7 +60,13 @@ static sr_s typelist()
     bcore_array_q_push_sc( &list, "else" );
 
     bcore_array_q_push_sc( &list, "vec" );
-    bcore_array_q_push_sc( &list, "color" );
+    bcore_array_q_push_sc( &list, "set_color" );
+    bcore_array_q_push_sc( &list, "set_refractive_index" );
+    bcore_array_q_push_sc( &list, "set_radiance" );
+    bcore_array_q_push_sc( &list, "set_transparent" );
+    bcore_array_q_push_sc( &list, "set_texture_field" );
+
+    bcore_array_q_push_sc( &list, "create_image" );
 
 //    bcore_array_q_sort( &list, 0, -1, 1 );
     return list;

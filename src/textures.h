@@ -1,4 +1,4 @@
-/** Texture Mapping
+/** Texture Fields and Texture Mapping
  *  Author: Johannes Bernhard Steffens
  *
  *  Copyright (c) 2017 Johannes Bernhard Steffens. All rights reserved.

@@ -70,41 +70,16 @@ int main( int argc, const char** argv )
     st_s* png_file = bcore_life_s_push_aware( l, st_s_create_fa( "#<st_s*>.pnm", out_name ) );
 //    st_s* map_file = bcore_life_s_push_aware( l, st_s_create_fa( "#<st_s*>_photon.pnm", out_name ) );
 
-    bcore_msg_fa( "reading '#<st_s*>'\n", in_file  );
+    bcore_msg_fa( "Processing '#<st_s*>'\n", in_file  );
     sr_s obj = bcore_life_s_push_sr( l, bcore_interpret_auto_file( in_file->sc ) );
-    if( !obj.o ) ERR( "File '%s' did not yield an object.", in_file->sc );
-    if( sr_s_type( &obj ) != typeof( "scene_s" ) )
+    if( sr_s_type( &obj ) == typeof( "scene_s" ) )
     {
-        ERR( "File '%s' yielded object '%s' (scene_s was expected).", in_file->sc, ifnameof( sr_s_type( &obj ) ) );
+        scene_s* scene = obj.o;
+        image_cps_s* image = scene_s_create_image( scene );
+        bcore_msg_fa( "writing '#<st_s*>'\n", png_file  );
+        image_cps_s_write_pnm( image, png_file->sc );
+        image_cps_s_discard( image );
     }
-
-    scene_s* scene = obj.o;
-
-//    bcore_txt_ml_to_stdout( sr_awc( scene ) );
-//    return 0;
-
-    bcore_msg_fa( "number of objects: #<sz_t>\n", scene_s_objects( scene ) );
-
-
-    bcore_msg_fa( "creating photon map:" );
-    clock_t time = clock();
-    scene_s_create_photon_map( scene );
-    time = clock() - time;
-    bcore_msg( "time = %5.3g cs\n", ( f3_t )time / ( CLOCKS_PER_SEC ) );
-
-//    image_cps_s* photon_image = scene_s_show_photon_map( scene );
-//    bcore_msg_fa( "writing '#<st_s*>'\n", map_file  );
-//    image_cps_s_write_pnm( photon_image, map_file->sc );
-//    image_cps_s_discard( photon_image );
-
-    bcore_msg_fa( "creating image:" );
-    time = clock();
-    image_cps_s* image = scene_s_create_image( scene );
-    time = clock() - time;
-    bcore_msg( "time = %5.3g cs\n", ( f3_t )time / ( CLOCKS_PER_SEC ) );
-    bcore_msg_fa( "writing '#<st_s*>'\n", png_file  );
-    image_cps_s_write_pnm( image, png_file->sc );
-    image_cps_s_discard( image );
 
     bcore_life_s_discard( l );
 

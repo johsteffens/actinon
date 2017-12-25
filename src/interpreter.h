@@ -38,22 +38,20 @@ typedef enum
     CL_OP_BEGIN, // begin of operators
     OP_DOT, // '.'
     OP_QUERY,  // '?'
-
     OP_MUL, // '*'
-    OP_MUL_ASSIGN, // '*='
-
     OP_DIV, // '/'
-    OP_DIV_ASSIGN, // '/='
-
     OP_ADD, // '+'
-    OP_ADD_ASSIGN, // '+='
-
     OP_SUB, // '-'
-    OP_SUB_ASSIGN, // '-='
 
+    CL_ASSIGN_OPS_BEGIN,
     OP_ASSIGN, // '='
-    OP_EQUAL,  // '=='
+    OP_MUL_ASSIGN, // '*='
+    OP_ADD_ASSIGN, // '+='
+    OP_SUB_ASSIGN, // '-='
+    OP_DIV_ASSIGN, // '/='
+    CL_ASSIGN_OPS_END,
 
+    OP_EQUAL,  // '=='
     OP_SMALLER, // '<'
     OP_UNEQUAL, // '<>'
     OP_SMALLER_EQUAL, // '<='
@@ -101,6 +99,8 @@ bl_t  meval_s_try_name(        meval_s* o, tp_t key );
 bl_t  meval_s_end_code(        meval_s* o );
 v3d_s meval_s_eval_v3d(        meval_s* o ); // error if expression does not yield a vector
 f3_t  meval_s_eval_f3 (        meval_s* o ); // error if expression does not yield f3_t
+sr_s  meval_s_eval_texture_field( meval_s* o ); // error if expression is not of spect_txm
+bl_t  meval_s_eval_bl(         meval_s* o ); // error if expression does not yield bl_t
 m3d_s meval_s_eval_rot(        meval_s* o ); // error if expression does not yield a rotation matrix
 sr_s  meval_s_eval(            meval_s* o, sr_s front_obj );
 
