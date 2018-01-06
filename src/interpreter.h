@@ -37,7 +37,6 @@ typedef enum
     CL_DATA, // data followed by index
     CL_NAME, // name followed by name hash
     CL_COMMA, // ','
-    CL_COLON, // ':'
     CL_SEMICOLON, // ';'
     CL_ROUND_BRACKET_OPEN,   // '('
     CL_ROUND_BRACKET_CLOSE,  // ')'
@@ -62,7 +61,7 @@ typedef enum
     OP_DIV_ASSIGN, // '/='
     CL_ASSIGN_OPS_END,
 
-    OP_EQUAL,  // '=='
+    OP_EQUAL,   // '=='
     OP_SMALLER, // '<'
     OP_UNEQUAL, // '<>'
     OP_SMALLER_EQUAL, // '<='
@@ -71,11 +70,16 @@ typedef enum
     OP_LARGER_EQUAL, // '>='
 
     // logic operators
-    OP_NOT,
-    OP_AND,
-    OP_OR,
-    OP_XOR,
+    OP_NOT,  // '!', 'NOT'
+    OP_AND,  // '&', 'AND'
+    OP_OR,   // '|', 'OR'
+    OP_XOR,  // '^', 'XOR'
+
+    // other operators
+    OP_CAT,  // ':' - catenation
+
     CL_OP_END, // end of operators
+
 
     /// flow controls
     CL_FL_BEGIN, // begin of flow-controls

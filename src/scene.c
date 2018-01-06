@@ -16,6 +16,8 @@
  */
 
 #include <math.h>
+#include <stdio.h>
+
 #include "bcore_threads.h"
 #include "bcore_sinks.h"
 #include "bcore_spect_inst.h"
@@ -24,11 +26,17 @@
 #include "bcore_spect_array.h"
 #include "bcore_txt_ml.h"
 #include "bcore_trait.h"
+#include "bcore_sources.h"
 
 #include "scene.h"
 #include "objects.h"
 #include "container.h"
 #include "gmath.h"
+
+/**********************************************************************************************************************/
+/// globals
+
+bl_t scene_s_overwrite_output_files_g = false;
 
 /**********************************************************************************************************************/
 /// photon_s
@@ -238,7 +246,7 @@ void scene_s_clear( scene_s* o )
 sz_t scene_s_push( scene_s* o, const sr_s* object )
 {
     tp_t type = sr_s_type( object );
-    if( bcore_trait_is( type, typeof( "spect_obj" ) ) )
+    if( bcore_trait_is_of( type, typeof( "spect_obj" ) ) )
     {
         if( obj_radiance( object->o ) > 0 )
         {
@@ -305,13 +313,8 @@ sr_s scene_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
         sr_s obj = meval_s_eval( ev, sr_null() );
         if( sr_s_type( &obj ) != TYPEOF_st_s ) meval_s_err_fa( ev, "String expected." );
 
-        {
-            const st_s* png_file = obj.o;
-            image_cps_s* image = scene_s_create_image( o );
-            bcore_msg_fa( "writing '#<st_s*>'\n", png_file  );
-            image_cps_s_write_pnm( image, png_file->sc );
-            image_cps_s_discard( image );
-        }
+        const st_s* png_file = obj.o;
+        scene_s_create_image_file( o, png_file->sc );
 
         sr_down( obj );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
@@ -324,24 +327,26 @@ sr_s scene_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
     return sr_null();
 }
 
-f3_t scene_s_hit( const scene_s* o, const ray_s* r, vc_t* hit_obj, bl_t* is_light )
+f3_t scene_s_hit( const scene_s* o, const ray_s* r, v3d_s* p_nor, vc_t* hit_obj )
 {
     f3_t min_a = f3_inf;
     f3_t a;
     vc_t hit_obj_l;
 
-    if( ( a = compound_s_fwd_hit( &o->light, r, &hit_obj_l ) ) < min_a )
+    v3d_s nor;
+
+    if( ( a = compound_s_ray_hit( &o->light, r, &nor, &hit_obj_l ) ) < min_a )
     {
         min_a = a;
         if( hit_obj ) *hit_obj = hit_obj_l;
-        if( is_light ) *is_light = true;
+        if( p_nor ) *p_nor = nor;
     }
 
-    if( ( a = compound_s_fwd_hit( &o->matter, r, &hit_obj_l ) ) < min_a )
+    if( ( a = compound_s_ray_hit( &o->matter, r, &nor, &hit_obj_l ) ) < min_a )
     {
         min_a = a;
         if( hit_obj ) *hit_obj = hit_obj_l;
-        if( is_light ) *is_light = false;
+        if( p_nor ) *p_nor = nor;
     }
 
     return min_a;
@@ -352,11 +357,10 @@ void scene_s_send_photon( scene_s* scene, const ray_s* ray, cl_s color, sz_t dep
 {
     if( depth == 0 ) return;
     obj_hdr_s* hit_obj;
-    f3_t offs = compound_s_fwd_hit( &scene->matter, ray, ( vc_t* )&hit_obj );
+    v3d_s nor;
+    f3_t offs = compound_s_ray_hit( &scene->matter, ray, &nor, ( vc_t* )&hit_obj );
     if( offs >= scene->photon_max_travel_distance ) return;
     v3d_s pos = ray_s_pos( ray, offs );
-
-    v3d_s nor = obj_normal( hit_obj, pos );
 
     if( v3d_s_mlv( ray->d, nor ) > 0 && hit_obj->prp.transparent ) // ray traveled through object
     {
@@ -382,7 +386,6 @@ void scene_s_send_photon( scene_s* scene, const ray_s* ray, cl_s color, sz_t dep
         scene_s_send_photon( scene, &out_r, v3d_s_mlf( color, reflectance ), depth - 1 );
         if( transmittance > 0 && hit_obj->prp.transparent )
         {
-
             scene_s_send_photon( scene, &out_t, v3d_s_mlf( color, transmittance ), depth - 1 );
         }
     }
@@ -401,7 +404,7 @@ void scene_s_send_photon( scene_s* scene, const ray_s* ray, cl_s color, sz_t dep
     }
 }
 
-cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, f3_t offs, sz_t depth, f3_t intensity )
+cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, f3_t offs, v3d_s nor, sz_t depth, f3_t intensity )
 {
     cl_s lum = { 0, 0, 0 };
     if( depth == 0 || intensity < scene->trace_min_intensity ) return lum;
@@ -426,13 +429,13 @@ cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, 
         ray_s out_t;
         out_r.p = pos;
         out_t.p = ray_s_pos( ray, offs + 2.0 * f3_eps );
-        v3d_s nor = obj_normal( obj, pos );
         compute_refraction( ray->d, nor, obj->prp.refractive_index, &reflectance, &out_r.d, &transmittance, transparent ? &out_t.d : NULL );
-        vc_t hit_obj = NULL;
+        vc_t  hit_obj = NULL;
+        v3d_s hit_nor;
         f3_t a;
-        if ( ( a = scene_s_hit( scene, &out_r, &hit_obj, NULL ) ) < f3_inf )
+        if ( ( a = scene_s_hit( scene, &out_r, &hit_nor, &hit_obj ) ) < f3_inf )
         {
-            lum = scene_s_lum( scene, hit_obj, &out_r, a, depth - 1, reflectance * intensity );
+            lum = scene_s_lum( scene, hit_obj, &out_r, a, hit_nor, depth - 1, reflectance * intensity );
         }
         else
         {
@@ -441,24 +444,26 @@ cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, 
 
         if( transparent )
         {
-            if ( ( a = scene_s_hit( scene, &out_t, &hit_obj, NULL ) ) < f3_inf )
+            if( obj_side( obj, out_r.p ) * obj_side( obj, out_t.p ) == -1 ) // truly stepping through surface
             {
-                lum = v3d_s_add( lum, scene_s_lum( scene, hit_obj, &out_t, a, depth - 1, transmittance * intensity ) );
-            }
-            else
-            {
-                lum = v3d_s_add( lum, v3d_s_mlf( scene->background_color, transmittance * intensity ) );
-            }
+                if ( ( a = scene_s_hit( scene, &out_t, &hit_nor, &hit_obj ) ) < f3_inf )
+                {
+                    lum = v3d_s_add( lum, scene_s_lum( scene, hit_obj, &out_t, a, hit_nor, depth - 1, transmittance * intensity ) );
+                }
+                else
+                {
+                    lum = v3d_s_add( lum, v3d_s_mlf( scene->background_color, transmittance * intensity ) );
+                }
 
-
-            if( v3d_s_mlv( ray->d, nor ) > 0 ) // exiting object
-            {
-                f3_t rf = obj->prp.color.x > 0 ? pow( 0.5, offs / obj->prp.color.x ) : 0.0;
-                f3_t gf = obj->prp.color.y > 0 ? pow( 0.5, offs / obj->prp.color.y ) : 0.0;
-                f3_t bf = obj->prp.color.z > 0 ? pow( 0.5, offs / obj->prp.color.z ) : 0.0;
-                lum.x *= rf;
-                lum.y *= gf;
-                lum.z *= bf;
+                if( v3d_s_mlv( ray->d, nor ) > 0 ) // exiting object
+                {
+                    f3_t rf = obj->prp.color.x > 0 ? pow( 0.5, offs / obj->prp.color.x ) : 0.0;
+                    f3_t gf = obj->prp.color.y > 0 ? pow( 0.5, offs / obj->prp.color.y ) : 0.0;
+                    f3_t bf = obj->prp.color.z > 0 ? pow( 0.5, offs / obj->prp.color.z ) : 0.0;
+                    lum.x *= rf;
+                    lum.y *= gf;
+                    lum.z *= bf;
+                }
             }
         }
     }
@@ -466,13 +471,16 @@ cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, 
     /// direct light
     if( scene->direct_samples > 0 && !transparent )
     {
-        ray_s surface = { .p = pos, .d = obj_normal( obj, surface.p ) };
+        bl_t outside = obj_side( obj, pos ) == 1;
+        ray_s surface = { .p = pos, .d = outside ? nor : v3d_s_neg( nor ) };
 
         /// random seed
         u2_t rv = surface.p.x * 32944792 + surface.p.y * 76403048 + surface.p.z * 24349373;
 
         /// peripheral light
         cl_s cl_per = { 0, 0, 0 };
+
+        f3_t trans_intensity = intensity * transmittance;
 
         /// process sources with radiance directly  (light-sources)
         for( sz_t i = 0; i < scene->light.size; i++ )
@@ -483,31 +491,33 @@ cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, 
             ray_cone_s fov_to_src = obj_fov( light_src, pos );
             m3d_s src_con = m3d_s_transposed( m3d_s_con_z( fov_to_src.ray.d ) );
             f3_t cyl_hgt = areal_coverage( fov_to_src.cos_rs );
-            cl_s color = v3d_s_mlf( obj_color( light_src, light_src->prp.pos ), light_src->prp.radiance * intensity );
+            cl_s color = obj_color( light_src, light_src->prp.pos );
             bcore_arr_sz_s* idx_arr = compound_s_in_fov_arr( &scene->matter, &fov_to_src );
-            for( sz_t j = 0; j < scene->direct_samples; j++ )
+            sz_t direct_samples = scene->direct_samples * trans_intensity;
+            direct_samples = ( direct_samples == 0 ) ? 1 : direct_samples;
+            for( sz_t j = 0; j < direct_samples; j++ )
             {
                 out.d = m3d_s_mlv( &src_con, v3d_s_rsc( &rv, cyl_hgt ) );
                 f3_t weight = v3d_s_mlv( out.d, surface.d );
                 if( weight <= 0 ) continue;
 
-                f3_t a = obj_fwd_hit( light_src, &out );
+                f3_t a = obj_ray_hit( light_src, &out, NULL );
                 if( a >= f3_inf ) continue;
-                if( compound_s_idx_fwd_hit( &scene->matter, idx_arr, &out, NULL ) > a )
+                if( compound_s_idx_ray_hit( &scene->matter, idx_arr, &out, NULL, NULL ) > a )
                 {
                     v3d_s hit_pos = ray_s_pos( &out, a );
 
                     f3_t diff_sqr = v3d_s_diff_sqr( hit_pos, light_src->prp.pos );
                     f3_t local_intensity = ( diff_sqr > 0 ) ? ( light_src->prp.radiance / diff_sqr ) : f3_mag;
 
-                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( color, local_intensity * weight ) );
+                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( color, local_intensity * weight * trans_intensity ) );
                 }
             }
 
             bcore_arr_sz_s_discard( idx_arr );
 
-            // factor 2 arises from the weight distribution across the half-sphere
-            cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 2.0 * cyl_hgt / scene->direct_samples ) );
+            // factor 2 arises from weight distribution across the half-sphere
+            cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 2.0 * cyl_hgt / direct_samples ) );
 
         }
 
@@ -518,20 +528,33 @@ cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, 
             cl_s cl_sum = { 0, 0, 0 };
             ray_s out = surface;
             m3d_s out_con = m3d_s_transposed( m3d_s_con_z( surface.d ) );
-            for( sz_t i = 0; i < scene->path_samples; i++ )
+
+            f3_t per_energy = v3d_s_sqr( cl_per );
+            per_energy = per_energy > 0.01 ? per_energy : 0.01;
+
+            sz_t path_samples = scene->path_samples * trans_intensity;
+            path_samples = ( path_samples == 0 ) ? 1 : path_samples;
+
+            for( sz_t i = 0; i < path_samples; i++ )
             {
                 out.d = m3d_s_mlv( &out_con, v3d_s_rsc( &rv, 1.0 ) );
                 f3_t weight = v3d_s_mlv( out.d, surface.d );
                 if( weight <= 0 ) continue;
-                vc_t hit_obj = NULL;
-                f3_t a = compound_s_fwd_hit( &scene->matter, &out, &hit_obj );
+                vc_t  hit_obj = NULL;
+                v3d_s hit_nor;
+                f3_t a = compound_s_ray_hit( &scene->matter, &out, &hit_nor, &hit_obj );
                 if( a < f3_inf && hit_obj )
                 {
-                    cl_sum = v3d_s_add( cl_sum, scene_s_lum( scene, hit_obj, &out, a, depth - 10, weight * intensity ) );
+                    cl_s lum = scene_s_lum( scene, hit_obj, &out, a, hit_nor, depth - 10, weight * trans_intensity );
+                    cl_sum = v3d_s_add( cl_sum, lum );
+                }
+                else
+                {
+                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( scene->background_color, weight * trans_intensity ) );
                 }
             }
-            // factor 2 arises from the weight distribution across the half-sphere
-            cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 2.0 / scene->path_samples ) );
+            // factor 2 arises from weight distribution across the half-sphere
+            cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 2.0 / path_samples ) );
         }
         // indirect light via photon map
         else if( scene->photon_map.size > 0 )
@@ -555,11 +578,11 @@ cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, 
                 if( weight <= 0 ) continue;
 
                 vc_t hit_obj = NULL;
-                f3_t a = compound_s_fwd_hit( &scene->matter, &out, &hit_obj );
+                f3_t a = compound_s_ray_hit( &scene->matter, &out, NULL, &hit_obj );
 
                 if( a >= f3_inf || hit_obj == obj )
                 {
-                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( ph.c, weight * intensity ) );
+                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( ph.c, weight * intensity * transmittance ) );
                 }
             }
             cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 1.0 / scene->photon_samples ) );
@@ -711,7 +734,7 @@ void lum_map_s_push_arr( lum_map_s* o, const lum_arr_s* lum_arr )
     for( sz_t i = 0; i < lum_arr->size; i++ ) lum_map_s_push( o, lum_arr->data[ i ] );
 }
 
-lum_s lum_map_s_get_avg( lum_map_s* o, s2_t x, s2_t y )
+lum_s lum_map_s_get_plain_avg( const lum_map_s* o, s2_t x, s2_t y )
 {
     tp_t key = bcore_tp_fold_u2( bcore_tp_fold_u2( bcore_tp_init(), x ), y );
     sr_s* sr = bcore_hmap_tp_sr_s_get( &o->map, key );
@@ -816,14 +839,15 @@ vd_t lum_machine_s_func( lum_machine_s* o )
         ray.p = o->scene->camera_position;
         ray.d = m3d_s_mlv( &camera_rotation, d );
 
-        vc_t hit_obj = NULL;
-        f3_t offs = scene_s_hit( o->scene, &ray, &hit_obj, NULL );
+        vc_t  hit_obj = NULL;
+        v3d_s hit_nor;
+        f3_t offs = scene_s_hit( o->scene, &ray, &hit_nor, &hit_obj );
 
         lum->clr = o->scene->background_color;
 
         if( offs < f3_inf && hit_obj )
         {
-            lum->clr = scene_s_lum( o->scene, hit_obj, &ray, offs, o->scene->trace_depth, 1.0 );
+            lum->clr = scene_s_lum( o->scene, hit_obj, &ray, offs, hit_nor, o->scene->trace_depth, 1.0 );
         }
     }
     return NULL;
@@ -840,8 +864,60 @@ void lum_machine_s_run( const scene_s* scene, lum_arr_s* lum_arr )
     lum_machine_s_discard( machine );
 }
 
-image_cps_s* scene_s_create_image( scene_s* o )
+f3_t lum_dev( const scene_s* o, v3d_s ref, const lum_map_s* lum_map, s3_t x, s3_t y )
 {
+    if( x < 0 || x >= o->image_width  ) return 0;
+    if( y < 0 || y >= o->image_height ) return 0;
+    return v3d_s_sqr( v3d_s_sub( ref, lum_map_s_get_plain_avg( lum_map, x, y ).clr ) );
+}
+
+f3_t lum_sqr_grad( const scene_s* o, const lum_map_s* lum_map, s3_t x, s3_t y )
+{
+    f3_t g0 = 0;
+    f3_t g1 = 0;
+    v3d_s v = lum_map_s_get_plain_avg( lum_map, x, y ).clr;
+    g1 = lum_dev( o, v, lum_map, x - 1, y - 1 ); g0 = g1 > g0 ? g1 : g0;
+    g1 = lum_dev( o, v, lum_map, x - 1, y + 0 ); g0 = g1 > g0 ? g1 : g0;
+    g1 = lum_dev( o, v, lum_map, x - 1, y + 1 ); g0 = g1 > g0 ? g1 : g0;
+    g1 = lum_dev( o, v, lum_map, x + 0, y - 1 ); g0 = g1 > g0 ? g1 : g0;
+    g1 = lum_dev( o, v, lum_map, x + 0, y + 1 ); g0 = g1 > g0 ? g1 : g0;
+    g1 = lum_dev( o, v, lum_map, x + 1, y - 1 ); g0 = g1 > g0 ? g1 : g0;
+    g1 = lum_dev( o, v, lum_map, x + 1, y + 0 ); g0 = g1 > g0 ? g1 : g0;
+    g1 = lum_dev( o, v, lum_map, x + 1, y + 1 ); g0 = g1 > g0 ? g1 : g0;
+    return g0;
+}
+
+void scene_s_create_image_file_from_lum_map( const scene_s* o, const lum_map_s* lum_map, sc_t file )
+{
+    image_cl_s* image = image_cl_s_create();
+    image_cl_s_set_size( image, o->image_width, o->image_height, cl_black() );
+    image_cps_s* image_cps = image_cps_s_create();
+
+    for( sz_t j = 0; j < o->image_height; j++ )
+    {
+        for( sz_t i = 0; i < o->image_width; i++ )
+        {
+            image_cl_s_set_pixel( image, i, j, lum_map_s_get_plain_avg( lum_map, i, j ).clr );
+        }
+    }
+    image_cl_s_saturate( image, o->gamma );
+    image_cps_s_copy_cl( image_cps, image );
+    image_cps_s_write_pnm( image_cps, file );
+    st_s_print_fa( "  Hash: #<tp_t>", image_cps_s_hash( image_cps ) );
+
+    image_cps_s_discard( image_cps );
+    image_cl_s_discard( image );
+}
+
+void scene_s_create_image_file( scene_s* o, sc_t file )
+{
+    if( bcore_source_file_s_exists( file ) && !scene_s_overwrite_output_files_g )
+    {
+        bcore_msg_fa( "File '#<sc_t>' exists. Overwrite it? [Y|N]:", file );
+        char buf[ 2 ];
+        if( fgets( buf, 2, stdin )[ 0 ] != 'Y' ) abort();
+    }
+
     bcore_life_s* l = bcore_life_s_create();
 
     bcore_msg_fa( "Number of objects: #<sz_t>\n", scene_s_objects( o ) );
@@ -877,26 +953,16 @@ image_cps_s* scene_s_create_image( scene_s* o )
     sz_t rnd_samples = o->gradient_samples;
     f3_t sqr_gradient_theshold = f3_sqr( o->gradient_threshold );
 
+    scene_s_create_image_file_from_lum_map( o, lum_map, file );
     for( sz_t k = 0; k < o->gradient_cycles; k++ )
     {
-        st_s_print_fa( "\n\tgradient pass #<sz_t>: ", k + 1 );
+        st_s_print_fa( "\n\tgradient pass #pl3 {#<sz_t>}: ", k + 1 );
         lum_arr_s_clear( lum_arr );
-        for( sz_t j = 1; j < o->image_height - 1; j++ )
+        for( s3_t j = 0; j < o->image_height; j++ )
         {
-            for( sz_t i = 1; i < o->image_width - 1; i++ )
+            for( s3_t i = 0; i < o->image_width; i++ )
             {
-                f3_t g = 0;
-                f3_t g1 = 0;
-                v3d_s v = lum_map_s_get_avg( lum_map, i + 0, j + 0 ).clr;
-                g1 = v3d_s_sqr( v3d_s_sub( v, lum_map_s_get_avg( lum_map, i - 1, j - 1 ).clr ) ); g = g1 > g ? g1 : g;
-                g1 = v3d_s_sqr( v3d_s_sub( v, lum_map_s_get_avg( lum_map, i - 1, j + 0 ).clr ) ); g = g1 > g ? g1 : g;
-                g1 = v3d_s_sqr( v3d_s_sub( v, lum_map_s_get_avg( lum_map, i - 1, j + 1 ).clr ) ); g = g1 > g ? g1 : g;
-                g1 = v3d_s_sqr( v3d_s_sub( v, lum_map_s_get_avg( lum_map, i - 0, j - 1 ).clr ) ); g = g1 > g ? g1 : g;
-                g1 = v3d_s_sqr( v3d_s_sub( v, lum_map_s_get_avg( lum_map, i - 0, j + 1 ).clr ) ); g = g1 > g ? g1 : g;
-                g1 = v3d_s_sqr( v3d_s_sub( v, lum_map_s_get_avg( lum_map, i + 1, j - 1 ).clr ) ); g = g1 > g ? g1 : g;
-                g1 = v3d_s_sqr( v3d_s_sub( v, lum_map_s_get_avg( lum_map, i + 1, j + 0 ).clr ) ); g = g1 > g ? g1 : g;
-                g1 = v3d_s_sqr( v3d_s_sub( v, lum_map_s_get_avg( lum_map, i + 1, j + 1 ).clr ) ); g = g1 > g ? g1 : g;
-                if( g > sqr_gradient_theshold )
+                if( lum_sqr_grad( o, lum_map, i, j ) > sqr_gradient_theshold )
                 {
                     for( sz_t k = 0; k < rnd_samples; k++ )
                     {
@@ -909,30 +975,16 @@ image_cps_s* scene_s_create_image( scene_s* o )
         }
         lum_machine_s_run( o, lum_arr );
         lum_map_s_push_arr( lum_map, lum_arr );
+        scene_s_create_image_file_from_lum_map( o, lum_map, file );
     }
     time = clock() - time;
     bcore_msg( "\n%5.3g cs\n", ( f3_t )time / ( CLOCKS_PER_SEC ) );
 
-    image_cl_s* image = bcore_life_s_push_aware( l, image_cl_s_create() );
-    image_cl_s_set_size( image, o->image_width, o->image_height, cl_black() );
-    for( sz_t j = 0; j < o->image_height; j++ )
-    {
-        for( sz_t i = 0; i < o->image_width; i++ )
-        {
-            image_cl_s_set_pixel( image, i, j, lum_map_s_get_avg( lum_map, i, j ).clr );
-        }
-    }
-
-    image_cl_s_saturate( image, o->gamma );
-    image_cps_s* image_cps = image_cps_s_create();
-    image_cps_s_copy_cl( image_cps, image );
-
-    st_s_print_fa( "Hash: #<tp_t>\n", image_cps_s_hash( image_cps ) );
 
     scene_s_clear_photon_map( o );
     bcore_life_s_discard( l );
-    return image_cps;
 }
+
 
 /**********************************************************************************************************************/
 

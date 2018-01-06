@@ -32,6 +32,7 @@
 #include "closures.h"
 #include "gmath.h"
 #include "quicktypes.h"
+#include "distance.h"
 
 void selftest( const char* name )
 {
@@ -50,46 +51,58 @@ vd_t signal( tp_t target, tp_t signal, vd_t object )
     if( ( ret = container_signal(   target, signal, object ) ) ) return ret;
     if( ( ret = closures_signal(    target, signal, object ) ) ) return ret;
     if( ( ret = gmath_signal(       target, signal, object ) ) ) return ret;
+    if( ( ret = distance_signal(    target, signal, object ) ) ) return ret;
     return ret;
+}
+
+void run_selftest()
+{
+    bcore_library_init( signal );
+    st_s_print_d( signal( typeof( "all" ), typeof( "selftest" ), NULL ) );
+    bcore_library_down( false );
+    exit( 0 );
+}
+
+void run_quicktypes()
+{
+    bcore_library_init( signal );
+    quicktypes_to_stdout( NULL );
+    bcore_library_down( false );
+    exit( 0 );
 }
 
 int main( int argc, const char** argv )
 {
     bcore_library_init( signal );
-    {
-//        st_s_print_d( signal( typeof( "all" ), typeof( "selftest" ), NULL ) );
-//        quicktypes_to_stdout( NULL );
-//        bcore_library_down( false );
-//        return 0;
-    }
 
     bcore_msg( "RAYFLUX: Ray-tracer.\n" );
     bcore_msg( "Copyright (C) 2017 Johannes B. Steffens.\n\n" );
 
     if( argc < 2 )
     {
-        bcore_msg( "Format: rayflux <config file>\n" );
+        bcore_msg( "Format: rayflux <script file> [-f]\n" );
         return 1;
     }
 
     bcore_life_s* l = bcore_life_s_create();
     st_s* in_file  = bcore_life_s_push_aware( l, st_s_create_sc( argv[ 1 ] ) );
-    st_s* out_name = bcore_life_s_push_aware( l, st_s_create_sc( in_file->sc ) );
 
-    st_s* png_file = bcore_life_s_push_aware( l, st_s_create_fa( "#<st_s*>.pnm", out_name ) );
-//    st_s* map_file = bcore_life_s_push_aware( l, st_s_create_fa( "#<st_s*>_photon.pnm", out_name ) );
-
-    bcore_msg_fa( "Processing '#<st_s*>'\n", in_file  );
-    sr_s obj = bcore_life_s_push_sr( l, bcore_interpret_auto_file( in_file->sc ) );
-    if( sr_s_type( &obj ) == typeof( "scene_s" ) )
+    for( sz_t i = 2; i < argc; i++ )
     {
-        scene_s* scene = obj.o;
-        image_cps_s* image = scene_s_create_image( scene );
-        bcore_msg_fa( "writing '#<st_s*>'\n", png_file  );
-        image_cps_s_write_pnm( image, png_file->sc );
-        image_cps_s_discard( image );
+        st_s* arg = st_s_create_sc( argv[ i ] );
+        if( st_s_equal_sc( arg, "-f" ) )
+        {
+            scene_s_overwrite_output_files_g = true;
+        }
+        else
+        {
+            bcore_err_fa( "Unknown command option '#<st_s*>'\n", arg );
+        }
+        st_s_discard( arg );
     }
 
+    bcore_msg_fa( "Processing '#<st_s*>'\n", in_file  );
+    bcore_life_s_push_sr( l, bcore_interpret_auto_file( in_file->sc ) );
     bcore_life_s_discard( l );
 
     bcore_library_down( false );

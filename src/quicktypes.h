@@ -56,6 +56,7 @@ void quicktypes_to_stdout( tp_t (*hash)( sc_t name ) );
 #define TYPEOF_AND                  2439409094
 #define TYPEOF_OR                   2095360516
 #define TYPEOF_XOR                  1330009950
+#define TYPEOF_CAT                  1229878055
 #define TYPEOF_if                    959999494
 #define TYPEOF_while                 231090382
 #define TYPEOF_else                 3183434736

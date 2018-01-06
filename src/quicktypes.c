@@ -67,6 +67,7 @@ static sr_s typelist()
     bcore_array_q_push_sc( &list, "AND" );
     bcore_array_q_push_sc( &list, "OR" );
     bcore_array_q_push_sc( &list, "XOR" );
+    bcore_array_q_push_sc( &list, "CAT" );
 
     bcore_array_q_push_sc( &list, "if" );
     bcore_array_q_push_sc( &list, "while" );

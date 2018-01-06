@@ -76,7 +76,7 @@ void map_s_move( map_s* o, const v3d_s* vec )
             {
                 arr_s_move( sr->o, vec );
             }
-            else if( bcore_trait_is( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
+            else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
             {
                 obj_move( sr->o, vec );
             }
@@ -101,7 +101,7 @@ void map_s_rotate( map_s* o, const m3d_s* mat )
             {
                 arr_s_rotate( sr->o, mat );
             }
-            else if( bcore_trait_is( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
+            else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
             {
                 obj_rotate( sr->o, mat );
             }
@@ -126,7 +126,7 @@ void map_s_scale( map_s* o, f3_t fac )
             {
                 arr_s_scale( sr->o, fac );
             }
-            else if( bcore_trait_is( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
+            else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
             {
                 obj_scale( sr->o, fac );
             }
@@ -217,6 +217,19 @@ void arr_s_push( arr_s* o, sr_s obj )
     bcore_arr_sr_s_push_sr( &o->a, obj );
 }
 
+void arr_s_cat( arr_s* o, const arr_s* arr )
+{
+    for( sz_t i = 0; i < arr->a.size; i++ )
+    {
+        arr_s_push( o, sr_cw( arr->a.data[ i ] ) );
+    }
+}
+
+void arr_s_clear( arr_s* o )
+{
+    bcore_arr_sr_s_clear( &o->a );
+}
+
 void arr_s_move( arr_s* o, const v3d_s* vec )
 {
     sz_t size = arr_s_get_size( o );
@@ -234,7 +247,7 @@ void arr_s_move( arr_s* o, const v3d_s* vec )
             {
                 map_s_move( sr->o, vec );
             }
-            else if( bcore_trait_is( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
+            else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
             {
                 obj_move( sr->o, vec );
             }
@@ -259,7 +272,7 @@ void arr_s_rotate( arr_s* o, const m3d_s* mat )
             {
                 map_s_rotate( sr->o, mat );
             }
-            else if( bcore_trait_is( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
+            else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
             {
                 obj_rotate( sr->o, mat );
             }
@@ -284,7 +297,7 @@ void arr_s_scale( arr_s* o, f3_t fac )
             {
                 map_s_scale( sr->o, fac );
             }
-            else if( bcore_trait_is( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
+            else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
             {
                 obj_scale( sr->o, fac );
             }
@@ -325,6 +338,18 @@ sr_s arr_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
     {
         meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
         arr_s_scale( o, meval_s_eval_f3( ev ) );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == typeof( "size" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        obj = sr_s3( arr_s_get_size( o ) );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == TYPEOF_clear )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        arr_s_clear( o );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
     else

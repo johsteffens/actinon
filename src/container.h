@@ -59,6 +59,7 @@ sz_t arr_s_get_size( const arr_s* o );
 sr_s* arr_s_get( arr_s* o, sz_t idx );
 void arr_s_set( arr_s* o, sz_t idx, sr_s obj );
 void arr_s_push( arr_s* o, sr_s obj );
+void arr_s_cat( arr_s* o, const arr_s* arr ); // catenates arrays
 
 void arr_s_move(   arr_s* o, const v3d_s* vec );
 void arr_s_rotate( arr_s* o, const m3d_s* mat );

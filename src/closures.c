@@ -152,6 +152,39 @@ DEFINE_STD_CLOSURE( create_string_fa_s, "v3d_s create_string_fa_s( st_s format, 
 
 /**********************************************************************************************************************/
 
+/// sqrt( x )
+static sr_s sqrt_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( sqrt( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+}
+
+DEFINE_STD_CLOSURE( sqrt_s, "f3_t sqrt_s( num val )", sqrt_s_call )
+
+/**********************************************************************************************************************/
+
+/// exp( x )
+static sr_s exp_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( exp( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+}
+
+DEFINE_STD_CLOSURE( exp_s, "f3_t exp_s( num val )", exp_s_call )
+
+/**********************************************************************************************************************/
+
+/// pow( x, y )
+static sr_s pow_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 2 );
+    return sr_f3( pow( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ), sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) ) ) );
+}
+
+DEFINE_STD_CLOSURE( pow_s, "f3_t pow_s( num base, num exp )", pow_s_call )
+
+/**********************************************************************************************************************/
+
 vd_t closures_signal( tp_t target, tp_t signal, vd_t object )
 {
     if( target != typeof( "all" ) && target != typeof( "closures" ) ) return NULL;
@@ -170,6 +203,9 @@ vd_t closures_signal( tp_t target, tp_t signal, vd_t object )
         bcore_flect_define_creator( typeof( "roty_s"             ), roty_s_create_self );
         bcore_flect_define_creator( typeof( "rotz_s"             ), rotz_s_create_self );
         bcore_flect_define_creator( typeof( "create_string_fa_s" ), create_string_fa_s_create_self );
+        bcore_flect_define_creator( typeof( "sqrt_s"             ), sqrt_s_create_self );
+        bcore_flect_define_creator( typeof( "exp_s"              ), exp_s_create_self );
+        bcore_flect_define_creator( typeof( "pow_s"              ), pow_s_create_self  );
     }
 
     return NULL;

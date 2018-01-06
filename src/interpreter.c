@@ -43,7 +43,6 @@ sc_t code_symbol( code_s o )
     switch( o )
     {
         case CL_COMMA:     return ","; break;
-        case CL_COLON:     return ":"; break;
         case CL_SEMICOLON: return ";"; break;
         case CL_ROUND_BRACKET_OPEN:   return "("; break;
         case CL_ROUND_BRACKET_CLOSE:  return ")"; break;
@@ -70,6 +69,7 @@ sc_t code_symbol( code_s o )
         case OP_AND:           return "AND"; break;
         case OP_OR:            return "OR"; break;
         case OP_XOR:           return "XOR"; break;
+        case OP_CAT:           return "CAT"; break;
         default:               return ""; break;
     }
     return "";
@@ -77,8 +77,6 @@ sc_t code_symbol( code_s o )
 
 /**********************************************************************************************************************/
 // mcode_s: metacode
-
-
 
 #define TYPEOF_mcode_s typeof( "mcode_s" )
 typedef struct mcode_s
@@ -248,6 +246,7 @@ void mcode_s_parse( mcode_s* o, sr_s* src )
                 case TYPEOF_OR:    mcode_s_push_code( o, OP_OR          ); break;
                 case TYPEOF_XOR:   mcode_s_push_code( o, OP_XOR         ); break;
                 case TYPEOF_NOT:   mcode_s_push_code( o, OP_NOT         ); break;
+                case TYPEOF_CAT:   mcode_s_push_code( o, OP_CAT         ); break;
                 case TYPEOF_if:
                 {
                     mcode_s_push_code( o, FL_IF );
@@ -291,7 +290,7 @@ void mcode_s_parse( mcode_s* o, sr_s* src )
             st_s_discard( name );
         }
         // operators
-        else if( bcore_source_q_parse_bl_fa( src, "#?([0]=='!'||[0]=='?'||[0]=='.'||[0]=='='||[0]=='+'||[0]=='-'||[0]=='*'||[0]=='/'||[0]=='>'||[0]=='<'||[0]=='&'||[0]=='|')" ) ) // operator
+        else if( bcore_source_q_parse_bl_fa( src, "#?([0]=='!'||[0]=='?'||[0]=='.'||[0]=='='||[0]=='+'||[0]=='-'||[0]=='*'||[0]=='/'||[0]=='>'||[0]=='<'||[0]=='&'||[0]=='|'||[0]==':')" ) ) // operator
         {
             char c = bcore_source_q_get_u0( src );
             switch( c )
@@ -307,20 +306,19 @@ void mcode_s_parse( mcode_s* o, sr_s* src )
                 case '<': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_SMALLER_EQUAL :
                                                 bcore_source_q_parse_bl_fa( src, "#?'>'" ) ? OP_UNEQUAL       : OP_SMALLER ); break;
                 case '>': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_LARGER_EQUAL  : OP_LARGER ); break;
-                case '&': mcode_s_push_code( o , OP_AND ); break;
-                case '|': mcode_s_push_code( o , OP_OR  ); break;
-                case '^': mcode_s_push_code( o , OP_XOR ); break;
+                case '&': mcode_s_push_code( o, OP_AND ); break;
+                case '|': mcode_s_push_code( o, OP_OR  ); break;
+                case '^': mcode_s_push_code( o, OP_XOR ); break;
+                case ':': mcode_s_push_code( o, OP_CAT ); break;
                 default : break;
             }
         }
         // controls
-        else if( bcore_source_q_parse_bl_fa( src, "#?([0]==':'||[0]==';'||[0]==','||[0]=='('||[0]==')'||[0]=='['||[0]==']')" ) ) // controls
+        else if( bcore_source_q_parse_bl_fa( src, "#?([0]==';'||[0]==','||[0]=='('||[0]==')'||[0]=='['||[0]==']')" ) ) // controls
         {
             char c = bcore_source_q_get_u0( src );
             switch( c )
             {
-                case ':': mcode_s_push_code( o, CL_COLON ); break;
-
                 case ';':
                 {
                     if( jmp_buf->size > 0 )
@@ -352,7 +350,7 @@ void mcode_s_parse( mcode_s* o, sr_s* src )
         {
             break;
         }
-        else if( bcore_source_q_parse_bl_fa( src, "#?'#include '" ) ) // include file (c-style syntax) (interpreted as block)
+        else if( bcore_source_q_parse_bl_fa( src, "#?'#include' " ) ) // include file (c-style syntax) (interpreted as block)
         {
             st_s* file = st_s_create();
             bcore_source_q_parse_fa( src, "#string ", file );
@@ -383,6 +381,10 @@ void mcode_s_parse( mcode_s* o, sr_s* src )
             mcode_s_push_code( o, o->data.size );
 
             bcore_arr_sr_s_push_sr( &o->data, sr_asd( code ) );
+        }
+        else if( bcore_source_q_parse_bl_fa( src, "#?'#source_file_name' " ) ) // constant representing the file name of the current script file
+        {
+            mcode_s_push_data( o, sr_asd( st_s_create_sc( bcore_source_q_get_file( src ) ) ) );
         }
         else
         {
@@ -554,6 +556,21 @@ static sr_s meval_s_mul( meval_s* o, sr_s v1, sr_s v2 )
             case TYPEOF_m3d_s: r = sr_create( TYPEOF_m3d_s ); *( m3d_s* )r.o = m3d_s_mlm( v1.o, v2.o ); break;
         }
         break;
+
+        default:
+        {
+            if( bcore_trait_is_of( t1, TYPEOF_spect_obj ) )
+            {
+                switch( t2 )
+                {
+                    case TYPEOF_s3_t:  r = sr_clone( v1 ); v1 = sr_null(); obj_scale(  r.o, *( s3_t* )v2.o ); break;
+                    case TYPEOF_f3_t:  r = sr_clone( v1 ); v1 = sr_null(); obj_scale(  r.o, *( f3_t* )v2.o ); break;
+                    case TYPEOF_m3d_s: r = sr_clone( v1 ); v1 = sr_null(); obj_rotate( r.o,  ( m3d_s* )v2.o ); break;
+                }
+            }
+        }
+        break;
+
     }
 
     if( !r.o )
@@ -620,6 +637,19 @@ static sr_s meval_s_add( meval_s* o, sr_s v1, sr_s v2 )
             }
         }
         break;
+
+        default:
+        {
+            if( bcore_trait_is_of( t1, TYPEOF_spect_obj ) )
+            {
+                switch( t2 )
+                {
+                    case TYPEOF_v3d_s: r = sr_clone( v1 ); v1 = sr_null(); obj_move(  r.o,  ( v3d_s* )v2.o ); break;
+                }
+            }
+        }
+        break;
+
     }
 
     if( !r.o )
@@ -710,17 +740,23 @@ static sr_s meval_s_inverse( meval_s* o, sr_s v1 )
     return r;
 }
 
-static bl_t meval_s_logic_and( meval_s* o, sr_s v1, sr_s v2 )
+static sr_s meval_s_logic_and( meval_s* o, sr_s v1, sr_s v2 )
 {
-    bl_t r = false;
+    sr_s r = sr_null();
+    tp_t t1 = sr_s_type( &v1 );
+    tp_t t2 = sr_s_type( &v2 );
 
-    if( sr_s_type( &v1 ) == TYPEOF_bl_t && sr_s_type( &v2 ) == TYPEOF_bl_t )
+    if( t1 == TYPEOF_bl_t && t2 == TYPEOF_bl_t )
     {
-        r = *( bl_t* )v1.o && *( bl_t* )v2.o;
+        r = sr_bl( *( bl_t* )v1.o && *( bl_t* )v2.o );
+    }
+    else if( bcore_trait_is_of( t1, TYPEOF_spect_obj ) && bcore_trait_is_of( t2, TYPEOF_spect_obj ) )
+    {
+        r = sr_asd( obj_pair_inside_s_create_pair( v1.o, v2.o ) );
     }
     else
     {
-        meval_s_err_fa( o, "Cannot evaluate '#<sc_t>' AND '#<sc_t>'\n", sr_s_type( &v1 ), sr_s_type( &v2 ) );
+        meval_s_err_fa( o, "Cannot evaluate '#<sc_t>' AND '#<sc_t>'\n", ifnameof( sr_s_type( &v1 ) ), ifnameof( sr_s_type( &v2 ) ) );
     }
 
     sr_down( v1 );
@@ -729,17 +765,23 @@ static bl_t meval_s_logic_and( meval_s* o, sr_s v1, sr_s v2 )
     return r;
 }
 
-static bl_t meval_s_logic_or( meval_s* o, sr_s v1, sr_s v2 )
+static sr_s meval_s_logic_or( meval_s* o, sr_s v1, sr_s v2 )
 {
-    bl_t r = false;
+    sr_s r = sr_null();
+    tp_t t1 = sr_s_type( &v1 );
+    tp_t t2 = sr_s_type( &v2 );
 
-    if( sr_s_type( &v1 ) == TYPEOF_bl_t && sr_s_type( &v2 ) == TYPEOF_bl_t )
+    if( t1 == TYPEOF_bl_t && t2 == TYPEOF_bl_t )
     {
-        r = *( bl_t* )v1.o || *( bl_t* )v2.o;
+        r = sr_bl( *( bl_t* )v1.o || *( bl_t* )v2.o );
+    }
+    else if( bcore_trait_is_of( t1, TYPEOF_spect_obj ) && bcore_trait_is_of( t2, TYPEOF_spect_obj ) )
+    {
+        r = sr_asd( obj_pair_outside_s_create_pair( v1.o, v2.o ) );
     }
     else
     {
-        meval_s_err_fa( o, "Cannot evaluate '#<sc_t>' OR '#<sc_t>'\n", sr_s_type( &v1 ), sr_s_type( &v2 ) );
+        meval_s_err_fa( o, "Cannot evaluate '#<sc_t>' OR '#<sc_t>'\n", ifnameof( sr_s_type( &v1 ) ), ifnameof( sr_s_type( &v2 ) ) );
     }
 
     sr_down( v1 );
@@ -748,17 +790,17 @@ static bl_t meval_s_logic_or( meval_s* o, sr_s v1, sr_s v2 )
     return r;
 }
 
-static bl_t meval_s_logic_xor( meval_s* o, sr_s v1, sr_s v2 )
+static sr_s meval_s_logic_xor( meval_s* o, sr_s v1, sr_s v2 )
 {
-    bl_t r = false;
+    sr_s r = sr_null();
 
     if( sr_s_type( &v1 ) == TYPEOF_bl_t && sr_s_type( &v2 ) == TYPEOF_bl_t )
     {
-        r = ( *( bl_t* )v1.o && !( *( bl_t* )v2.o ) ) || ( !( *( bl_t* )v1.o ) && *( bl_t* )v2.o );
+        r = sr_bl( ( *( bl_t* )v1.o && !( *( bl_t* )v2.o ) ) || ( !( *( bl_t* )v1.o ) && *( bl_t* )v2.o ) );
     }
     else
     {
-        meval_s_err_fa( o, "Cannot evaluate '#<sc_t>' XOR '#<sc_t>'\n", sr_s_type( &v1 ), sr_s_type( &v2 ) );
+        meval_s_err_fa( o, "Cannot evaluate '#<sc_t>' XOR '#<sc_t>'\n", ifnameof( sr_s_type( &v1 ) ), ifnameof( sr_s_type( &v2 ) ) );
     }
 
     sr_down( v1 );
@@ -769,20 +811,53 @@ static bl_t meval_s_logic_xor( meval_s* o, sr_s v1, sr_s v2 )
 
 static sr_s meval_s_logic_not( meval_s* o, sr_s v1 )
 {
-    bl_t r = false;
+    sr_s r = sr_null();
 
-    if( sr_s_type( &v1 ) == TYPEOF_bl_t )
+    tp_t t1 = sr_s_type( &v1 );
+    if( t1 == TYPEOF_bl_t )
     {
-        r = !( *( bl_t* )v1.o );
+        r = sr_bl( !( *( bl_t* )v1.o ) );
+    }
+    else if( bcore_trait_is_of( t1, TYPEOF_spect_obj ) )
+    {
+        r = sr_asd( obj_neg_s_create_neg( v1.o ) );
     }
     else
     {
-        meval_s_err_fa( o, "Cannot evaluate NOT '#<sc_t>'\n", sr_s_type( &v1 ) );
+        meval_s_err_fa( o, "Cannot evaluate NOT '#<sc_t>'\n", ifnameof( sr_s_type( &v1 ) ) );
     }
 
     sr_down( v1 );
 
-    return sr_bl( r );
+    return r;
+}
+
+static sr_s meval_s_cat( meval_s* o, sr_s v1, sr_s v2 )
+{
+    tp_t t1 = sr_s_type( &v1 );
+    tp_t t2 = sr_s_type( &v2 );
+    sr_s r = sr_null();
+
+    if( t1 == TYPEOF_arr_s )
+    {
+        r = sr_clone( v1 );
+        if( t2 == TYPEOF_arr_s )
+        {
+            arr_s_cat( r.o, v2.o );
+        }
+        else
+        {
+            arr_s_push( r.o, v2 );
+        }
+    }
+    else
+    {
+        r = sr_create( TYPEOF_arr_s );
+        arr_s_push( r.o, v1 );
+        arr_s_push( r.o, v2 );
+    }
+
+    return r;
 }
 
 tp_t meval_s_peek_code( const meval_s* o )
@@ -869,7 +944,7 @@ f3_t meval_s_eval_f3( meval_s* o )
 sr_s meval_s_eval_texture_field( meval_s* o )
 {
     sr_s val = meval_s_eval( o, sr_null() );
-    if( !bcore_trait_is( sr_s_type( &val ), typeof( "spect_txm" ) ) ) meval_s_err_fa( o, "Texture map expected." );
+    if( !bcore_trait_is_of( sr_s_type( &val ), typeof( "spect_txm" ) ) ) meval_s_err_fa( o, "Texture map expected." );
     return val;
 }
 
@@ -898,7 +973,7 @@ m3d_s meval_s_eval_rot( meval_s* o )
 /// calls a closure
 sr_s meval_s_eval_call( meval_s* o, const sr_s* closure )
 {
-    if( !bcore_trait_is( sr_s_type( closure ), TYPEOF_bclos_closure ) )
+    if( !bcore_trait_is_of( sr_s_type( closure ), TYPEOF_bclos_closure ) )
     {
         meval_s_err_fa( o, "'#<sc_t>' is no function.", ifnameof( sr_s_type( closure ) ) );
     }
@@ -913,7 +988,7 @@ sr_s meval_s_eval_call( meval_s* o, const sr_s* closure )
         sr_s arg  = meval_s_eval( o, sr_null() );
         tp_t sig_type = sig->data[ i ].type;
         tp_t arg_type = sr_s_type( &arg );
-        if( arg_type != sig_type && !bcore_trait_is( arg_type, sig_type ) )
+        if( arg_type != sig_type && !bcore_trait_is_of( arg_type, sig_type ) )
         {
             meval_s_err_fa( o, "Function '#<sc_t>': Argument #<sz_t> is '#<sc_t>' and not of '#<sc_t>'.",
                                 ifnameof( sr_s_type( closure ) ),
@@ -1019,7 +1094,14 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
         {
             if( bcore_via_q_nexists( &front_obj, key ) )
             {
-                obj = bcore_via_q_nget( &front_obj, key );
+                if( meval_s_try_code( o, OP_ASSIGN ) )
+                {
+                    bcore_via_q_nset( &front_obj, key, sr_clone( meval_s_eval( o, sr_null() ) ) );
+                }
+                else
+                {
+                    obj = bcore_via_q_nget( &front_obj, key );
+                }
             }
             else
             {
@@ -1031,7 +1113,7 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
                     case TYPEOF_arr_s:   obj =   arr_s_meval_key( &front_obj, o, key ); break;
                     default:
                     {
-                        if( bcore_trait_is( type, TYPEOF_spect_obj ) )
+                        if( bcore_trait_is_of( type, TYPEOF_spect_obj ) )
                         {
                             obj = obj_meval_key( &front_obj, o, key );
                         }
@@ -1112,9 +1194,12 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
                 case OP_ADD: return sr_fork( meval_s_add( o, front_obj, meval_s_eval( o, obj ) ) );
                 case OP_SUB: return sr_fork( meval_s_add( o, front_obj, meval_s_eval( o, meval_s_mul( o, sr_s3( -1 ), obj ) ) ) );
 
-                case OP_AND: return sr_bl( meval_s_logic_and( o, front_obj, meval_s_eval( o, obj ) ) );
-                case OP_OR:  return sr_bl( meval_s_logic_or(  o, front_obj, meval_s_eval( o, obj ) ) );
-                case OP_XOR: return sr_bl( meval_s_logic_xor( o, front_obj, meval_s_eval( o, obj ) ) );
+                case OP_AND: return meval_s_logic_and( o, front_obj, meval_s_eval( o, obj ) );
+                case OP_OR:  return meval_s_logic_or(  o, front_obj, meval_s_eval( o, obj ) );
+                case OP_XOR: return meval_s_logic_xor( o, front_obj, meval_s_eval( o, obj ) );
+
+                case OP_CAT: return meval_s_eval( o, meval_s_cat( o, front_obj, obj ) );
+
                 default : meval_s_err_fa( o, "Invalid operator '#<sc_t>'.\n", code_symbol( opr ) );
             }
         }
@@ -1302,6 +1387,9 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     bclos_frame_s_set( frame, typeof( "colr"      ), sr_create( typeof( "colr_s"             ) ) );
     bclos_frame_s_set( frame, typeof( "colg"      ), sr_create( typeof( "colg_s"             ) ) );
     bclos_frame_s_set( frame, typeof( "colb"      ), sr_create( typeof( "colb_s"             ) ) );
+    bclos_frame_s_set( frame, typeof( "sqrt"      ), sr_create( typeof( "sqrt_s"             ) ) );
+    bclos_frame_s_set( frame, typeof( "exp"       ), sr_create( typeof( "exp_s"              ) ) );
+    bclos_frame_s_set( frame, typeof( "pow"       ), sr_create( typeof( "pow_s"              ) ) );
 
     bclos_frame_s_set( frame, typeof( "string_fa" ), sr_create( typeof( "create_string_fa_s" ) ) );
     mclosure_s_define( o, frame, NULL, mcode );

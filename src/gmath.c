@@ -40,15 +40,16 @@ void compute_refraction( v3d_s dir_i, v3d_s nor, f3_t rix, f3_t* intensity_r, v3
         transmittance = 1.0 - reflectance;
     }
 
+    if( intensity_r ) *intensity_r = reflectance;
+    if( intensity_t ) *intensity_t = transmittance;
+
     if( dir_r )
     {
-        *intensity_r = reflectance;
         *dir_r = v3d_s_of_length( v3d_s_sub( dir_i, v3d_s_mlf( nor, 2.0 * v3d_s_mlv( dir_i, nor ) ) ), 1.0 );
     }
 
     if( dir_t )
     {
-        *intensity_t = transmittance;
         f3_t a = f;
         f3_t q = f * f * ( 1.0 - c * c );
         if( q < 1.0 && transmittance > 0 )

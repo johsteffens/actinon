@@ -67,12 +67,6 @@ cl_s obj_color( vc_t o, v3d_s pos );
 /// projects on object's surface
 v2d_s obj_projection( vc_t o, v3d_s pos );
 
-/// object's surface-normal at given position
-v3d_s obj_normal( vc_t o, v3d_s pos );
-
-/// position is outside or inside object
-bl_t obj_outside( vc_t o, v3d_s pos );
-
 /// returns a (minimal) ray-cone with entire object in field of view
 ray_cone_s obj_fov( vc_t o, v3d_s pos );
 
@@ -80,7 +74,10 @@ ray_cone_s obj_fov( vc_t o, v3d_s pos );
 bl_t obj_is_in_fov( vc_t o, const ray_cone_s* fov );
 
 /// returns object's hit position (offset) or f3_inf if not hit.
-f3_t obj_fwd_hit( vc_t o, const ray_s* ray );
+f3_t obj_ray_hit( vc_t o, const ray_s* ray, v3d_s* p_nor );
+
+/// return 1 when pos is outside object, -1 otherwise
+s2_t obj_side( vc_t o, v3d_s pos );
 
 f3_t obj_radiance( vc_t o );
 
@@ -94,6 +91,30 @@ void obj_set_refractive_index( vd_t o, f3_t val );
 void obj_set_radiance        ( vd_t o, f3_t val );
 void obj_set_transparent     ( vd_t o, bl_t flag );
 void obj_set_texture_field   ( vd_t o, vc_t texture_field );
+
+/**********************************************************************************************************************/
+/// obj_pair_inside_s  (combination of two objects)
+
+typedef struct obj_pair_inside_s obj_pair_inside_s;
+DECLARE_FUNCTIONS_OBJ( obj_pair_inside_s )
+
+obj_pair_inside_s* obj_pair_inside_s_create_pair( vc_t o1, vc_t o2 );
+
+/**********************************************************************************************************************/
+/// obj_pair_outside_s  (combination of two objects)
+
+typedef struct obj_pair_outside_s obj_pair_outside_s;
+DECLARE_FUNCTIONS_OBJ( obj_pair_outside_s )
+
+obj_pair_outside_s* obj_pair_outside_s_create_pair( vc_t o1, vc_t o2 );
+
+/**********************************************************************************************************************/
+/// obj_neg_s  (negated objects inside <-> outside)
+
+typedef struct obj_neg_s obj_neg_s;
+DECLARE_FUNCTIONS_OBJ( obj_neg_s )
+
+obj_neg_s* obj_neg_s_create_neg( vc_t o1 );
 
 /**********************************************************************************************************************/
 /// compound_s (array of objects)
@@ -123,13 +144,13 @@ vd_t compound_s_push( compound_s* o, tp_t type );
 vd_t compound_s_push_q( compound_s* o, const sr_s* object );
 
 /// computes an object hit by given ray; returns f3_inf in case of no hit
-f3_t compound_s_fwd_hit( const compound_s* o, const ray_s* r, vc_t* hit_obj );
+f3_t compound_s_ray_hit( const compound_s* o, const ray_s* r, v3d_s* p_nor, vc_t* hit_obj );
 
 /// computes a subset of objects in given field of view
 bcore_arr_sz_s* compound_s_in_fov_arr( const compound_s* o, const ray_cone_s* fov );
 
 /// above hit function on a subset specified by idx_arr
-f3_t compound_s_idx_fwd_hit( const compound_s* o, const bcore_arr_sz_s* idx_arr, const ray_s* r, vc_t* hit_obj );
+f3_t compound_s_idx_ray_hit( const compound_s* o, const bcore_arr_sz_s* idx_arr, const ray_s* r, v3d_s* p_nor, vc_t* hit_obj );
 
 /**********************************************************************************************************************/
 
