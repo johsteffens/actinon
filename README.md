@@ -11,7 +11,7 @@ With a special 'thin-coating-model' for opaque objects yields a realistic polish
 
 Scene construction can be done via a scripting language which was designed for the purpose.
 
-## License & Attribution
+## License
 The source code in this project, including rayflux-script, is licensed under the Apache 2.0 License. 
 
 Images and videos uploaded into this project and depicting results of the raytracer shall be licensed under the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
