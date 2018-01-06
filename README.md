@@ -13,7 +13,7 @@ It defines its own scripting language for scene construction.
 ## License & Attribution
 The source code in this project, including rayflux script, is licensed under the Apache 2.0 License. 
 
-Images and videos uploaded into this project and depicting results of the raytracer shall be licenced under the [Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).
+Images and videos uploaded into this project and depicting results of the raytracer shall be licensed under the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
 
 Images or videos you created yourself with rayflux are yours, provided you designed the entire scene yourself. As courtesy, you may want to publish with a statement that they were created using [rayflux](https://github.com/johsteffens/rayflux).
 
