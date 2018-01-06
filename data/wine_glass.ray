@@ -1,0 +1,172 @@
+// Rayflux-script for rendering a wine-glass with rayflux.
+
+/* Copyright 2018 Johannes Bernhard Steffens
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* This script file represents a small program in rayflux-language.
+ * It creates an image file of name <source-file>.pnm depicting a partially
+ * filled wine-glass. Illumination and render parameters are set
+ * to demonstrate caustics produced by the glass and liquid.
+ */
+
+// Rayflux language specifier
+<mclosure_s></>
+
+// This script-language was specifically designed for rayflux.
+// Its syntax is related to popular languages like C, C++, Python.
+//
+// Special functions and operators are provided for
+// - Vector/Matrix arithmetic
+// - Object -rotation, -scaling, -movement
+// - Fusing objects to build composite objects.
+// - Arranging objects
+//
+// Functions are first class objects.
+// A block '{ .... }' defines a function body, which can either be assigned
+// to a variable or executed immediately if followed by '()'.'
+
+/***************************************************/
+// Here we specify rendering parameters
+
+scene = scene_s;
+scene.threads             = 10;
+
+// image parameters
+scene.image_width         = 400;
+scene.image_height        = 400;
+scene.gamma               = 0.9;
+
+// gradient refinement parameters
+scene.gradient_cycles     = 100;
+scene.gradient_samples    = 2;
+scene.gradient_threshold  = 0.03;
+
+// Ray & Path Tracing Parameters ...
+
+// trace_depth specifies maximum amount of reflection-, refraction-
+// and path-recursions to be traced.
+// A path-recursion consumes 10 depth-counts, all other 1 depth-count
+scene.trace_depth         = 25;
+scene.trace_min_intensity = 0.03;
+scene.direct_samples      = 200;  // direct light sampling
+scene.path_samples        = 500;  // path tracing   (0=off)
+scene.photon_samples      = 0;    // photon mapping (0=off)
+scene.photon_min_distance = 0.05; // photon proximity limiter to reduce side effects
+scene.photon_max_travel_distance = 5;
+
+// Camera Parameters ...
+camera_position = vec( 0, -10, 7 );
+scene.camera_position       = camera_position;
+scene.camera_view_direction = vec( 0, 0, 0 ) - camera_position;
+scene.camera_top_direction  = vec( 0, 0, 1 );
+scene.camera_focal_length   = 4;
+
+// Color values are specified in the form (red, green, blue )
+scene.background_color = color( 0.4, 0.4, 0.3 );
+
+/***************************************************/
+// The code defining the scene begins here...
+
+// Defining a function with no arguments.
+create_lights =
+{
+    base_light = obj_sphere_s * 1.0;
+    base_light.set_radiance( 40 );
+    base_light.set_color( color( 1.0, 1.0, 1.0 ) );
+    base_light.move( vec( -2, 2, 5 ) );
+
+    // The evaluation-result of the last expression defines the return value of the function.
+    // Here it is just the object base_light.
+    base_light;
+};
+
+create_floor =
+{
+    plane = obj_plane_s;
+    plane.set_color( color( 0.8, 0.7, 0.6 ) );
+    plane.set_refractive_index( 1.0 );
+    plane.move( vec( 0, 0, -1 ) );
+    plane;
+};
+
+// This function creates the wine-glass
+create_glass =
+{
+    sphere   = obj_sphere_s;
+    cover    = obj_plane_s;
+    cylinder = obj_cylinder_s;
+
+    sphere.set_refractive_index( 1.5 );
+    sphere.set_transparent( true );
+
+    // The color values of transparent material
+    // is interpreted as half-absorption-distance.
+    // (Distance at with the color intensity is reduced to 1/2)
+    sphere.set_color( color( 2, 2, 2 ) );
+
+    outer_sphere = sphere;
+    bowl = outer_sphere & ( cover + vecz( 0.6 ) );
+
+    inner_sphere = outer_sphere * 0.96;
+    liquid_sphere = inner_sphere * 0.999; // a tiny gap between liquid and inner sphere avoids unwanted render side-effects.
+    liquid_sphere.set_color( color( 0.4, 0.06, 0.05 ) );
+    liquid_sphere.set_refractive_index( 1.2 );
+    liquid = liquid_sphere & ( cover - vecz( 0.3 ) );
+
+    inner_sphere.move( vecz( 0.02 ) );
+    liquid.move( vecz( 0.02 ) );
+    bowl = bowl & !inner_sphere;
+
+    bowl.  set_envelope( outer_sphere * 1.01 );
+    liquid.set_envelope( outer_sphere * 1.01 );
+
+    bowl.move(   vecz( 2 ) );
+    liquid.move( vecz( 2 ) );
+
+    neckcyl = ( cylinder * 0.08 ) & ( cover + vecz( 0.5 ) ) & !( cover - vecz( 0.5 ) );
+
+    perl = ( sphere * 0.15 );
+    neck = neckcyl | ( perl + vecz( 0.45 ) ) | ( perl - vecz( 0.45 ) );
+    neck.set_envelope( sphere * 1.2 );
+
+    neck.move( vecz( 0.55 ) );
+
+    bottom = ( sphere * 3 ) & ( cylinder * 0.8 ) & !( cover + vecz( 2.85 ) );
+    bottom.set_envelope( sphere * 0.85 + vecz( 2.85 ) );
+    bottom.move( vecz( -2.85 ) );
+
+    glass = ( bowl | neck | bottom );
+    glass.set_envelope( sphere * 1.7 + vecz( 1.5 ) );
+    wine = glass : liquid;
+
+    // We keep a miniscule gap between glass-bottom and floor.
+    // This ensures that the renderer will see the glass above the floor
+    // computing refractions and reflections as intended.
+    wine.move( vecz( -0.999 ) );
+
+    wine;
+};
+
+// This block finalizes the scene and computes the scene-image
+{
+    scene.clear(); // not really needed for a single image but useful for a video sequence
+    scene.push( create_lights() );
+    scene.push( create_floor() );
+    scene.push( create_glass() );
+
+    // output file name = source file name with appended '.pnm'
+    file_name = #source_file_name + ".pnm";
+    scene.create_image( file_name );
+}();
