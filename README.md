@@ -15,7 +15,7 @@ The source code in this project, including rayflux script, is licensed under the
 
 Images and videos uploaded into this project and depicting results of the raytracer shall be licensed under the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
 
-Images or videos you created yourself with rayflux are yours, provided you designed the entire scene yourself. As courtesy, you may want to publish with a statement that they were created using [rayflux](https://github.com/johsteffens/rayflux).
+Images or videos rendered by rayflux from your own scene sources are yours.
 
 ## Motivation
 I've always been fascinated by computer graphics, particluarly employing physics in order to achieve realism. As youngster, about 25 years ago, I began experimenting with algorithms using lambertian light distribution on rays casted in a virtual 3D scene in order to generate realistic visual effects. Back then I was even oblivious to the fact that the technique was well-known under the label "ray-tracing".
