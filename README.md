@@ -1,5 +1,7 @@
 # Rayflux - Raytracer
 
+![Rayflux Image](https://raw.githubusercontent.com/johsteffens/rayflux/master/image/wine_glass.ray.png "Image created with Rayflux")
+
 ## What it is
 Rayflux is a ray-tracer. It is based on project [beth](https://github.com/johsteffens/beth).
 
