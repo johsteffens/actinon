@@ -3,12 +3,13 @@
 ![Rayflux Image](https://raw.githubusercontent.com/johsteffens/rayflux/master/image/wine_glass.ray.png "Image created with Rayflux")
 
 ## What it is
-Rayflux is a ray-tracer. It is based on project [beth](https://github.com/johsteffens/beth).
+Rayflux is a ray-tracer based on project [beth](https://github.com/johsteffens/beth).
 
 It can render realistic 3D scenes employing techniques like distributed tracing, path tracing and photon mapping.
 It handles transparency, reflection, refraction and and diffuse-light processing.
-It employs a special 'thin-coating-model' for opaque objects to produce realistic polished-surface-effect.
-It defines its own scripting language for scene construction.
+With a special 'thin-coating-model' for opaque objects yields a realistic polished-surface-effect.
+
+Scene construction can be done via a scripting language which was designed for the purpose.
 
 ## License & Attribution
 The source code in this project, including rayflux-script, is licensed under the Apache 2.0 License. 
