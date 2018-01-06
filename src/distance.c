@@ -1,6 +1,6 @@
 /** Distance Functions */
 
-/** Copyright 2017 Johannes Bernhard Steffens
+/** Copyright 2018 Johannes Bernhard Steffens
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
