@@ -21,4 +21,4 @@ I've always been fascinated by computer graphics, particluarly employing physics
 
 Today computers are powerful enough to allow deep recursions into the render equation making experimenting in this field more rewarding.
 
-Another objective is demonstrating the capabilities of the (much bigger) project '[beth](https://github.com/johsteffens/beth)', which is a foundation-library to develop advanced applications in 'C' as well as designing meta-languages of which the rayflux-language might be an example.
+Another objective is demonstrating the capabilities of the (much bigger) project '[beth](https://github.com/johsteffens/beth)', which is a foundation-library to develop advanced applications in 'C' as well as designing meta-languages of which the rayflux-script might be an example.
