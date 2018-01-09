@@ -352,6 +352,33 @@ f3_t scene_s_hit( const scene_s* o, const ray_s* r, v3d_s* p_nor, vc_t* hit_obj 
     return min_a;
 }
 
+f3_t scene_s_trans_hit( const scene_s* o, const ray_s* r, v3d_s* p_exit_nor, vc_t* exit_obj, vc_t* enter_obj )
+{
+    f3_t min_a = f3_inf;
+    f3_t a;
+
+    vc_t exit_obj_l;
+    vc_t enter_obj_l;
+    v3d_s nor;
+
+    if( ( a = compound_s_ray_hit( &o->light, r, &nor, &enter_obj_l ) ) < min_a )
+    {
+        min_a = a;
+        if( enter_obj ) *enter_obj = enter_obj_l;
+        if( p_exit_nor ) *p_exit_nor = v3d_s_neg( nor );
+    }
+
+    if( ( a = compound_s_ray_trans_hit( &o->matter, r, &nor, &exit_obj_l, &enter_obj_l ) ) < min_a )
+    {
+        min_a = a;
+        if( exit_obj ) *exit_obj = exit_obj_l;
+        if( enter_obj ) *enter_obj = enter_obj_l;
+        if( p_exit_nor ) *p_exit_nor = nor;
+    }
+
+    return min_a;
+}
+
 /// sends a photon and registers it in photon map
 void scene_s_send_photon( scene_s* scene, const ray_s* ray, cl_s color, sz_t depth )
 {
@@ -524,7 +551,6 @@ cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, 
         // path tracing
         if( scene->path_samples && depth > 10 )
         {
-            // via path tracing
             cl_s cl_sum = { 0, 0, 0 };
             ray_s out = surface;
             m3d_s out_con = m3d_s_transposed( m3d_s_con_z( surface.d ) );
@@ -589,6 +615,220 @@ cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, 
         }
 
         cl_s cl = obj_color( obj, pos );
+        cl_per.x *= cl.x;
+        cl_per.y *= cl.y;
+        cl_per.z *= cl.z;
+        lum = v3d_s_add( lum, cl_per );
+    }
+
+    return lum;
+}
+
+cl_s scene_s_trans_lum( const scene_s* scene,
+                        const ray_s* ray,
+                        f3_t offs,
+                        v3d_s exit_nor,
+                        const obj_hdr_s* exit_obj,
+                        const obj_hdr_s* enter_obj,
+                        sz_t depth,
+                        f3_t intensity )
+{
+    cl_s lum = { 0, 0, 0 };
+    if( depth == 0 || intensity < scene->trace_min_intensity ) return lum;
+
+    v3d_s pos = ray_s_pos( ray, offs );
+
+    if( enter_obj && enter_obj->prp.radiance > 0 )
+    {
+        f3_t diff_sqr = v3d_s_diff_sqr( pos, enter_obj->prp.pos );
+        f3_t light_intensity = ( diff_sqr > 0 ) ? ( enter_obj->prp.radiance / diff_sqr ) : f3_mag;
+        return v3d_s_mlf( obj_color( enter_obj, pos ), light_intensity * intensity );
+    }
+
+    f3_t reflectance = 0;
+    f3_t transmittance = 1.0;
+//    bl_t transparent = obj->prp.transparent;
+
+    f3_t trans_refractive_index = ( enter_obj ? enter_obj->prp.refractive_index : 1.0 ) / ( exit_obj ? exit_obj->prp.refractive_index : 1.0 );
+
+    /// reflections and refractions
+    if( trans_refractive_index != 1.0 || ( enter_obj && enter_obj->prp.transparent ) )
+    {
+        ray_s out_r;
+        ray_s out_t;
+        out_r.p = pos;
+        out_t.p = ray_s_pos( ray, offs + 2.0 * f3_eps );
+
+        if( trans_refractive_index > 1.0 )
+        {
+            compute_refraction( ray->d, v3d_s_neg( exit_nor ), trans_refractive_index, &reflectance, &out_r.d, &transmittance, &out_t.d );
+        }
+        else
+        {
+            compute_refraction( ray->d, exit_nor, 1.0 / trans_refractive_index, &reflectance, &out_r.d, &transmittance, &out_t.d );
+        }
+
+        v3d_s hit_exit_nor;
+        vc_t  hit_exit_obj = NULL;
+        vc_t  hit_enter_obj = NULL;
+        f3_t a;
+        if ( ( a = scene_s_trans_hit( scene, &out_r, &hit_exit_nor, &hit_exit_obj, &hit_enter_obj ) ) < f3_inf )
+        {
+            lum = scene_s_trans_lum( scene, &out_r, a, hit_exit_nor, hit_exit_obj, hit_enter_obj, depth - 1, reflectance * intensity );
+        }
+        else
+        {
+            lum = v3d_s_mlf( scene->background_color, reflectance * intensity );
+        }
+
+        if( exit_obj || ( enter_obj && enter_obj->prp.transparent ) )
+        {
+            //if( obj_side( obj, out_r.p ) * obj_side( obj, out_t.p ) == -1 ) // truly stepping through surface
+            {
+                if ( ( a = scene_s_trans_hit( scene, &out_t, &hit_exit_nor, &hit_exit_obj, &hit_enter_obj ) ) < f3_inf )
+                {
+                    lum = v3d_s_add( lum, scene_s_trans_lum( scene, &out_t, a, hit_exit_nor, hit_exit_obj, hit_enter_obj, depth - 1, transmittance * intensity ) );
+                }
+                else
+                {
+                    lum = v3d_s_add( lum, v3d_s_mlf( scene->background_color, transmittance * intensity ) );
+                }
+
+                if( exit_obj ) // exiting object
+                {
+                    f3_t rf = exit_obj->prp.color.x > 0 ? pow( 0.5, offs / exit_obj->prp.color.x ) : 0.0;
+                    f3_t gf = exit_obj->prp.color.y > 0 ? pow( 0.5, offs / exit_obj->prp.color.y ) : 0.0;
+                    f3_t bf = exit_obj->prp.color.z > 0 ? pow( 0.5, offs / exit_obj->prp.color.z ) : 0.0;
+                    lum.x *= rf;
+                    lum.y *= gf;
+                    lum.z *= bf;
+                }
+            }
+        }
+    }
+
+    /// direct light
+    if( scene->direct_samples > 0 && enter_obj && !enter_obj->prp.transparent )
+    {
+        ray_s surface = { .p = pos, .d = v3d_s_neg( exit_nor ) };
+
+        /// random seed
+        u2_t rv = surface.p.x * 32944792 + surface.p.y * 76403048 + surface.p.z * 24349373;
+
+        /// peripheral light
+        cl_s cl_per = { 0, 0, 0 };
+
+        f3_t trans_intensity = intensity * transmittance;
+
+        /// process sources with radiance directly  (light-sources)
+        for( sz_t i = 0; i < scene->light.size; i++ )
+        {
+            cl_s cl_sum = { 0, 0, 0 };
+            ray_s out = surface;
+            obj_hdr_s* light_src = scene->light.data[ i ];
+            ray_cone_s fov_to_src = obj_fov( light_src, pos );
+            m3d_s src_con = m3d_s_transposed( m3d_s_con_z( fov_to_src.ray.d ) );
+            f3_t cyl_hgt = areal_coverage( fov_to_src.cos_rs );
+            cl_s color = obj_color( light_src, light_src->prp.pos );
+            bcore_arr_sz_s* idx_arr = compound_s_in_fov_arr( &scene->matter, &fov_to_src );
+            sz_t direct_samples = scene->direct_samples * trans_intensity;
+            direct_samples = ( direct_samples == 0 ) ? 1 : direct_samples;
+            for( sz_t j = 0; j < direct_samples; j++ )
+            {
+                out.d = m3d_s_mlv( &src_con, v3d_s_rsc( &rv, cyl_hgt ) );
+                f3_t weight = v3d_s_mlv( out.d, surface.d );
+                if( weight <= 0 ) continue;
+
+                f3_t a = obj_ray_hit( light_src, &out, NULL );
+                if( a >= f3_inf ) continue;
+                if( compound_s_idx_ray_hit( &scene->matter, idx_arr, &out, NULL, NULL ) > a )
+                {
+                    v3d_s hit_pos = ray_s_pos( &out, a );
+
+                    f3_t diff_sqr = v3d_s_diff_sqr( hit_pos, light_src->prp.pos );
+                    f3_t local_intensity = ( diff_sqr > 0 ) ? ( light_src->prp.radiance / diff_sqr ) : f3_mag;
+
+                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( color, local_intensity * weight * trans_intensity ) );
+                }
+            }
+
+            bcore_arr_sz_s_discard( idx_arr );
+
+            // factor 2 arises from weight distribution across the half-sphere
+            cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 2.0 * cyl_hgt / direct_samples ) );
+
+        }
+
+        // path tracing
+        if( scene->path_samples && depth > 10 )
+        {
+            cl_s cl_sum = { 0, 0, 0 };
+            ray_s out = surface;
+            m3d_s out_con = m3d_s_transposed( m3d_s_con_z( surface.d ) );
+
+            f3_t per_energy = v3d_s_sqr( cl_per );
+            per_energy = per_energy > 0.01 ? per_energy : 0.01;
+
+            sz_t path_samples = scene->path_samples * trans_intensity;
+            path_samples = ( path_samples == 0 ) ? 1 : path_samples;
+
+            for( sz_t i = 0; i < path_samples; i++ )
+            {
+                out.d = m3d_s_mlv( &out_con, v3d_s_rsc( &rv, 1.0 ) );
+                f3_t weight = v3d_s_mlv( out.d, surface.d );
+                if( weight <= 0 ) continue;
+                v3d_s hit_exit_nor;
+                vc_t  hit_exit_obj = NULL;
+                vc_t  hit_enter_obj = NULL;
+
+                f3_t a = compound_s_ray_trans_hit( &scene->matter, &out, &hit_exit_nor, &hit_exit_obj, &hit_enter_obj );
+
+                if( a < f3_inf )
+                {
+                    cl_s lum = scene_s_trans_lum( scene, &out, a, hit_exit_nor, hit_exit_obj, hit_enter_obj, depth - 10, weight * trans_intensity );
+                    cl_sum = v3d_s_add( cl_sum, lum );
+                }
+                else
+                {
+                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( scene->background_color, weight * trans_intensity ) );
+                }
+            }
+            // factor 2 arises from weight distribution across the half-sphere
+            cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 2.0 / path_samples ) );
+        }
+        // indirect light via photon map
+        else if( scene->photon_map.size > 0 )
+        {
+            f3_t min_sqr_dist = f3_sqr( scene->photon_min_distance );
+
+            cl_s cl_sum = { 0, 0, 0 };
+            for( sz_t i = 0; i < scene->photon_map.size; i++ )
+            {
+                photon_s ph = scene->photon_map.data[ i ];
+                ray_s out;
+                out.p = ph.p;
+                v3d_s diff = v3d_s_sub( pos, ph.p );
+                f3_t diff_sqr = v3d_s_sqr( diff );
+
+                if( diff_sqr < min_sqr_dist ) continue;
+
+                out.d = v3d_s_of_length( diff, 1.0 );
+                f3_t weight = -v3d_s_mlv( out.d, surface.d ) / diff_sqr;
+
+                if( weight <= 0 ) continue;
+
+                vc_t hit_obj = NULL;
+                f3_t a = compound_s_ray_hit( &scene->matter, &out, NULL, &hit_obj );
+
+                if( a >= f3_inf || hit_obj == enter_obj )
+                {
+                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( ph.c, weight * intensity * transmittance ) );
+                }
+            }
+            cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 1.0 / scene->photon_samples ) );
+        }
+
+        cl_s cl = obj_color( enter_obj, pos );
         cl_per.x *= cl.x;
         cl_per.y *= cl.y;
         cl_per.z *= cl.z;
@@ -839,15 +1079,31 @@ vd_t lum_machine_s_func( lum_machine_s* o )
         ray.p = o->scene->camera_position;
         ray.d = m3d_s_mlv( &camera_rotation, d );
 
-        vc_t  hit_obj = NULL;
-        v3d_s hit_nor;
-        f3_t offs = scene_s_hit( o->scene, &ray, &hit_nor, &hit_obj );
-
         lum->clr = o->scene->background_color;
 
-        if( offs < f3_inf && hit_obj )
+        bl_t trans_method = true;
+
+        if( trans_method )
         {
-            lum->clr = scene_s_lum( o->scene, hit_obj, &ray, offs, hit_nor, o->scene->trace_depth, 1.0 );
+            v3d_s exit_nor;
+            vc_t  exit_obj = NULL;
+            vc_t  enter_obj = NULL;
+            f3_t offs = scene_s_trans_hit( o->scene, &ray, &exit_nor, &exit_obj, &enter_obj );
+            if( offs < f3_inf )
+            {
+                lum->clr = scene_s_trans_lum( o->scene, &ray, offs, exit_nor, exit_obj, enter_obj, o->scene->trace_depth, 1.0 );
+            }
+        }
+        else
+        {
+            // deprecated
+            vc_t  hit_obj = NULL;
+            v3d_s hit_nor;
+            f3_t offs = scene_s_hit( o->scene, &ray, &hit_nor, &hit_obj );
+            if( offs < f3_inf && hit_obj )
+            {
+                lum->clr = scene_s_lum( o->scene, hit_obj, &ray, offs, hit_nor, o->scene->trace_depth, 1.0 );
+            }
         }
     }
     return NULL;

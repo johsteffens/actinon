@@ -1299,6 +1299,48 @@ f3_t compound_s_ray_hit( const compound_s* o, const ray_s* r, v3d_s* p_nor, vc_t
     }
 }
 
+f3_t compound_s_ray_trans_hit( const compound_s* o, const ray_s* r, v3d_s* p_exit_nor, vc_t* exit_obj, vc_t* enter_obj )
+{
+    v3d_s nor;
+    f3_t min_a = f3_inf;
+    for( sz_t i = 0; i < o->size; i++ )
+    {
+        f3_t a = obj_ray_hit( o->data[ i ], r, &nor );
+        if( a < f3_inf )
+        {
+            if( a < min_a - f3_eps )
+            {
+                min_a = a;
+                if( v3d_s_mlv( nor, r->d ) > 0 )
+                {
+                    *p_exit_nor = nor;
+                    if( exit_obj ) *exit_obj = o->data[ i ];
+                    if( enter_obj ) *enter_obj = NULL;
+                }
+                else
+                {
+                    *p_exit_nor = v3d_s_neg( nor );
+                    if( exit_obj ) *exit_obj = NULL;
+                    if( enter_obj ) *enter_obj = o->data[ i ];
+                }
+            }
+            else if( f3_abs( a - min_a ) < f3_eps )
+            {
+                min_a = a < min_a ? a : min_a;
+                if( v3d_s_mlv( nor, r->d ) > 0 )
+                {
+                    if( exit_obj ) *exit_obj = o->data[ i ];
+                }
+                else
+                {
+                    if( enter_obj ) *enter_obj = o->data[ i ];
+                }
+            }
+        }
+    }
+    return min_a;
+}
+
 f3_t compound_s_idx_ray_hit( const compound_s* o, const bcore_arr_sz_s* idx_arr, const ray_s* r, v3d_s* p_nor, vc_t* hit_obj )
 {
     if( p_nor )

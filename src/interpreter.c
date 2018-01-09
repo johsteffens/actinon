@@ -557,6 +557,28 @@ static sr_s meval_s_mul( meval_s* o, sr_s v1, sr_s v2 )
         }
         break;
 
+        case TYPEOF_arr_s:
+        {
+            switch( t2 )
+            {
+                case TYPEOF_s3_t:  r = sr_clone( v1 ); v1 = sr_null(); arr_s_scale(  r.o, *( s3_t* )v2.o ); break;
+                case TYPEOF_f3_t:  r = sr_clone( v1 ); v1 = sr_null(); arr_s_scale(  r.o, *( f3_t* )v2.o ); break;
+                case TYPEOF_m3d_s: r = sr_clone( v1 ); v1 = sr_null(); arr_s_rotate( r.o,  ( m3d_s* )v2.o ); break;
+            }
+        }
+        break;
+
+        case TYPEOF_map_s:
+        {
+            switch( t2 )
+            {
+                case TYPEOF_s3_t:  r = sr_clone( v1 ); v1 = sr_null(); map_s_scale(  r.o, *( s3_t* )v2.o ); break;
+                case TYPEOF_f3_t:  r = sr_clone( v1 ); v1 = sr_null(); map_s_scale(  r.o, *( f3_t* )v2.o ); break;
+                case TYPEOF_m3d_s: r = sr_clone( v1 ); v1 = sr_null(); map_s_rotate( r.o,  ( m3d_s* )v2.o ); break;
+            }
+        }
+        break;
+
         default:
         {
             if( bcore_trait_is_of( t1, TYPEOF_spect_obj ) )
@@ -634,6 +656,24 @@ static sr_s meval_s_add( meval_s* o, sr_s v1, sr_s v2 )
             {
                 case TYPEOF_st_s: st_s_push_st( r.o, v2.o ); break;
                 case TYPEOF_s3_t: st_s_push_fa( r.o, "#<s3_t>", *( s3_t* )v2.o ); break;
+            }
+        }
+        break;
+
+        case TYPEOF_arr_s:
+        {
+            switch( t2 )
+            {
+                case TYPEOF_v3d_s: r = sr_clone( v1 ); v1 = sr_null(); arr_s_move(  r.o,  ( v3d_s* )v2.o ); break;
+            }
+        }
+        break;
+
+        case TYPEOF_map_s:
+        {
+            switch( t2 )
+            {
+                case TYPEOF_v3d_s: r = sr_clone( v1 ); v1 = sr_null(); map_s_move(  r.o,  ( v3d_s* )v2.o ); break;
             }
         }
         break;

@@ -43,8 +43,9 @@
 /**********************************************************************************************************************/
 /// f3_t
 static inline f3_t f3_sqr( f3_t v ) { return v * v; }
+static inline f3_t f3_abs( f3_t v ) { return v < 0 ? -v : v; }
 
-// Note: xsg, xsg2 show strong hyper-structures on polar coordinates
+// Note: generators xsg, xsg2 show strong hyper-structures on polar coordinates
 
 /// random generator (range 0, 1)
 static inline f3_t f3_rnd1( u2_t* rv ) { return ( *rv = bcore_xsg1_u2( *rv ) ) * ( 1.0 / 0xFFFFFFFFu ); }

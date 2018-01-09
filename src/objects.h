@@ -145,6 +145,7 @@ vd_t compound_s_push_q( compound_s* o, const sr_s* object );
 
 /// computes an object hit by given ray; returns f3_inf in case of no hit
 f3_t compound_s_ray_hit( const compound_s* o, const ray_s* r, v3d_s* p_nor, vc_t* hit_obj );
+f3_t compound_s_ray_trans_hit( const compound_s* o, const ray_s* r, v3d_s* p_exot_nor, vc_t* exit_obj, vc_t* enter_obj );
 
 /// computes a subset of objects in given field of view
 bcore_arr_sz_s* compound_s_in_fov_arr( const compound_s* o, const ray_cone_s* fov );
