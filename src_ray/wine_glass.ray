@@ -120,7 +120,7 @@ create_glass =
     bowl = outer_sphere & ( cover + vecz( 0.6 ) );
 
     inner_sphere = outer_sphere * 0.96;
-    liquid_sphere = inner_sphere * 0.999; // a tiny gap between liquid and inner sphere avoids unwanted render side-effects.
+    liquid_sphere = inner_sphere; // liquit touches inner sphere causing renderer to calculate a media-transition
     liquid_sphere.set_color( color( 0.4, 0.06, 0.05 ) );
     liquid_sphere.set_refractive_index( 1.2 );
     liquid = liquid_sphere & ( cover - vecz( 0.3 ) );
@@ -152,7 +152,7 @@ create_glass =
     wine = glass : liquid;
 
     // We keep a miniscule gap between glass-bottom and floor.
-    // This ensures that the renderer will see the glass above the floor
+    // This ensures that the renderer will see the glass always above the floor
     // computing refractions and reflections as intended.
     wine.move( vecz( -0.999 ) );
 
