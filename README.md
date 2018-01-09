@@ -1,6 +1,7 @@
 # Rayflux - Raytracer
 
-![Rayflux Image](https://raw.githubusercontent.com/johsteffens/rayflux/master/image/wine_glass.ray.png "Image created with Rayflux")
+![Wine Image](https://raw.githubusercontent.com/johsteffens/rayflux/master/image/wine_glass.ray.png "Image created with Rayflux")
+![Pyramid Image](https://raw.githubusercontent.com/johsteffens/rayflux/master/image/pyramid.ray.png "Image created with Rayflux")
 
 ## What it is
 Rayflux is a ray-tracer. It can render 3D scenes realistically, employing techniques like distributed tracing, path tracing, media-transition and others. It handles transparency, reflection, refraction and and diffuse-light processing. Opaque surfaces with reflective characteristics are realized by a solving Fresnel equations for a surface thinly-coated with refractive material, thus yielding a realistic polished-surface-effect.
