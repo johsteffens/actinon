@@ -1,0 +1,126 @@
+// Rayflux-script for rendering a wine-glass with rayflux.
+
+/* Copyright 2018 Johannes Bernhard Steffens
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* This script file represents a small program in rayflux-script.
+ * It creates an image file of name <source-file>.pnm depicting transparent colored
+ * glass-balls on a polished floor. Some balls are arranged to form a pyramid. 
+ * Illumination and render parameters are set to demonstrate multiple reflections,
+ * refractions and caustics.
+ *
+ * For more detailed inline commenting of the code see also wine_glass.ray.
+ */
+<mclosure_s></>
+
+scene = scene_s;
+
+scene.image_width         = 400;
+scene.image_height        = 400;
+scene.gamma               = 0.7;
+
+scene.gradient_cycles     = 100;
+scene.gradient_samples    = 2;
+scene.gradient_threshold  = 0.03;
+
+scene.trace_depth         = 25;
+scene.trace_min_intensity = 0.02;
+scene.direct_samples      = 100;
+scene.path_samples        = 250;
+scene.photon_samples      = 0;
+scene.photon_min_distance = 0.05;
+scene.photon_max_travel_distance = 5;
+
+camera_position = vec( 0, -10, 4 );
+
+scene.camera_position       = camera_position;
+scene.camera_view_direction = vec( 0, 0, 0 ) - camera_position;
+scene.camera_top_direction  = vec( 0, 0, 1 );
+scene.camera_focal_length   = 4;
+scene.background_color = color( 0.2, 0.1, 0.05 );
+
+create_lights = 
+{
+    base_light = obj_sphere_s;
+    base_light.scale( 0.5 );
+    base_light.set_radiance( 50 );
+    base_light.set_color( color( 1.0, 1.0, 1.0 ) );
+    ( base_light + vec( -3, 3, 4 ) );
+};
+
+create_floor =
+{
+    plane = obj_plane_s;
+    plane.set_color( color( 0.6, 0.7, 0.8 ) );
+    plane.set_refractive_index( 1.5 );
+    plane.move( vec( 0, 0, -1 ) );
+    plane;
+};
+
+create_matter = 
+{
+    pyramid = arr_s;
+    field = arr_s;
+    line = arr_s;
+
+    r = 0.5;
+    r2 = r * 2;
+
+    sphere = obj_sphere_s;
+    sphere.radius = r;
+    sphere.set_color( color( 2.0, 1.1, 0.6 ) );
+    sphere.set_refractive_index( 1.5 );
+    sphere.set_transparent( true );
+
+    layers = 4;
+    i = 0;
+    while( i < layers )
+    {
+        pyramid.move( vec( r, r, 1.414 * r ) );
+        line.move( vecx( r2 ) );
+        field.move( vecx( r2 ) + vecy( r2 ) );
+        field.push( line );
+        line.push( sphere );
+        line.rotate( rotz( 90 ) );
+        field.push( line );
+        line.rotate( rotz( -90 ) );
+        pyramid.push( field );
+        i += 1;
+    } ();
+
+    pyramid.move( vec( -r * ( i - 1 ), -r * ( i - 1 ), -1 + r ) );
+    pyramid.rotate( rotz( 20 ) );
+    pyramid.move( vec( -0.5, 2, 0 ) );
+
+
+    ball = sphere + vecz( r - 1.0 );
+    pyramid : 
+    ( ball + vec( -1, -2, 0 ) ) :
+    ( ball + vec( -2.5, -0.5, 0 ) ) :
+    ( ball + vec(  3, 3, 0 ) ) :
+    ( ball + vec(  2, 5, 0 ) ) :
+    ( ball + vec(  3, 5, 0 ) ) ;
+};
+
+{
+    scene.clear();
+    scene.push( create_lights() );
+    scene.push( create_floor() );
+    scene.push( create_matter() );
+    file_name = #source_file_name + ".pnm";
+    scene.create_image( file_name );
+}();
+
+

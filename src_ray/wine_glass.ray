@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-/* This script file represents a small program in rayflux-language.
+/* This script file represents a small program in rayflux-script.
  * It creates an image file of name <source-file>.pnm depicting a partially
  * filled wine-glass. Illumination and render parameters are set
  * to demonstrate caustics produced by the glass and liquid.
@@ -25,7 +25,7 @@
 <mclosure_s></>
 
 // This script-language was specifically designed for rayflux.
-// Its syntax is related to popular languages like C, C++, Python.
+// Its syntax is loosely related to popular languages like C, C++, Python.
 //
 // Special functions and operators are provided for
 // - Vector/Matrix arithmetic
@@ -48,7 +48,19 @@ scene.image_width         = 400;
 scene.image_height        = 400;
 scene.gamma               = 0.9;
 
-// gradient refinement parameters
+/** Gradient refinement:
+ *
+ *  Gradient refinement serves two purposes:
+ *    1. Anti-aliasing by computing at sub-pixel accuracy.
+ *    2. Refinement of light scatter effects and path tracing effects.
+ *
+ *  For each gradient cycle, the image is refined by computing
+ *  within selected pixels 'n' random sub-pixel positions and adding the
+ *  result to the pixel. Only sub-pixels with significant gradients to
+ *  neighboring pixels are refined. Each refinement also re-randomizes the
+ *  light and path-scatter adding to overall randomization and after sufficient
+ *  converging to a smooth overall effect.
+ */
 scene.gradient_cycles     = 100;
 scene.gradient_samples    = 2;
 scene.gradient_threshold  = 0.03;
