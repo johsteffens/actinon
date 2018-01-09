@@ -57,7 +57,7 @@ create_lights =
     base_light.scale( 0.5 );
     base_light.set_radiance( 50 );
     base_light.set_color( color( 1.0, 1.0, 1.0 ) );
-    ( base_light + vec( -3, 3, 4 ) );
+    ( base_light + vec( -2.6, 3, 4 ) );
 };
 
 create_floor =
