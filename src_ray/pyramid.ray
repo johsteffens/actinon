@@ -39,9 +39,6 @@ scene.trace_depth         = 25;
 scene.trace_min_intensity = 0.02;
 scene.direct_samples      = 100;
 scene.path_samples        = 250;
-scene.photon_samples      = 0;
-scene.photon_min_distance = 0.05;
-scene.photon_max_travel_distance = 5;
 
 camera_position = vec( 0, -10, 4 );
 

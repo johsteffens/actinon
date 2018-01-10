@@ -45,9 +45,6 @@ sz_t scene_s_objects( const scene_s* o ); // number of objects
 
 sr_s scene_s_meval_key( sr_s* o, meval_s* ev, tp_t key );
 
-void scene_s_clear_photon_map( scene_s* o );
-void scene_s_create_photon_map( scene_s* o );
-image_cps_s* scene_s_show_photon_map( const scene_s* o );
 void scene_s_create_image_file( scene_s* o, sc_t file );
 
 /**********************************************************************************************************************/

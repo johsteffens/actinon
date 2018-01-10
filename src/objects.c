@@ -27,6 +27,7 @@
 #include "gmath.h"
 #include "quicktypes.h"
 #include "distance.h"
+#include "container.h"
 
 /**********************************************************************************************************************/
 /// envelope_s  (sphere used to define object boundaries)
@@ -66,6 +67,26 @@ void envelope_s_scale( envelope_s* o, f3_t fac )
 bl_t envelope_s_is_in_fov( const envelope_s* o, const ray_cone_s* fov )
 {
     return sphere_is_in_fov( o->pos, o->radius, fov );
+}
+
+ray_cone_s envelope_s_fov( const envelope_s* o, v3d_s pos )
+{
+    ray_cone_s cne;
+    v3d_s diff = v3d_s_sub( o->pos, pos );
+    cne.ray.d = v3d_s_of_length( diff, 1.0 );
+    cne.ray.p = pos;
+    f3_t diff_sqr = v3d_s_sqr( diff );
+    f3_t radius_sqr = f3_sqr( o->radius );
+
+    if( diff_sqr > radius_sqr )
+    {
+        cne.cos_rs = sqrt( 1.0 - ( radius_sqr / diff_sqr ) );
+    }
+    else
+    {
+        cne.cos_rs = -1;
+    }
+    return cne;
 }
 
 bl_t envelope_s_ray_hits( const envelope_s* o, const ray_s* r )
@@ -198,7 +219,7 @@ v2d_s obj_projection( vc_t o, v3d_s pos )
 ray_cone_s obj_fov( vc_t o, v3d_s pos )
 {
     const obj_hdr_s* hdr = o;
-    if( !hdr->p->fp_fov ) ERR( "Object '#<sc_t>' has no fov-function", ifnameof( *(aware_t*)o ) );
+    if( !hdr->p->fp_fov ) ERR_fa( "Object '#<sc_t>' has no fov-function", ifnameof( *(aware_t*)o ) );
     return hdr->p->fp_fov( o, pos );
 }
 
@@ -741,6 +762,17 @@ v2d_s obj_pair_inside_s_projection( const obj_pair_inside_s* o, v3d_s pos )
     return ( v2d_s ) { 0, 0 };
 }
 
+ray_cone_s obj_pair_inside_s_fov( const obj_pair_inside_s* o, v3d_s pos )
+{
+    if( o->envelope ) return envelope_s_fov( o->envelope, pos );
+    ray_cone_s cne;
+    v3d_s diff = v3d_s_sub( o->prp.pos, pos );
+    cne.ray.d = v3d_s_of_length( diff, 1.0 );
+    cne.ray.p = pos;
+    cne.cos_rs = 0;
+    return cne;
+}
+
 bl_t obj_pair_inside_s_is_in_fov( const obj_pair_inside_s* o, const ray_cone_s* fov )
 {
     if( o->envelope ) envelope_s_is_in_fov( o->envelope, fov );
@@ -833,6 +865,7 @@ static bcore_flect_self_s* obj_pair_inside_s_create_self( void )
     bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_pair_inside_s_def, sizeof( obj_pair_inside_s ) );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_init_a,       "ap_t",            "init" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_projection,   "projection_fp",   "projection" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_fov,          "fov_fp",          "fov" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_ray_hit,      "ray_hit_fp",      "ray_hit" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_side,         "side_fp",         "side" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_is_in_fov,    "is_in_fov_fp",    "is_in_fov" );
@@ -895,6 +928,17 @@ static void obj_pair_outside_s_init_a( vd_t nc )
 v2d_s obj_pair_outside_s_projection( const obj_pair_outside_s* o, v3d_s pos )
 {
     return ( v2d_s ) { 0, 0 };
+}
+
+ray_cone_s obj_pair_outside_s_fov( const obj_pair_outside_s* o, v3d_s pos )
+{
+    if( o->envelope ) return envelope_s_fov( o->envelope, pos );
+    ray_cone_s cne;
+    v3d_s diff = v3d_s_sub( o->prp.pos, pos );
+    cne.ray.d = v3d_s_of_length( diff, 1.0 );
+    cne.ray.p = pos;
+    cne.cos_rs = 0;
+    return cne;
 }
 
 bl_t obj_pair_outside_s_is_in_fov( const obj_pair_outside_s* o, const ray_cone_s* fov )
@@ -989,6 +1033,7 @@ static bcore_flect_self_s* obj_pair_outside_s_create_self( void )
     bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_pair_outside_s_def, sizeof( obj_pair_outside_s ) );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_init_a,       "ap_t",            "init" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_projection,   "projection_fp",   "projection" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_fov,          "fov_fp",          "fov" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_ray_hit,      "ray_hit_fp",      "ray_hit" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_side,         "side_fp",         "side" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_is_in_fov,    "is_in_fov_fp",    "is_in_fov" );
@@ -1251,6 +1296,7 @@ void compound_s_clear( compound_s* o )
 
 vd_t compound_s_push( compound_s* o, tp_t type )
 {
+    ASSERT( bcore_trait_is_of( type, TYPEOF_spect_obj ) );
     sr_s sr = sr_create( type );
     bcore_array_aware_push( o, sr );
     return sr.o;
@@ -1260,9 +1306,38 @@ vd_t compound_s_push_q( compound_s* o, const sr_s* object )
 {
     if( !object ) return NULL;
     tp_t type = sr_s_type( object );
-    vd_t dst = compound_s_push( o, type );
-    bcore_inst_typed_copy( type, dst, object->o );
-    return dst;
+    if( bcore_trait_is_of( type, TYPEOF_spect_obj ) )
+    {
+        vd_t dst = compound_s_push( o, type );
+        bcore_inst_typed_copy( type, dst, object->o );
+        return dst;
+    }
+    else if( type == TYPEOF_map_s )
+    {
+        map_s* map = object->o;
+        sz_t size = bcore_hmap_tp_sr_s_size( &map->m );
+        for( sz_t i = 0; i < size; i++ )
+        {
+            if( bcore_hmap_tp_sr_s_idx_key( &map->m, i ) )
+            {
+                compound_s_push_q( o, bcore_hmap_tp_sr_s_idx_val( &map->m, i ) );
+            }
+        }
+    }
+    else if( type == TYPEOF_arr_s )
+    {
+        const arr_s* arr = object->o;
+        for( sz_t i = 0; i < arr->a.size; i++ )
+        {
+            compound_s_push_q( o, &arr->a.data[ i ] );
+        }
+        return NULL;
+    }
+    else
+    {
+        bcore_err_fa( "Cannot push object #<sc_t> to compound_s.", ifnameof( type ) );
+    }
+    return NULL;
 }
 
 f3_t compound_s_ray_hit( const compound_s* o, const ray_s* r, v3d_s* p_nor, vc_t* hit_obj )
@@ -1385,6 +1460,16 @@ bcore_arr_sz_s* compound_s_in_fov_arr( const compound_s* o, const ray_cone_s* fo
         if( obj_is_in_fov( o->data[ i ], fov ) ) bcore_arr_sz_s_push( arr, i );
     }
     return arr;
+}
+
+sz_t compound_s_side_count( const compound_s* o, v3d_s pos, s2_t side )
+{
+    sz_t count = 0;
+    for( sz_t i = 0; i < o->size; i++ )
+    {
+        count += ( obj_side( o->data[ i ], pos ) == side );
+    }
+    return count;
 }
 
 static bcore_flect_self_s* compound_s_create_self( void )

@@ -247,7 +247,7 @@ void arr_s_move( arr_s* o, const v3d_s* vec )
             {
                 map_s_move( sr->o, vec );
             }
-            else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
+            else if( bcore_trait_is_of( sr_s_type( sr ), TYPEOF_spect_obj ) )
             {
                 obj_move( sr->o, vec );
             }

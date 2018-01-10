@@ -74,9 +74,6 @@ scene.trace_depth         = 25;
 scene.trace_min_intensity = 0.03;
 scene.direct_samples      = 200;  // direct light sampling
 scene.path_samples        = 500;  // path tracing   (0=off)
-scene.photon_samples      = 0;    // photon mapping (0=off)
-scene.photon_min_distance = 0.05; // photon proximity limiter to reduce side effects
-scene.photon_max_travel_distance = 5;
 
 // Camera Parameters ...
 camera_position = vec( 0, -10, 7 );

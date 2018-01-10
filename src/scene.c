@@ -192,9 +192,6 @@ typedef struct scene_s
 
     sz_t direct_samples;
     sz_t path_samples;
-    sz_t photon_samples;
-    f3_t photon_min_distance;
-    f3_t photon_max_travel_distance;
 
     compound_s light;  // light sources
     compound_s matter; // passive objects
@@ -224,9 +221,6 @@ static sc_t scene_s_def =
     "f3_t trace_min_intensity = 0;"
     "sz_t direct_samples      = 100;"
     "sz_t path_samples        = 0;"  // requires trace_depth > 10
-    "sz_t photon_samples      = 0;"
-    "f3_t photon_min_distance = 0.05;"
-    "f3_t photon_max_travel_distance = 1E300;"
 
     "compound_s light;"
     "compound_s matter;"
@@ -235,13 +229,6 @@ static sc_t scene_s_def =
 
 DEFINE_FUNCTIONS_OBJ_INST( scene_s )
 DEFINE_CREATE_SELF( scene_s, scene_s_def )
-
-void scene_s_clear( scene_s* o )
-{
-    compound_s_clear( &o->light );
-    compound_s_clear( &o->matter );
-    scene_s_clear_photon_map( o );
-}
 
 sz_t scene_s_push( scene_s* o, const sr_s* object )
 {
@@ -258,7 +245,7 @@ sz_t scene_s_push( scene_s* o, const sr_s* object )
         }
         return 1;
     }
-    else if( type == typeof( "map_s" ) )
+    else if( type == TYPEOF_map_s )
     {
         map_s* map = object->o;
         sz_t size = bcore_hmap_tp_sr_s_size( &map->m );
@@ -270,7 +257,7 @@ sz_t scene_s_push( scene_s* o, const sr_s* object )
             }
         }
     }
-    else if( type == typeof( "arr_s" ) )
+    else if( type == TYPEOF_arr_s )
     {
         arr_s* arr = object->o;
         sz_t size = arr_s_get_size( arr );
@@ -377,58 +364,6 @@ f3_t scene_s_trans_hit( const scene_s* o, const ray_s* r, v3d_s* p_exit_nor, vc_
     }
 
     return min_a;
-}
-
-/// sends a photon and registers it in photon map
-void scene_s_send_photon( scene_s* scene, const ray_s* ray, cl_s color, sz_t depth )
-{
-    if( depth == 0 ) return;
-    obj_hdr_s* hit_obj;
-    v3d_s nor;
-    f3_t offs = compound_s_ray_hit( &scene->matter, ray, &nor, ( vc_t* )&hit_obj );
-    if( offs >= scene->photon_max_travel_distance ) return;
-    v3d_s pos = ray_s_pos( ray, offs );
-
-    if( v3d_s_mlv( ray->d, nor ) > 0 && hit_obj->prp.transparent ) // ray traveled through object
-    {
-        f3_t rf = hit_obj->prp.color.x > 0 ? pow( 0.5, offs / hit_obj->prp.color.x ) : 0.0;
-        f3_t gf = hit_obj->prp.color.y > 0 ? pow( 0.5, offs / hit_obj->prp.color.y ) : 0.0;
-        f3_t bf = hit_obj->prp.color.z > 0 ? pow( 0.5, offs / hit_obj->prp.color.z ) : 0.0;
-        color.x *= rf;
-        color.y *= gf;
-        color.z *= bf;
-    }
-
-    f3_t reflectance = 0;
-    f3_t transmittance = 1.0 - reflectance; // only surface transmittance
-
-    /// reflections and refractions
-    if( hit_obj->prp.refractive_index > 1.0 || hit_obj->prp.transparent )
-    {
-        ray_s out_r;
-        ray_s out_t;
-        out_r.p = pos;
-        out_t.p = pos;
-        compute_refraction( ray->d, nor, hit_obj->prp.refractive_index, &reflectance, &out_r.d, &transmittance, &out_t.d );
-        scene_s_send_photon( scene, &out_r, v3d_s_mlf( color, reflectance ), depth - 1 );
-        if( transmittance > 0 && hit_obj->prp.transparent )
-        {
-            scene_s_send_photon( scene, &out_t, v3d_s_mlf( color, transmittance ), depth - 1 );
-        }
-    }
-
-    if( !hit_obj->prp.transparent )
-    {
-        color = v3d_s_mlf( color, transmittance );
-        if( v3d_s_sqr( color ) > 0 )
-        {
-            cl_s cl = obj_color( hit_obj, pos );
-            color.x *= cl.x;
-            color.y *= cl.y;
-            color.z *= cl.z;
-            photon_map_s_push( &scene->photon_map, ( photon_s ) { .c = color, .p = pos } );
-        }
-    }
 }
 
 cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, f3_t offs, v3d_s nor, sz_t depth, f3_t intensity )
@@ -581,37 +516,6 @@ cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, 
             }
             // factor 2 arises from weight distribution across the half-sphere
             cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 2.0 / path_samples ) );
-        }
-        // indirect light via photon map
-        else if( scene->photon_map.size > 0 )
-        {
-            f3_t min_sqr_dist = f3_sqr( scene->photon_min_distance );
-
-            cl_s cl_sum = { 0, 0, 0 };
-            for( sz_t i = 0; i < scene->photon_map.size; i++ )
-            {
-                photon_s ph = scene->photon_map.data[ i ];
-                ray_s out;
-                out.p = ph.p;
-                v3d_s diff = v3d_s_sub( pos, ph.p );
-                f3_t diff_sqr = v3d_s_sqr( diff );
-
-                if( diff_sqr < min_sqr_dist ) continue;
-
-                out.d = v3d_s_of_length( diff, 1.0 );
-                f3_t weight = -v3d_s_mlv( out.d, surface.d ) / diff_sqr;
-
-                if( weight <= 0 ) continue;
-
-                vc_t hit_obj = NULL;
-                f3_t a = compound_s_ray_hit( &scene->matter, &out, NULL, &hit_obj );
-
-                if( a >= f3_inf || hit_obj == obj )
-                {
-                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( ph.c, weight * intensity * transmittance ) );
-                }
-            }
-            cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 1.0 / scene->photon_samples ) );
         }
 
         cl_s cl = obj_color( obj, pos );
@@ -796,37 +700,6 @@ cl_s scene_s_trans_lum( const scene_s* scene,
             // factor 2 arises from weight distribution across the half-sphere
             cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 2.0 / path_samples ) );
         }
-        // indirect light via photon map
-        else if( scene->photon_map.size > 0 )
-        {
-            f3_t min_sqr_dist = f3_sqr( scene->photon_min_distance );
-
-            cl_s cl_sum = { 0, 0, 0 };
-            for( sz_t i = 0; i < scene->photon_map.size; i++ )
-            {
-                photon_s ph = scene->photon_map.data[ i ];
-                ray_s out;
-                out.p = ph.p;
-                v3d_s diff = v3d_s_sub( pos, ph.p );
-                f3_t diff_sqr = v3d_s_sqr( diff );
-
-                if( diff_sqr < min_sqr_dist ) continue;
-
-                out.d = v3d_s_of_length( diff, 1.0 );
-                f3_t weight = -v3d_s_mlv( out.d, surface.d ) / diff_sqr;
-
-                if( weight <= 0 ) continue;
-
-                vc_t hit_obj = NULL;
-                f3_t a = compound_s_ray_hit( &scene->matter, &out, NULL, &hit_obj );
-
-                if( a >= f3_inf || hit_obj == enter_obj )
-                {
-                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( ph.c, weight * intensity * transmittance ) );
-                }
-            }
-            cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 1.0 / scene->photon_samples ) );
-        }
 
         cl_s cl = obj_color( enter_obj, pos );
         cl_per.x *= cl.x;
@@ -840,29 +713,10 @@ cl_s scene_s_trans_lum( const scene_s* scene,
 
 /**********************************************************************************************************************/
 
-void scene_s_clear_photon_map( scene_s* o )
+void scene_s_clear( scene_s* o )
 {
-    photon_map_s_clear( &o->photon_map );
-}
-
-void scene_s_create_photon_map( scene_s* o )
-{
-    scene_s_clear_photon_map( o );
-
-    /// process sources with radiance directly  (light-sources)
-    for( sz_t i = 0; i < o->light.size; i++ )
-    {
-        obj_hdr_s* light_src = o->light.data[ i ];
-        cl_s color = v3d_s_mlf( obj_color( light_src, light_src->prp.pos ), light_src->prp.radiance );
-        ray_s out;
-        out.p = light_src->prp.pos;
-        u2_t rv = 1234;
-        for( sz_t i = 0; i < o->photon_samples; i++ )
-        {
-            out.d = v3d_s_rsc( &rv, 2.0 );
-            scene_s_send_photon( o, &out, color, o->trace_depth );
-        }
-    }
+    compound_s_clear( &o->light );
+    compound_s_clear( &o->matter );
 }
 
 /**********************************************************************************************************************/
@@ -898,6 +752,13 @@ image_cps_s* scene_s_show_photon_map( const scene_s* scene )
     image_cl_s_discard( image );
     return image_cps;
 
+}
+
+void scene_s_create_photon_map_image_file( const scene_s* o, sc_t file )
+{
+    image_cps_s* image = scene_s_show_photon_map( o );
+    image_cps_s_write_pnm( image, file );
+    image_cps_s_discard( image );
 }
 
 /**********************************************************************************************************************/
@@ -1096,7 +957,7 @@ vd_t lum_machine_s_func( lum_machine_s* o )
         }
         else
         {
-            // deprecated
+            // deprecated method (not considering media transition)
             vc_t  hit_obj = NULL;
             v3d_s hit_nor;
             f3_t offs = scene_s_hit( o->scene, &ray, &hit_nor, &hit_obj );
@@ -1159,7 +1020,7 @@ void scene_s_create_image_file_from_lum_map( const scene_s* o, const lum_map_s* 
     image_cl_s_saturate( image, o->gamma );
     image_cps_s_copy_cl( image_cps, image );
     image_cps_s_write_pnm( image_cps, file );
-    st_s_print_fa( "  Hash: #<tp_t>", image_cps_s_hash( image_cps ) );
+    st_s_print_fa( " hash: #<tp_t>", image_cps_s_hash( image_cps ) );
 
     image_cps_s_discard( image_cps );
     image_cl_s_discard( image );
@@ -1178,21 +1039,12 @@ void scene_s_create_image_file( scene_s* o, sc_t file )
 
     bcore_msg_fa( "Number of objects: #<sz_t>\n", scene_s_objects( o ) );
 
-    if( o->photon_samples > 0 )
-    {
-        bcore_msg_fa( "Creating photon map:" );
-        clock_t time = clock();
-        scene_s_create_photon_map( o );
-        time = clock() - time;
-        bcore_msg_fa( " #<sz_t> photons;", o->photon_map.size );
-        bcore_msg( " %5.3g cs;\n", ( f3_t )time / ( CLOCKS_PER_SEC ) );
-    }
-
     lum_arr_s* lum_arr = bcore_life_s_push_aware( l, lum_arr_s_create() );
 
     st_s_print_fa( "Rendering ...\n" );
     clock_t time = clock();
     st_s_print_fa( "\tmain image: " );
+
     for( sz_t j = 0; j < o->image_height; j++ )
     {
         for( sz_t i = 0; i < o->image_width; i++ )
@@ -1237,7 +1089,6 @@ void scene_s_create_image_file( scene_s* o, sc_t file )
     bcore_msg( "\n%5.3g cs\n", ( f3_t )time / ( CLOCKS_PER_SEC ) );
 
 
-    scene_s_clear_photon_map( o );
     bcore_life_s_discard( l );
 }
 
