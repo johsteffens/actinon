@@ -197,6 +197,11 @@ sz_t arr_s_get_size( const arr_s* o )
     return o->a.size;
 }
 
+void arr_s_set_size( arr_s* o, sz_t size )
+{
+    bcore_arr_sr_s_set_size( &o->a, size );
+}
+
 sr_s* arr_s_get( arr_s* o, sz_t idx )
 {
     if( idx < o->a.size ) return &o->a.data[ idx ];
@@ -214,7 +219,7 @@ void arr_s_set( arr_s* o, sz_t idx, sr_s obj )
 
 void arr_s_push( arr_s* o, sr_s obj )
 {
-    bcore_arr_sr_s_push_sr( &o->a, obj );
+    bcore_arr_sr_s_push_sr( &o->a, sr_clone( obj ) );
 }
 
 void arr_s_cat( arr_s* o, const arr_s* arr )

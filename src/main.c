@@ -73,6 +73,7 @@ void run_quicktypes()
 
 int main( int argc, const char** argv )
 {
+    run_selftest();
     bcore_library_init( signal );
 
     bcore_msg( "RAYFLUX: Ray-tracer.\n" );

@@ -42,35 +42,37 @@ sc_t code_symbol( code_s o )
 {
     switch( o )
     {
-        case CL_COMMA:     return ","; break;
-        case CL_SEMICOLON: return ";"; break;
-        case CL_ROUND_BRACKET_OPEN:   return "("; break;
-        case CL_ROUND_BRACKET_CLOSE:  return ")"; break;
-        case CL_SQUARE_BRACKET_OPEN:  return "["; break;
-        case CL_SQUARE_BRACKET_CLOSE: return "]"; break;
-        case OP_DOT:           return "."; break;
-        case OP_QUERY:         return "?"; break;
-        case OP_MUL:           return "*"; break;
-        case OP_MUL_ASSIGN:    return "*="; break;
-        case OP_DIV:           return "/"; break;
-        case OP_DIV_ASSIGN:    return "/="; break;
-        case OP_ADD:           return "+"; break;
-        case OP_ADD_ASSIGN:    return "+="; break;
-        case OP_SUB:           return "-"; break;
-        case OP_SUB_ASSIGN:    return "-="; break;
-        case OP_ASSIGN:        return "="; break;
-        case OP_EQUAL:         return "=="; break;
-        case OP_SMALLER:       return "<"; break;
-        case OP_UNEQUAL:       return "!="; break;
-        case OP_SMALLER_EQUAL: return "<="; break;
-        case OP_LARGER:        return ">"; break;
-        case OP_LARGER_EQUAL:  return ">="; break;
-        case OP_NOT:           return "NOT"; break;
-        case OP_AND:           return "AND"; break;
-        case OP_OR:            return "OR"; break;
-        case OP_XOR:           return "XOR"; break;
-        case OP_CAT:           return "CAT"; break;
-        default:               return ""; break;
+        case CL_COMMA:     return ",";
+        case CL_SEMICOLON: return ";";
+        case CL_ROUND_BRACKET_OPEN:   return "(";
+        case CL_ROUND_BRACKET_CLOSE:  return ")";
+        case CL_SQUARE_BRACKET_OPEN:  return "[";
+        case CL_SQUARE_BRACKET_CLOSE: return "]";
+        case CL_FSIGNATURE:    return "<-";
+        case CL_DYN_ARRAY:     return "[]";
+        case OP_DOT:           return ".";
+        case OP_QUERY:         return "?";
+        case OP_MUL:           return "*";
+        case OP_MUL_ASSIGN:    return "*=";
+        case OP_DIV:           return "/";
+        case OP_DIV_ASSIGN:    return "/=";
+        case OP_ADD:           return "+";
+        case OP_ADD_ASSIGN:    return "+=";
+        case OP_SUB:           return "-";
+        case OP_SUB_ASSIGN:    return "-=";
+        case OP_ASSIGN:        return "=";
+        case OP_EQUAL:         return "==";
+        case OP_SMALLER:       return "<";
+        case OP_UNEQUAL:       return "!=";
+        case OP_SMALLER_EQUAL: return "<=";
+        case OP_LARGER:        return ">";
+        case OP_LARGER_EQUAL:  return ">=";
+        case OP_NOT:           return "NOT";
+        case OP_AND:           return "AND";
+        case OP_OR:            return "OR";
+        case OP_XOR:           return "XOR";
+        case OP_CAT:           return "CAT";
+        default:               return "";
     }
     return "";
 }
@@ -289,7 +291,7 @@ void mcode_s_parse( mcode_s* o, sr_s* src )
             }
             st_s_discard( name );
         }
-        // operators
+        // controls and operators
         else if( bcore_source_q_parse_bl_fa( src, "#?([0]=='!'||[0]=='?'||[0]=='.'||[0]=='='||[0]=='+'||[0]=='-'||[0]=='*'||[0]=='/'||[0]=='>'||[0]=='<'||[0]=='&'||[0]=='|'||[0]==':')" ) ) // operator
         {
             char c = bcore_source_q_get_u0( src );
@@ -303,8 +305,14 @@ void mcode_s_parse( mcode_s* o, sr_s* src )
                 case '-': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_SUB_ASSIGN    : OP_SUB ); break;
                 case '*': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_MUL_ASSIGN    : OP_MUL ); break;
                 case '/': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_DIV_ASSIGN    : OP_DIV ); break;
-                case '<': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_SMALLER_EQUAL :
-                                                bcore_source_q_parse_bl_fa( src, "#?'>'" ) ? OP_UNEQUAL       : OP_SMALLER ); break;
+                case '<':
+                {
+                    if     ( bcore_source_q_parse_bl_fa( src, "#?'='" ) ) mcode_s_push_code( o, OP_SMALLER_EQUAL );
+                    else if( bcore_source_q_parse_bl_fa( src, "#?'>'" ) ) mcode_s_push_code( o, OP_UNEQUAL );
+                    else if( bcore_source_q_parse_bl_fa( src, "#?'*'" ) ) mcode_s_push_code( o, CL_FSIGNATURE );
+                    else                                                  mcode_s_push_code( o, OP_SMALLER );
+                }
+                break;
                 case '>': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_LARGER_EQUAL  : OP_LARGER ); break;
                 case '&': mcode_s_push_code( o, OP_AND ); break;
                 case '|': mcode_s_push_code( o, OP_OR  ); break;
@@ -334,7 +342,12 @@ void mcode_s_parse( mcode_s* o, sr_s* src )
                 case ',': mcode_s_push_code( o, CL_COMMA                ); break;
                 case '(': mcode_s_push_code( o, CL_ROUND_BRACKET_OPEN   ); break;
                 case ')': mcode_s_push_code( o, CL_ROUND_BRACKET_CLOSE  ); break;
-                case '[': mcode_s_push_code( o, CL_SQUARE_BRACKET_OPEN  ); break;
+                case '[':
+                {
+                    if( bcore_source_q_parse_bl_fa( src, "#?']'" ) ) mcode_s_push_code( o, CL_DYN_ARRAY );
+                    else                                             mcode_s_push_code( o, CL_SQUARE_BRACKET_OPEN  );
+                }
+                break;
                 case ']': mcode_s_push_code( o, CL_SQUARE_BRACKET_CLOSE ); break;
                 default : break;
             }
@@ -884,6 +897,7 @@ static sr_s meval_s_cat( meval_s* o, sr_s v1, sr_s v2 )
         if( t2 == TYPEOF_arr_s )
         {
             arr_s_cat( r.o, v2.o );
+            sr_down( v2 );
         }
         else
         {
@@ -1058,6 +1072,38 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
         {
             opr = meval_s_get_code( o );
         }
+        else if( code == CL_ROUND_BRACKET_OPEN ) // calling a closure
+        {
+            sr_s ret = sr_fork( meval_s_eval_call( o, &front_obj ) );
+            sr_down( front_obj );
+            return meval_s_eval( o, ret );
+        }
+        else if( code == CL_SQUARE_BRACKET_OPEN ) // indexing front object
+        {
+            meval_s_get_code( o );
+            if( sr_s_type( &front_obj ) != TYPEOF_arr_s ) meval_s_err_fa( o, "Cannot index '#<sc_t>'.\n", ifnameof( sr_s_type( &front_obj ) ) );
+            arr_s* arr = front_obj.o;
+            sr_s sr_index = meval_s_eval( o, sr_null() );
+            meval_s_expect_code( o, CL_SQUARE_BRACKET_CLOSE );
+            if( !bcore_trait_is_of( sr_s_type( &sr_index ), TYPEOF_num ) ) meval_s_err_fa( o, "Numeric index expected.\n" );
+            s3_t index = sr_s3_sr( sr_index );
+            if( index < 0 ) meval_s_err_fa( o, "Index is negative.\n" );
+            if( index > arr->a.size )
+            {
+                if( index > 1E9 ) meval_s_err_fa( o, "Attempting to allocate an array of #<s3_t> elements seems unintended.\n", index );
+                arr_s_set_size( arr, index + 1 );
+            }
+
+            sr_s* ret_p = arr_s_get( arr, index );
+            if( !ret_p ) meval_s_err_fa( o, "Index out of range.\n" );
+            if( !ret_p->p && meval_s_peek_code( o ) == OP_ASSIGN )
+            {
+                meval_s_get_code( o );
+                *ret_p = sr_clone( meval_s_eval( o, sr_null() ) );
+            }
+            sr_down( front_obj );
+            return meval_s_eval( o, sr_s_fork( ret_p ) );
+        }
         else
         {
             return sr_fork( front_obj );
@@ -1119,13 +1165,6 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
             sr_down( obj );
             obj = sr_tsd( TYPEOF_mclosure_s, mclosure );
         }
-
-        if( meval_s_peek_code( o ) == CL_ROUND_BRACKET_OPEN ) // calling a closure
-        {
-            sr_s closure = obj;
-            obj = meval_s_eval_call( o, &closure );
-            sr_down( closure );
-        }
     }
     else if( meval_s_try_code( o, CL_NAME ) ) // name of variable, constant or function
     {
@@ -1179,6 +1218,11 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
                     meval_s_expect_code( o, OP_ASSIGN );
                     obj = sr_s_fork( meval_s_set_obj( o, key, sr_clone( meval_s_eval( o, sr_null() ) ) ) );
                 }
+                else if( !p_obj->p )
+                {
+                    meval_s_expect_code( o, OP_ASSIGN );
+                    *p_obj = sr_clone( meval_s_eval( o, sr_null() ) );
+                }
                 else
                 {
                     if( sr_s_is_const( &obj ) ) meval_s_err_fa( o, "'#<sc_t>' is a constant.", meval_s_get_name( o, key ) );
@@ -1191,21 +1235,25 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
             }
             else
             {
-                if( meval_s_peek_code( o ) == CL_ROUND_BRACKET_OPEN ) // calling a closure
-                {
-                    obj = meval_s_eval_call( o, p_obj );
-                }
-                else
-                {
-                    obj = sr_s_fork( p_obj );
-                }
+                obj = sr_s_fork( p_obj );
             }
         }
+    }
+    else if( meval_s_try_code( o, CL_DYN_ARRAY ) ) // dynamic array
+    {
+        obj = sr_create( TYPEOF_arr_s );
     }
     else if( meval_s_try_code( o, CL_ROUND_BRACKET_OPEN ) ) // nested expression
     {
         obj = meval_s_eval( o, sr_null() );
         meval_s_expect_code( o, CL_ROUND_BRACKET_CLOSE );
+    }
+
+    /// Operations on object taking priority over standard operators
+    if( obj.p )
+    {
+        tp_t code = meval_s_peek_code( o );
+        if( code == CL_ROUND_BRACKET_OPEN || code == CL_SQUARE_BRACKET_OPEN ) obj = meval_s_eval( o, obj ); // closure & indexing
     }
 
     if( obj.p )
@@ -1245,8 +1293,8 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
         }
         else
         {
-            sr_down( front_obj );
-            return meval_s_eval( o, obj );
+            /// Operations on object which are subordinate to standard operators
+            obj = meval_s_eval( o, obj );
         }
     }
     else
@@ -1428,6 +1476,7 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     bclos_frame_s_set( frame, typeof( "colg"      ), sr_create( typeof( "colg_s"             ) ) );
     bclos_frame_s_set( frame, typeof( "colb"      ), sr_create( typeof( "colb_s"             ) ) );
     bclos_frame_s_set( frame, typeof( "sqrt"      ), sr_create( typeof( "sqrt_s"             ) ) );
+    bclos_frame_s_set( frame, typeof( "sqr"       ), sr_create( typeof( "sqr_s"              ) ) );
     bclos_frame_s_set( frame, typeof( "exp"       ), sr_create( typeof( "exp_s"              ) ) );
     bclos_frame_s_set( frame, typeof( "pow"       ), sr_create( typeof( "pow_s"              ) ) );
 
@@ -1450,7 +1499,7 @@ static bcore_flect_self_s* mclosure_s_create_self( void )
 st_s* mclosure_selftest()
 {
     st_s* log = st_s_create();
-    sr_s obj = bcore_interpret_auto_file( "../../rayflux/data/test.txt" );
+    sr_s obj = bcore_interpret_auto_file( "../../rayflux/dev/test.txt" );
     bcore_txt_ml_to_string( obj, log );
     return log;
 }
