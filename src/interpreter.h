@@ -49,7 +49,8 @@ typedef enum
     /// operators
     CL_OP_BEGIN, // begin of operators
     OP_DOT, // '.'
-    OP_QUERY,  // '?'
+    OP_QUERY,         // '?'  entire data structure to stdout
+    OP_DOUBLE_QUERY,  // '??' data content of leaf type to stdout
     OP_MUL, // '*'
     OP_DIV, // '/'
     OP_ADD, // '+'
@@ -122,7 +123,14 @@ sr_s  meval_s_eval(            meval_s* o, sr_s front_obj );
 
 /**********************************************************************************************************************/
 
-typedef struct mclosure_s mclosure_s;
+typedef struct mclosure_s
+{
+    aware_t _;
+    mcode_s*           mcode;
+    bclos_signature_s* signature;
+    bclos_frame_s*     lexical_frame;  // private
+} mclosure_s;
+
 DECLARE_FUNCTIONS_OBJ( mclosure_s )
 void mclosure_s_define( mclosure_s* o, bclos_frame_s* frame, bclos_signature_s* signature, mcode_s* mcode );
 

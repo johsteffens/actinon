@@ -52,6 +52,7 @@ sc_t code_symbol( code_s o )
         case CL_DYN_ARRAY:     return "[]";
         case OP_DOT:           return ".";
         case OP_QUERY:         return "?";
+        case OP_DOUBLE_QUERY:  return "??";
         case OP_MUL:           return "*";
         case OP_MUL_ASSIGN:    return "*=";
         case OP_DIV:           return "/";
@@ -75,6 +76,21 @@ sc_t code_symbol( code_s o )
         default:               return "";
     }
     return "";
+}
+
+/**********************************************************************************************************************/
+// mtype_s: object specifying a type within the mclosure framework
+
+#define TYPEOF_mtype_s typeof( "mtype_s" )
+typedef struct mtype_s { tp_t type; } mtype_s;
+DEFINE_FUNCTIONS_OBJ_FLAT( mtype_s )
+DEFINE_CREATE_SELF( mtype_s, "mtype_s = bcore_inst { tp_t type; }" )
+
+sr_s mtype_s_create_sr( tp_t type )
+{
+    sr_s sr = sr_create( TYPEOF_mtype_s );
+    ( ( mtype_s* )sr.o )->type = type;
+    return sr;
 }
 
 /**********************************************************************************************************************/
@@ -160,12 +176,31 @@ void mcode_s_push_src_index( mcode_s* o, sr_s* src )
     bcore_arr_sz_s_push( &o->src_map, bcore_source_q_get_index( src ) );
 }
 
-void mcode_s_parse( mcode_s* o, sr_s* src )
+void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
 {
     bcore_life_s* l = bcore_life_s_create();
     mcode_s_reset( o );
     st_s_copy_sc( &o->file, bcore_source_q_get_file( src ) );
     bcore_source_q_parse_fa( src, " " );
+
+    const bcore_hmap_tptp_s* hmap_types_l = hmap_types;
+
+    /** Setup m-system types by mapping each type to a corresponding beth-type
+     *  M-system types are converted by the parser to a mtype_s data element
+     */
+    if( !hmap_types_l )
+    {
+        bcore_hmap_tptp_s* map = bcore_life_s_push_aware( l, bcore_hmap_tptp_s_create() );
+        bcore_hmap_tptp_s_set( map, typeof( "bool"   ), TYPEOF_bl_t );
+        bcore_hmap_tptp_s_set( map, typeof( "int"    ), TYPEOF_s3_t );
+        bcore_hmap_tptp_s_set( map, typeof( "float"  ), TYPEOF_f3_t );
+        bcore_hmap_tptp_s_set( map, typeof( "num"    ), TYPEOF_num  );
+        bcore_hmap_tptp_s_set( map, typeof( "string" ), TYPEOF_st_s );
+        bcore_hmap_tptp_s_set( map, typeof( "list"   ), TYPEOF_arr_s );
+        bcore_hmap_tptp_s_set( map, typeof( "map"    ), TYPEOF_map_s );
+        bcore_hmap_tptp_s_set( map, typeof( "object" ), TYPEOF_spect_obj );
+        hmap_types_l = map;
+    }
 
     bcore_arr_sz_s* jmp_buf = bcore_life_s_push_aware( l, bcore_arr_sz_s_create() ); // jump address buffer
 
@@ -278,9 +313,9 @@ void mcode_s_parse( mcode_s* o, sr_s* src )
 
                 default:
                 {
-                    if( bcore_flect_exists( key ) )
+                    if( bcore_hmap_tptp_s_exists( hmap_types_l, key ) )
                     {
-                        mcode_s_push_data( o, sr_create( key ) );
+                        mcode_s_push_data( o, mtype_s_create_sr( *bcore_hmap_tptp_s_get( hmap_types_l, key ) ) );
                     }
                     else
                     {
@@ -298,7 +333,12 @@ void mcode_s_parse( mcode_s* o, sr_s* src )
             switch( c )
             {
                 case '!': mcode_s_push_code( o, OP_NOT   ); break;
-                case '?': mcode_s_push_code( o, OP_QUERY ); break;
+                case '?':
+                {
+                    if( bcore_source_q_parse_bl_fa( src, "#?'?'" ) ) mcode_s_push_code( o, OP_DOUBLE_QUERY );
+                    else                                             mcode_s_push_code( o, OP_QUERY );
+                }
+                break;
                 case '.': mcode_s_push_code( o, OP_DOT   ); break;
                 case '=': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_EQUAL         : OP_ASSIGN ); break;
                 case '+': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_ADD_ASSIGN    : OP_ADD ); break;
@@ -309,7 +349,7 @@ void mcode_s_parse( mcode_s* o, sr_s* src )
                 {
                     if     ( bcore_source_q_parse_bl_fa( src, "#?'='" ) ) mcode_s_push_code( o, OP_SMALLER_EQUAL );
                     else if( bcore_source_q_parse_bl_fa( src, "#?'>'" ) ) mcode_s_push_code( o, OP_UNEQUAL );
-                    else if( bcore_source_q_parse_bl_fa( src, "#?'*'" ) ) mcode_s_push_code( o, CL_FSIGNATURE );
+                    else if( bcore_source_q_parse_bl_fa( src, "#?'-'" ) ) mcode_s_push_code( o, CL_FSIGNATURE );
                     else                                                  mcode_s_push_code( o, OP_SMALLER );
                 }
                 break;
@@ -355,7 +395,7 @@ void mcode_s_parse( mcode_s* o, sr_s* src )
         else if( bcore_source_q_parse_bl_fa( src, "#?'{' " ) ) // recurse into block
         {
             mcode_s* code = mcode_s_create();
-            mcode_s_parse( code, src );
+            mcode_s_parse( code, hmap_types_l, src );
             mcode_s_push_data( o, sr_asd( code ) );
             bcore_source_q_parse_fa( src, "} " );
         }
@@ -386,7 +426,7 @@ void mcode_s_parse( mcode_s* o, sr_s* src )
             sr_s chain = sr_asd( bcore_source_chain_s_create() );
             bcore_source_chain_s_push_d( chain.o, bcore_source_file_s_create_name( file->sc ) );
             bcore_source_chain_s_push_d( chain.o, bcore_inst_typed_create( typeof( "bcore_source_string_s" ) ) );
-            mcode_s_parse( code, &chain );
+            mcode_s_parse( code, hmap_types_l, &chain );
             sr_down( chain );
             st_s_discard( file );
 
@@ -588,6 +628,23 @@ static sr_s meval_s_mul( meval_s* o, sr_s v1, sr_s v2 )
                 case TYPEOF_s3_t:  r = sr_clone( v1 ); v1 = sr_null(); map_s_scale(  r.o, *( s3_t* )v2.o ); break;
                 case TYPEOF_f3_t:  r = sr_clone( v1 ); v1 = sr_null(); map_s_scale(  r.o, *( f3_t* )v2.o ); break;
                 case TYPEOF_m3d_s: r = sr_clone( v1 ); v1 = sr_null(); map_s_rotate( r.o,  ( m3d_s* )v2.o ); break;
+            }
+        }
+        break;
+
+        case TYPEOF_bclos_signature_s:
+        {
+            bclos_signature_s* sig = v1.o;
+            switch( t2 )
+            {
+                case TYPEOF_mclosure_s:
+                {
+                    mclosure_s* src = v2.o;
+                    mclosure_s* mclosure = mclosure_s_create();
+                    mclosure_s_define( mclosure, src->lexical_frame, sig, src->mcode );
+                    r = sr_tsd( TYPEOF_mclosure_s, mclosure );
+                }
+                break;
             }
         }
         break;
@@ -1042,7 +1099,7 @@ sr_s meval_s_eval_call( meval_s* o, const sr_s* closure )
         sr_s arg  = meval_s_eval( o, sr_null() );
         tp_t sig_type = sig->data[ i ].type;
         tp_t arg_type = sr_s_type( &arg );
-        if( arg_type != sig_type && !bcore_trait_is_of( arg_type, sig_type ) )
+        if( sig_type != 0 && arg_type != sig_type && !bcore_trait_is_of( arg_type, sig_type ) )
         {
             meval_s_err_fa( o, "Function '#<sc_t>': Argument #<sz_t> is '#<sc_t>' and not of '#<sc_t>'.",
                                 ifnameof( sr_s_type( closure ) ),
@@ -1131,9 +1188,24 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
     }
     else // specific unary operators processed immediately
     {
-        if( meval_s_try_code( o, OP_QUERY ) )
+        tp_t code = meval_s_peek_code( o );
+        if( code == OP_QUERY )
         {
+            meval_s_get_code( o );
             bcore_txt_ml_to_stdout( meval_s_eval( o, sr_null() ) );
+            return sr_null();
+        }
+        else if( code == OP_DOUBLE_QUERY )
+        {
+            meval_s_get_code( o );
+            sr_s obj = meval_s_eval( o, sr_null() );
+            if( obj.p )
+            {
+                st_s* string = st_s_create_typed( sr_s_type( &obj ), obj.o );
+                bcore_msg_fa( "#<st_s*>\n", string );
+                st_s_discard( string );
+            }
+            sr_down( obj );
             return sr_null();
         }
     }
@@ -1242,6 +1314,34 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
     else if( meval_s_try_code( o, CL_DYN_ARRAY ) ) // dynamic array
     {
         obj = sr_create( TYPEOF_arr_s );
+    }
+    else if( meval_s_try_code( o, CL_FSIGNATURE ) ) // function signature
+    {
+        obj = sr_create( TYPEOF_bclos_signature_s );
+        bclos_signature_s* sig = obj.o;
+        meval_s_expect_code( o, CL_ROUND_BRACKET_OPEN );
+        while( !meval_s_try_code( o, CL_ROUND_BRACKET_CLOSE ) )
+        {
+            tp_t type = 0;
+            tp_t code = meval_s_peek_code( o );
+            if( code == CL_DATA )
+            {
+                sr_s obj = meval_s_get_data( o );
+                if( sr_s_type( &obj ) == TYPEOF_mtype_s )
+                {
+                    type = ( ( mtype_s* )obj.o )->type;
+                }
+                else
+                {
+                    meval_s_err_fa( o, "Unhandled data element '#<sc_t>' in argument list.\n", ifnameof( sr_s_type( &obj ) ) );
+                }
+            }
+            meval_s_expect_code( o, CL_NAME );
+            tp_t key = meval_s_get_code( o );
+            bclos_signature_arg_s arg = { .name = key, .type = type, .is_const = false };
+            bclos_signature_s_push( sig, arg );
+            if( meval_s_peek_code( o ) != CL_ROUND_BRACKET_CLOSE ) meval_s_expect_code( o, CL_COMMA );
+        }
     }
     else if( meval_s_try_code( o, CL_ROUND_BRACKET_OPEN ) ) // nested expression
     {
@@ -1390,14 +1490,6 @@ sr_s meval_s_execute( meval_s* o )
 
 /**********************************************************************************************************************/
 
-typedef struct mclosure_s
-{
-    aware_t _;
-    mcode_s*           mcode;
-    bclos_signature_s* signature;
-    bclos_frame_s*     lexical_frame;  // private
-} mclosure_s;
-
 static sc_t mclosure_s_def =
 "mclosure_s = bclos_closure"
 "{"
@@ -1462,25 +1554,36 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     sr_s src = sr_cp( bcore_life_s_push_sr( l, source ), TYPEOF_bcore_source_s );
     mclosure_s* o = bcore_life_s_push_aware( l, mclosure_s_clone( const_o ) );
     mcode_s* mcode = bcore_life_s_push_aware( l, mcode_s_create() );
-    mcode_s_parse( mcode, &src );
+    mcode_s_parse( mcode, NULL, &src );
     bclos_frame_s* frame = bcore_life_s_push_aware( l, bclos_frame_s_create() );
-    bclos_frame_s_set( frame, typeof( "vec"       ), sr_create( typeof( "create_vec_s"       ) ) );
-    bclos_frame_s_set( frame, typeof( "vecx"      ), sr_create( typeof( "vecx_s"             ) ) );
-    bclos_frame_s_set( frame, typeof( "vecy"      ), sr_create( typeof( "vecy_s"             ) ) );
-    bclos_frame_s_set( frame, typeof( "vecz"      ), sr_create( typeof( "vecz_s"             ) ) );
-    bclos_frame_s_set( frame, typeof( "rotx"      ), sr_create( typeof( "rotx_s"             ) ) );
-    bclos_frame_s_set( frame, typeof( "roty"      ), sr_create( typeof( "roty_s"             ) ) );
-    bclos_frame_s_set( frame, typeof( "rotz"      ), sr_create( typeof( "rotz_s"             ) ) );
-    bclos_frame_s_set( frame, typeof( "color"     ), sr_create( typeof( "create_color_s"     ) ) );
-    bclos_frame_s_set( frame, typeof( "colr"      ), sr_create( typeof( "colr_s"             ) ) );
-    bclos_frame_s_set( frame, typeof( "colg"      ), sr_create( typeof( "colg_s"             ) ) );
-    bclos_frame_s_set( frame, typeof( "colb"      ), sr_create( typeof( "colb_s"             ) ) );
-    bclos_frame_s_set( frame, typeof( "sqrt"      ), sr_create( typeof( "sqrt_s"             ) ) );
-    bclos_frame_s_set( frame, typeof( "sqr"       ), sr_create( typeof( "sqr_s"              ) ) );
-    bclos_frame_s_set( frame, typeof( "exp"       ), sr_create( typeof( "exp_s"              ) ) );
-    bclos_frame_s_set( frame, typeof( "pow"       ), sr_create( typeof( "pow_s"              ) ) );
 
+    /// Built-in functions
+    bclos_frame_s_set( frame, typeof( "vec"   ), sr_cc( sr_create( typeof( "create_vec_s"   ) ) ) );
+    bclos_frame_s_set( frame, typeof( "vecx"  ), sr_cc( sr_create( typeof( "vecx_s"         ) ) ) );
+    bclos_frame_s_set( frame, typeof( "vecy"  ), sr_cc( sr_create( typeof( "vecy_s"         ) ) ) );
+    bclos_frame_s_set( frame, typeof( "vecz"  ), sr_cc( sr_create( typeof( "vecz_s"         ) ) ) );
+    bclos_frame_s_set( frame, typeof( "rotx"  ), sr_cc( sr_create( typeof( "rotx_s"         ) ) ) );
+    bclos_frame_s_set( frame, typeof( "roty"  ), sr_cc( sr_create( typeof( "roty_s"         ) ) ) );
+    bclos_frame_s_set( frame, typeof( "rotz"  ), sr_cc( sr_create( typeof( "rotz_s"         ) ) ) );
+    bclos_frame_s_set( frame, typeof( "color" ), sr_cc( sr_create( typeof( "create_color_s" ) ) ) );
+    bclos_frame_s_set( frame, typeof( "colr"  ), sr_cc( sr_create( typeof( "colr_s"         ) ) ) );
+    bclos_frame_s_set( frame, typeof( "colg"  ), sr_cc( sr_create( typeof( "colg_s"         ) ) ) );
+    bclos_frame_s_set( frame, typeof( "colb"  ), sr_cc( sr_create( typeof( "colb_s"         ) ) ) );
+    bclos_frame_s_set( frame, typeof( "sqrt"  ), sr_cc( sr_create( typeof( "sqrt_s"         ) ) ) );
+    bclos_frame_s_set( frame, typeof( "sqr"   ), sr_cc( sr_create( typeof( "sqr_s"          ) ) ) );
+    bclos_frame_s_set( frame, typeof( "exp"   ), sr_cc( sr_create( typeof( "exp_s"          ) ) ) );
+    bclos_frame_s_set( frame, typeof( "pow"   ), sr_cc( sr_create( typeof( "pow_s"          ) ) ) );
     bclos_frame_s_set( frame, typeof( "string_fa" ), sr_create( typeof( "create_string_fa_s" ) ) );
+
+    /// Built-in constants
+    bclos_frame_s_set( frame, typeof( "scene_s"        ), sr_create( typeof( "scene_s"        ) ) );
+    bclos_frame_s_set( frame, typeof( "obj_sphere_s"   ), sr_create( typeof( "obj_sphere_s"   ) ) );
+    bclos_frame_s_set( frame, typeof( "obj_plane_s"    ), sr_create( typeof( "obj_plane_s"    ) ) );
+    bclos_frame_s_set( frame, typeof( "obj_cone_s"     ), sr_create( typeof( "obj_cone_s"     ) ) );
+    bclos_frame_s_set( frame, typeof( "obj_cylinder_s" ), sr_create( typeof( "obj_cylinder_s" ) ) );
+    bclos_frame_s_set( frame, typeof( "arr_s"          ), sr_create( typeof( "arr_s"          ) ) );
+    bclos_frame_s_set( frame, typeof( "map_s"          ), sr_create( typeof( "map_s"          ) ) );
+
     mclosure_s_define( o, frame, NULL, mcode );
     sr_s return_obj = mclosure_s_call( o, NULL, NULL );
     bcore_life_s_discard( l );
@@ -1512,6 +1615,7 @@ vd_t interpreter_signal( tp_t target, tp_t signal, vd_t object )
 
     if( signal == typeof( "init1" ) )
     {
+        bcore_flect_define_creator( typeof( "mtype_s"    ), mtype_s_create_self );
         bcore_flect_define_creator( typeof( "mcode_s"    ), mcode_s_create_self );
         bcore_flect_define_creator( typeof( "meval_s"    ), meval_s_create_self );
         bcore_flect_define_creator( typeof( "mclosure_s" ), mclosure_s_create_self );
