@@ -1613,7 +1613,7 @@ static bcore_flect_self_s* mclosure_s_create_self( void )
 st_s* mclosure_selftest()
 {
     st_s* log = st_s_create();
-    sr_s obj = bcore_interpret_auto_file( "../../rayflux/dev/test.txt" );
+    sr_s obj = bcore_interpret_auto_file( "../../actinon/dev/test.txt" );
     bcore_txt_ml_to_string( obj, log );
     return log;
 }

@@ -81,7 +81,7 @@ int main( int argc, const char** argv )
 
     if( argc < 2 )
     {
-        bcore_msg( "Format: rayflux <script file> [-f]\n" );
+        bcore_msg( "Format: actinon <script file> [-f]\n" );
         return 1;
     }
 
