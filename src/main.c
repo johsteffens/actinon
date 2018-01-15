@@ -76,12 +76,12 @@ int main( int argc, const char** argv )
 //    run_selftest();
     bcore_library_init( signal );
 
-    bcore_msg( "RAYFLUX: Ray-tracer.\n" );
+    bcore_msg( "ACTINON: Ray-tracer.\n" );
     bcore_msg( "Copyright (C) 2017 Johannes B. Steffens.\n\n" );
 
     if( argc < 2 )
     {
-        bcore_msg( "Format: actinon <script file> [-f]\n" );
+        bcore_msg( "Usage: actinon <script file> [-f]\n" );
         return 1;
     }
 

@@ -1589,6 +1589,63 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
         sr_down( v );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
+    else if( key == typeof( "set_surface" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        sr_s v = meval_s_eval( ev, sr_null() );
+        if( sr_s_type( &v ) != TYPEOF_st_s ) meval_s_err_fa( ev, "set_surface: string-argument expected." );
+        st_s* string = v.o;
+        obj_hdr_s* hdr = sr_o->o;
+        if( st_s_equal_sc( string, "transparent" ) )
+        {
+            hdr->prp.transparent = true;
+            hdr->prp.refractive_index = 1.0;
+            hdr->prp.color = ( cl_s ) { 10.0, 10.0, 10.0 };
+        }
+        else if( st_s_equal_sc( string, "glass" ) )
+        {
+            hdr->prp.transparent = true;
+            hdr->prp.refractive_index = 1.5;
+            hdr->prp.color = ( cl_s ) { 10.0, 10.0, 10.0 };
+        }
+        else if( st_s_equal_sc( string, "water" ) )
+        {
+            hdr->prp.transparent = true;
+            hdr->prp.refractive_index = 1.2;
+            hdr->prp.color = ( cl_s ) { 10.0, 10.0, 10.0 };
+        }
+        else if( st_s_equal_sc( string, "sapphire" ) )
+        {
+            hdr->prp.transparent = true;
+            hdr->prp.refractive_index = 1.76;
+            hdr->prp.color = ( cl_s ) { 10.0, 10.0, 10.0 };
+        }
+        else if( st_s_equal_sc( string, "diamond" ) )
+        {
+            hdr->prp.transparent = true;
+            hdr->prp.refractive_index = 2.42;
+            hdr->prp.color = ( cl_s ) { 10.0, 10.0, 10.0 };
+        }
+        else if( st_s_equal_sc( string, "diffuse" ) )
+        {
+            hdr->prp.transparent = false;
+            hdr->prp.refractive_index = 1.0;
+            hdr->prp.color = ( cl_s ) { 1.0, 1.0, 1.0 };
+        }
+        else if( st_s_equal_sc( string, "polished" ) )
+        {
+            hdr->prp.transparent = false;
+            hdr->prp.refractive_index = 1.5;
+            hdr->prp.color = ( cl_s ) { 1.0, 1.0, 1.0 };
+        }
+        else
+        {
+            meval_s_err_fa( ev, "set_surface: Unknown surface specification '#<sc_t>.", string->sc );
+        }
+
+        sr_down( v );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
     else if( key == typeof( "set_distance_function" ) )
     {
         meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
