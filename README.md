@@ -4,7 +4,7 @@
 ![Diamond](https://raw.githubusercontent.com/johsteffens/rayflux/master/image/diamond.ray.png "Image created with Rayflux")
 
 ## What it is
-Rayflux is a ray-tracer. It can render 3D scenes realistically, employing techniques like distributed tracing, path tracing, antialiasing and others. It can visualize transparency, reflection, refraction, media-transition, diffuse-light, indirect-light and more. Realistic polished surfaces are realized by solving Fresnel equations for an thin coating with transparent material of a given refractive index.
+Rayflux is a ray-tracer. It can render 3D scenes realistically, employing techniques like distributed tracing, path tracing, antialiasing and others. It can visualize transparency, reflection, refraction, media-transition, diffuse-light, indirect-light and more. Realistic polished surfaces are achieved by solving Fresnel equations for an thin coating with transparent material of a given refractive index.
 
 For scene-design a special scripting language was developed. It is aimed to simplify object definition and composition. It supports the construction of complex objects from simpler objects. Geometric operations like translation, scaling and rotations can be realized simply and intuitively. 3D vectors and higher order tensors are dedicated objects with predefined operators supporting basic vector arithmetic. The language also allows computing image sequences (e.g. for videos).
 
