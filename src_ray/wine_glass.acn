@@ -1,4 +1,4 @@
-// Rayflux-script for rendering a wine-glass with rayflux.
+// Actinon-script for rendering a wine-glass with Actinon.
 
 /* Copyright 2018 Johannes Bernhard Steffens
  *
@@ -15,16 +15,16 @@
  * limitations under the License.
  */
 
-/* This script file represents a small program in rayflux-script.
+/* This script file represents a small program in Actinon-script.
  * It creates an image file of name <source-file>.pnm depicting a partially
  * filled wine-glass. Illumination and render parameters are set
  * to demonstrate caustics produced by the glass and liquid.
  */
 
-// Rayflux language specifier
+// Actinon language specifier
 <mclosure_s></>
 
-// This script-language was specifically designed for rayflux.
+// This script-language was specifically designed for Actinon.
 // Its syntax is loosely related to popular languages like C, C++, Python.
 //
 // Special functions and operators are provided for

@@ -1,4 +1,4 @@
-// Rayflux-script
+// Actinon-script
 
 /* Copyright 2018 Johannes Bernhard Steffens
  *
@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-/* This script file represents a small program in rayflux-script.
+/* This script file represents a small program in Actinon-script.
  * It creates an image file of name <source-file>.pnm depicting transparent colored
  * glass-balls on a polished floor. Some balls are arranged to form a pyramid. 
  * Illumination and render parameters are set to demonstrate multiple reflections,
