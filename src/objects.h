@@ -99,6 +99,7 @@ typedef struct obj_pair_inside_s obj_pair_inside_s;
 DECLARE_FUNCTIONS_OBJ( obj_pair_inside_s )
 
 obj_pair_inside_s* obj_pair_inside_s_create_pair( vc_t o1, vc_t o2 );
+sr_s obj_pair_inside_s_create_pair_sr( sr_s o1, sr_s o2 );
 
 /**********************************************************************************************************************/
 /// obj_pair_outside_s  (combination of two objects)
@@ -107,6 +108,7 @@ typedef struct obj_pair_outside_s obj_pair_outside_s;
 DECLARE_FUNCTIONS_OBJ( obj_pair_outside_s )
 
 obj_pair_outside_s* obj_pair_outside_s_create_pair( vc_t o1, vc_t o2 );
+sr_s obj_pair_outside_s_create_pair_sr( sr_s o1, sr_s o2 );
 
 /**********************************************************************************************************************/
 /// obj_neg_s  (negated objects inside <-> outside)

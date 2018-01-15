@@ -751,6 +751,20 @@ obj_pair_inside_s* obj_pair_inside_s_create_pair( vc_t o1, vc_t o2 )
     return o;
 }
 
+sr_s obj_pair_inside_s_create_pair_sr( sr_s o1, sr_s o2 )
+{
+    tp_t t1 = sr_s_type( &o1 );
+    tp_t t2 = sr_s_type( &o2 );
+    if( !bcore_trait_is_of( t1, TYPEOF_spect_obj ) || !bcore_trait_is_of( t2, TYPEOF_spect_obj ) )
+    {
+        ERR( "Objects '#<sc_t>' and '#<sc_t>' cannot be composed.", ifnameof( t1 ), ifnameof( t2 ) );
+    }
+    sr_s ret = sr_tsd( TYPEOF_obj_pair_inside_s, obj_pair_inside_s_create_pair( o1.o, o2.o ) );
+    sr_down( o1 );
+    sr_down( o2 );
+    return ret;
+}
+
 static void obj_pair_inside_s_init_a( vd_t nc )
 {
     struct { ap_t a; vc_t p; obj_pair_inside_s* o; } * nc_l = nc;
@@ -917,6 +931,20 @@ obj_pair_outside_s* obj_pair_outside_s_create_pair( vc_t o1, vc_t o2 )
     o->o1 = bcore_inst_aware_clone( o1 );
     o->o2 = bcore_inst_aware_clone( o2 );
     return o;
+}
+
+sr_s obj_pair_outside_s_create_pair_sr( sr_s o1, sr_s o2 )
+{
+    tp_t t1 = sr_s_type( &o1 );
+    tp_t t2 = sr_s_type( &o2 );
+    if( !bcore_trait_is_of( t1, TYPEOF_spect_obj ) || !bcore_trait_is_of( t2, TYPEOF_spect_obj ) )
+    {
+        ERR( "Objects '#<sc_t>' and '#<sc_t>' cannot be composed.", ifnameof( t1 ), ifnameof( t2 ) );
+    }
+    sr_s ret = sr_tsd( TYPEOF_obj_pair_outside_s, obj_pair_outside_s_create_pair( o1.o, o2.o ) );
+    sr_down( o1 );
+    sr_down( o2 );
+    return ret;
 }
 
 static void obj_pair_outside_s_init_a( vd_t nc )

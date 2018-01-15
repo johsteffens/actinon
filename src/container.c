@@ -310,6 +310,40 @@ void arr_s_scale( arr_s* o, f3_t fac )
     }
 }
 
+sr_s arr_s_create_inside_composite( arr_s* o, sz_t start, sz_t size )
+{
+    if( size == 1 )
+    {
+        return sr_cw( o->a.data[ start ] );
+    }
+    else
+    {
+        return obj_pair_inside_s_create_pair_sr
+        (
+            arr_s_create_inside_composite( o, start, size >> 1 ),
+            arr_s_create_inside_composite( o, start + ( size >> 1 ), size - ( size >> 1 ) )
+        );
+    }
+    return sr_null();
+}
+
+sr_s arr_s_create_outside_composite( arr_s* o, sz_t start, sz_t size )
+{
+    if( size == 1 )
+    {
+        return sr_cw( o->a.data[ start ] );
+    }
+    else
+    {
+        return obj_pair_outside_s_create_pair_sr
+        (
+            arr_s_create_outside_composite( o, start, size >> 1 ),
+            arr_s_create_outside_composite( o, start + ( size >> 1 ), size - ( size >> 1 ) )
+        );
+    }
+    return sr_null();
+}
+
 sr_s arr_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
 {
     if( !sr_o ) return sr_null();
@@ -355,6 +389,18 @@ sr_s arr_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
     {
         meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
         arr_s_clear( o );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == typeof( "compose_inside" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        obj = arr_s_create_inside_composite( o, 0, o->a.size );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == typeof( "compose_outside" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        obj = arr_s_create_outside_composite( o, 0, o->a.size );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
     else

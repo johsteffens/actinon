@@ -940,7 +940,7 @@ vd_t lum_machine_s_func( lum_machine_s* o )
         ray.p = o->scene->camera_position;
         ray.d = m3d_s_mlv( &camera_rotation, d );
 
-        lum->clr = o->scene->background_color;
+        cl_s out_clr = o->scene->background_color;
 
         bl_t trans_method = true;
 
@@ -952,7 +952,7 @@ vd_t lum_machine_s_func( lum_machine_s* o )
             f3_t offs = scene_s_trans_hit( o->scene, &ray, &exit_nor, &exit_obj, &enter_obj );
             if( offs < f3_inf )
             {
-                lum->clr = scene_s_trans_lum( o->scene, &ray, offs, exit_nor, exit_obj, enter_obj, o->scene->trace_depth, 1.0 );
+                out_clr = scene_s_trans_lum( o->scene, &ray, offs, exit_nor, exit_obj, enter_obj, o->scene->trace_depth, 1.0 );
             }
         }
         else
@@ -963,9 +963,11 @@ vd_t lum_machine_s_func( lum_machine_s* o )
             f3_t offs = scene_s_hit( o->scene, &ray, &hit_nor, &hit_obj );
             if( offs < f3_inf && hit_obj )
             {
-                lum->clr = scene_s_lum( o->scene, hit_obj, &ray, offs, hit_nor, o->scene->trace_depth, 1.0 );
+                out_clr = scene_s_lum( o->scene, hit_obj, &ray, offs, hit_nor, o->scene->trace_depth, 1.0 );
             }
         }
+
+        lum->clr = cl_s_sat( out_clr, o->scene->gamma );
     }
     return NULL;
 }
@@ -1017,7 +1019,6 @@ void scene_s_create_image_file_from_lum_map( const scene_s* o, const lum_map_s* 
             image_cl_s_set_pixel( image, i, j, lum_map_s_get_plain_avg( lum_map, i, j ).clr );
         }
     }
-    image_cl_s_saturate( image, o->gamma );
     image_cps_s_copy_cl( image_cps, image );
     image_cps_s_write_pnm( image_cps, file );
     st_s_print_fa( " hash: #<tp_t>", image_cps_s_hash( image_cps ) );

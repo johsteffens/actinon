@@ -185,6 +185,116 @@ DEFINE_STD_CLOSURE( exp_s, "f3_t exp_s( num val )", exp_s_call )
 
 /**********************************************************************************************************************/
 
+/// log( x )
+static sr_s log_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( log( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+}
+
+DEFINE_STD_CLOSURE( log_s, "f3_t log_s( num val )", log_s_call )
+
+/**********************************************************************************************************************/
+
+/// sin( x )
+static sr_s sin_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( sin( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+}
+
+DEFINE_STD_CLOSURE( sin_s, "f3_t sin_s( num val )", sin_s_call )
+
+/**********************************************************************************************************************/
+
+/// cos( x )
+static sr_s cos_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( cos( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+}
+
+DEFINE_STD_CLOSURE( cos_s, "f3_t cos_s( num val )", cos_s_call )
+
+/**********************************************************************************************************************/
+
+/// tan( x )
+static sr_s tan_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( tan( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+}
+
+DEFINE_STD_CLOSURE( tan_s, "f3_t tan_s( num val )", tan_s_call )
+
+/**********************************************************************************************************************/
+
+/// sin_d( x )
+static sr_s sin_d_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( sin( M_PI * sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) / 180.0 ) );
+}
+
+DEFINE_STD_CLOSURE( sin_d_s, "f3_t sin_d_s( num val )", sin_d_s_call )
+
+/**********************************************************************************************************************/
+
+/// cos_d( x )
+static sr_s cos_d_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( cos( M_PI * sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) / 180.0 ) );
+}
+
+DEFINE_STD_CLOSURE( cos_d_s, "f3_t cos_d_s( num val )", cos_d_s_call )
+
+/**********************************************************************************************************************/
+
+/// tan_d( x )
+static sr_s tan_d_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( tan( M_PI * sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) / 180.0 ) );
+}
+
+DEFINE_STD_CLOSURE( tan_d_s, "f3_t tan_d_s( num val )", tan_d_s_call )
+
+/**********************************************************************************************************************/
+
+/// asin( x )
+static sr_s asin_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( asin( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+}
+
+DEFINE_STD_CLOSURE( asin_s, "f3_t asin_s( num val )", asin_s_call )
+
+/**********************************************************************************************************************/
+
+/// acos( x )
+static sr_s acos_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( acos( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+}
+
+DEFINE_STD_CLOSURE( acos_s, "f3_t acos_s( num val )", acos_s_call )
+
+/**********************************************************************************************************************/
+
+/// atan( x )
+static sr_s atan_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( atan( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+}
+
+DEFINE_STD_CLOSURE( atan_s, "f3_t atan_s( num val )", atan_s_call )
+
+/**********************************************************************************************************************/
+
 /// pow( x, y )
 static sr_s pow_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
@@ -217,6 +327,16 @@ vd_t closures_signal( tp_t target, tp_t signal, vd_t object )
         bcore_flect_define_creator( typeof( "sqrt_s"             ), sqrt_s_create_self );
         bcore_flect_define_creator( typeof( "sqr_s"              ), sqr_s_create_self  );
         bcore_flect_define_creator( typeof( "exp_s"              ), exp_s_create_self  );
+        bcore_flect_define_creator( typeof( "log_s"              ), log_s_create_self  );
+        bcore_flect_define_creator( typeof( "sin_s"              ), sin_s_create_self  );
+        bcore_flect_define_creator( typeof( "cos_s"              ), cos_s_create_self  );
+        bcore_flect_define_creator( typeof( "tan_s"              ), tan_s_create_self  );
+        bcore_flect_define_creator( typeof( "sin_d_s"            ), sin_d_s_create_self );
+        bcore_flect_define_creator( typeof( "cos_d_s"            ), cos_d_s_create_self );
+        bcore_flect_define_creator( typeof( "tan_d_s"            ), tan_d_s_create_self );
+        bcore_flect_define_creator( typeof( "asin_s"             ), asin_s_create_self );
+        bcore_flect_define_creator( typeof( "acos_s"             ), acos_s_create_self );
+        bcore_flect_define_creator( typeof( "atan_s"             ), atan_s_create_self );
         bcore_flect_define_creator( typeof( "pow_s"              ), pow_s_create_self  );
     }
 

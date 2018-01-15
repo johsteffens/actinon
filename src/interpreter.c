@@ -196,7 +196,6 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
         bcore_hmap_tptp_s_set( map, typeof( "float"  ), TYPEOF_f3_t );
         bcore_hmap_tptp_s_set( map, typeof( "num"    ), TYPEOF_num  );
         bcore_hmap_tptp_s_set( map, typeof( "string" ), TYPEOF_st_s );
-        bcore_hmap_tptp_s_set( map, typeof( "list"   ), TYPEOF_arr_s );
         bcore_hmap_tptp_s_set( map, typeof( "map"    ), TYPEOF_map_s );
         bcore_hmap_tptp_s_set( map, typeof( "object" ), TYPEOF_spect_obj );
         hmap_types_l = map;
@@ -1569,10 +1568,22 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     bclos_frame_s_set( frame, typeof( "colr"  ), sr_cc( sr_create( typeof( "colr_s"         ) ) ) );
     bclos_frame_s_set( frame, typeof( "colg"  ), sr_cc( sr_create( typeof( "colg_s"         ) ) ) );
     bclos_frame_s_set( frame, typeof( "colb"  ), sr_cc( sr_create( typeof( "colb_s"         ) ) ) );
+
     bclos_frame_s_set( frame, typeof( "sqrt"  ), sr_cc( sr_create( typeof( "sqrt_s"         ) ) ) );
     bclos_frame_s_set( frame, typeof( "sqr"   ), sr_cc( sr_create( typeof( "sqr_s"          ) ) ) );
     bclos_frame_s_set( frame, typeof( "exp"   ), sr_cc( sr_create( typeof( "exp_s"          ) ) ) );
+    bclos_frame_s_set( frame, typeof( "log"   ), sr_cc( sr_create( typeof( "log_s"          ) ) ) );
+    bclos_frame_s_set( frame, typeof( "sin"   ), sr_cc( sr_create( typeof( "sin_s"          ) ) ) );
+    bclos_frame_s_set( frame, typeof( "cos"   ), sr_cc( sr_create( typeof( "cos_s"          ) ) ) );
+    bclos_frame_s_set( frame, typeof( "tan"   ), sr_cc( sr_create( typeof( "tan_s"          ) ) ) );
+    bclos_frame_s_set( frame, typeof( "sin_d" ), sr_cc( sr_create( typeof( "sin_d_s"        ) ) ) );
+    bclos_frame_s_set( frame, typeof( "cos_d" ), sr_cc( sr_create( typeof( "cos_d_s"        ) ) ) );
+    bclos_frame_s_set( frame, typeof( "tan_d" ), sr_cc( sr_create( typeof( "tan_d_s"        ) ) ) );
+    bclos_frame_s_set( frame, typeof( "asin"  ), sr_cc( sr_create( typeof( "asin_s"         ) ) ) );
+    bclos_frame_s_set( frame, typeof( "acos"  ), sr_cc( sr_create( typeof( "acos_s"         ) ) ) );
+    bclos_frame_s_set( frame, typeof( "atan"  ), sr_cc( sr_create( typeof( "atan_s"         ) ) ) );
     bclos_frame_s_set( frame, typeof( "pow"   ), sr_cc( sr_create( typeof( "pow_s"          ) ) ) );
+
     bclos_frame_s_set( frame, typeof( "string_fa" ), sr_create( typeof( "create_string_fa_s" ) ) );
 
     /// Built-in constants
