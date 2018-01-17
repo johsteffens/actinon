@@ -3,6 +3,8 @@
 ![Wine Glass](https://raw.githubusercontent.com/johsteffens/actinon/master/image/wine_glass.acn.png "Image created with Actinon")
 ![Diamond](https://raw.githubusercontent.com/johsteffens/actinon/master/image/diamond.acn.png "Image created with Actinon")
 
+### [Find more images here ...](https://github.com/johsteffens/actinon/wiki/Images)
+
 ## What it is
 Actinon is a ray-tracer. It can render 3D scenes realistically, employing techniques like distributed tracing, path tracing, antialiasing and others. It can visualize transparency, reflection, refraction, media-transition, diffuse-light, indirect-light and more. Realistic polished surfaces are achieved by mixing Fresnel-reflection, diffuse-reflection and light-absorption while observing energy conservation.
 
