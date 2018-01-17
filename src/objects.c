@@ -1688,7 +1688,7 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
         else if( st_s_equal_sc( string, "glass" ) )
         {
             hdr->prp.refractive_index = 1.46; // fused silica
-            hdr->prp.transparency = ( cl_s ) { 0.5, 0.7, 0.6 }; // transparency varies very strongly by glass type
+            hdr->prp.transparency = ( cl_s ) { 0.8, 0.9, 0.9 }; // transparency varies very strongly by glass type
             hdr->prp.fresnel_reflectivity = 1;
             hdr->prp.chromatic_reflectivity = 0;
             hdr->prp.diffuse_reflectivity = 0;
