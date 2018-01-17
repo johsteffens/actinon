@@ -117,21 +117,13 @@ create_glass =
     cover    = obj_plane_s;
     cylinder = obj_cylinder_s;
 
-    sphere.set_refractive_index( 1.5 );
-    sphere.set_transparent( true );
-
-    // The color values of transparent material
-    // is interpreted as half-absorption-distance.
-    // (Distance at with the color intensity is reduced to 1/2)
-    sphere.set_color( color( 2, 2, 2 ) );
-
     outer_sphere = sphere;
     bowl = outer_sphere & ( cover + vecz( 0.6 ) );
 
     inner_sphere = outer_sphere * 0.96;
-    liquid_sphere = inner_sphere; // liquit touches inner sphere causing renderer to calculate a media-transition
-    liquid_sphere.set_color( color( 0.4, 0.06, 0.05 ) );
-    liquid_sphere.set_refractive_index( 1.2 );
+
+    // if liquit exactly touches inner sphere, the renderer calculates media-transition properly
+    liquid_sphere = inner_sphere; 
     liquid = liquid_sphere & ( cover - vecz( 0.3 ) );
 
     inner_sphere.move( vecz( 0.02 ) );
@@ -158,6 +150,12 @@ create_glass =
 
     glass = ( bowl | neck | bottom );
     glass.set_envelope( sphere * 1.7 + vecz( 1.5 ) );
+
+
+    glass.set_material( "glass" );
+    liquid.set_material( "water" );                              // physical properties of water... 
+    liquid.set_transparency( color( 0.177, 9.61E-6, 9.54E-7 ) ); // ... and color of red wine
+
     wine = glass : liquid;
 
     // We keep a miniscule gap between glass-bottom and floor.

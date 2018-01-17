@@ -1,0 +1,219 @@
+// Actinon-script
+
+/* Copyright 2018 Johannes Bernhard Steffens
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+<mclosure_s></>
+
+scene = scene_s;
+scene.threads = 10;
+
+scene.image_width         = 400;
+scene.image_height        = 400;
+scene.gamma               = 1.0;
+
+scene.gradient_cycles     = 100;
+scene.gradient_samples    = 2;
+scene.gradient_threshold  = 0.03;
+
+scene.trace_depth         = 25;
+scene.trace_min_intensity = 0.03;
+scene.direct_samples      = 50;
+scene.path_samples        = 50;
+scene.max_path_length     = 0.1;
+
+camera_position = vec( 0, -0.5, 0.1 );
+
+scene.camera_position       = camera_position;
+scene.camera_view_direction = vec( 0, 0, -0.05 ) - camera_position;
+scene.camera_top_direction  = vec( 0, 0, 1 );
+scene.camera_focal_length   = 4;
+scene.background_color = color( 0.6, 0.7, 0.8 );
+
+create_light = <-( lamp_radius, radiance ) *
+{
+    sph = obj_sphere_s;
+    light = sph * lamp_radius;
+    light.set_radiance( radiance );
+    light;
+};
+
+create_floor = <-( num zoffs ) *
+{
+    plane = obj_plane_s;
+    plane.set_color( color( 0.6, 0.4, 0.2 ) );
+    plane.set_refractive_index( 1.2 );
+    plane.move( vec( 0, 0, zoffs ) );
+    plane;
+};
+
+create_plate = <-( num floor_offs, num radius, num height ) *
+{
+    cloth_height = 0.00075;
+    cover = obj_plane_s;
+    cone = obj_cone_s;
+    cone.cosa = cos_d( 45 );
+    cyl = obj_cylinder_s;
+
+    plate = cone & ( cover - vecz( radius + cloth_height ) ) & !( cover - vecz( radius + height ) );
+    plate.move( vecz( floor_offs + radius + height ) );
+
+    chw = radius * 0.65;
+
+    list = [];
+    list.push( cover );
+    list.push( ( cover * rotx(  90 ) ) - vecy( chw ) );
+    list.push( ( cover * rotx( -90 ) ) + vecy( chw ) );
+    list.push( ( cover * roty(  90 ) ) + vecx( chw ) );
+    list.push( ( cover * roty( -90 ) ) - vecx( chw ) );
+
+    cloth = list.compose_inside();
+    cloth.move( vecz( floor_offs + height ) );
+    cloth.rotate( rotz( 45 ) );
+    cloth.set_color( color( 0.9, 0.1, 0.2 ) );
+    plate.set_color( color( 0.2, 0.1, 0.05 ) );
+    plate.set_refractive_index( 1.5 );
+
+    plate : cloth;
+};
+
+create_diamond = <-( num radius ) *
+{
+    plane = obj_plane_s;
+    plane.set_color( color( 1, 0.5, 0.3 ) );
+
+    sphere = obj_sphere_s;
+
+    plate = plane + vecz( 0.24 );
+    side = plane * rotx( 90 );
+
+    // array of cut-surfaces
+    cuts = [];
+    
+    // function producing a series of cuts around the diamond
+    append_to_cuts = <-( cut_side, num_cuts ) *
+    {
+        i = 0;
+        while( i < num_cuts )
+        {
+            cuts.push( cut_side * rotz( i * 360 / num_cuts ) ); 
+            i += 1; 
+        }();
+    };
+
+    // applying 56 diamond cuts
+    append_to_cuts( ( ( side * rotx( 37 - 90 ) ) - vecy( 1.00 ) )                    , 16 );
+    append_to_cuts( ( ( side * rotx( 32 - 90 ) ) - vecy( 1.02 ) ) * rotz(  180 / 16 ),  8 );
+    append_to_cuts( ( ( side * rotx( 26 - 90 ) ) - vecy( 1.12 ) ) * rotz( -180 / 16 ),  8 );
+    append_to_cuts( ( ( side * rotx( 90 - 42 ) ) - vecy( 1.00 ) )                    , 16 );
+    append_to_cuts( ( ( side * rotx( 90 - 40 ) ) - vecy( 1.02 ) ) * rotz(  180 / 16 ),  8 );
+
+    // together with plate and bounding sphere we compose the diamond
+    gem = cuts.compose_inside() & plate & sphere;
+
+    // diamond material parameters
+    gem.set_material( "diamond" );
+
+    // we specify a bounding sphere to accelerate rendering 
+    gem.set_envelope( sphere * 1.01 );
+
+    gem.scale( radius );
+
+    gem;
+};
+
+create_stand = <-( num bottom_zoffs, num radius ) *
+{
+    sph = obj_sphere_s;
+    cov = obj_plane_s;
+
+    list = [];
+    list.push( ( sph * radius ) );
+    list.push( !( cov - vecz( radius * 0.1 ) ) );
+    list.push( !( ( sph * radius ) + vecz( radius * 0.4 ) ) );
+    list.push( cov + vecz( radius * 0.08 ) );
+
+    ring = list.compose_inside();
+
+    ring.set_color( color( 0.83, 0.68, 0.22 ) );
+    ring.set_chromatic_reflectivity( 0.7 );
+
+    list = [];
+    list.push( ( sph * radius ) );
+    list.push( !( ( sph * radius ) + vec( -radius * 0.05, -radius * 0.2, 0 ) ) );
+    list.push( !( ( sph * radius ) + vec( -radius * 0.05,  radius * 0.2, 0 ) ) );
+    list.push( ( cov * rotx(  90 ) ) * rotz( -7 ) );
+    list.push( ( cov * rotx( -90 ) ) * rotz(  7 ) );
+    list.push( ( cov * roty( -90 ) ) + vecx( radius * 0.5 ) );
+    list.push( !cov );
+    bar = list.compose_inside();
+    bar.set_envelope( ( ( sph * radius * 0.8 ) + vecx( radius ) ) * roty( -45 ) );
+    bar.move( vec( radius * 0.45, 0, bottom_zoffs ) );
+    bar.set_color( color( 0.83, 0.68, 0.22 ) );
+    bar.set_chromatic_reflectivity( 0.7 );
+
+    ring.move( vec( 0, 0, bottom_zoffs + radius * 0.85 ) );
+
+//    bar.rotate( rotz( 30 ) );
+
+//    ring.set_refractive_index( 100.0 );
+
+    stand = [];
+    stand.push( ring );
+    stand.push( bar );
+    stand.rotate( rotz( 90 ) );
+    stand.push( bar );
+    stand.rotate( rotz( 90 ) );
+    stand.push( bar );
+    stand.rotate( rotz( 90 ) );
+    stand.push( bar );
+
+    stand;
+
+    
+};
+
+create_diamond_on_stand = <-( num bottom_zoffs ) *
+{
+    stand = create_stand( bottom_zoffs, 0.05 );
+
+    diamond = create_diamond( 0.0472 );
+    diamond.move( vecz( 0.046 + bottom_zoffs ) );
+    diamond : stand;
+};
+
+{
+    scene.clear();
+//    scene.push( create_light( 0.025, 0.08 ) + vec( 0.075, -0.075, 0.125 ) );
+    scene.push( create_light( 0.025, 0.1 ) + vec( 0.04, 0.04, 0.125 ) );
+
+    floor_offset = -0.075;
+    scene.push( create_floor( floor_offset ) );
+
+    plate_height = 0.01;
+
+    
+    diamond_on_plate = create_plate( floor_offset, 0.1, plate_height ) : 
+                       create_diamond_on_stand( floor_offset + plate_height - 0.004 );
+
+    diamond_on_plate.rotate( rotz( 30 ) );
+
+    scene.push( diamond_on_plate );
+
+    file_name = #source_file_name + ".pnm";
+    scene.create_image( file_name );
+}();
+
+

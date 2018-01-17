@@ -60,8 +60,8 @@ create_lights =
 create_floor =
 {
     plane = obj_plane_s;
+    plane.set_material( "diffuse_polished" );
     plane.set_color( color( 0.6, 0.7, 0.8 ) );
-    plane.set_refractive_index( 1.5 );
     plane.move( vec( 0, 0, -1 ) );
     plane;
 };
@@ -75,11 +75,10 @@ create_matter =
     r = 0.5;
     r2 = r * 2;
 
-    sphere = obj_sphere_s;
-    sphere.radius = r;
-    sphere.set_color( color( 2.0, 1.1, 0.6 ) );
-    sphere.set_refractive_index( 1.5 );
-    sphere.set_transparent( true );
+    ball = obj_sphere_s;
+    ball.radius = r;
+    ball.set_material( "glass" );
+    ball.set_transparency( color( 0.75, 0.55, 0.3 ) );
 
     layers = 4;
     i = 0;
@@ -89,7 +88,7 @@ create_matter =
         line.move( vecx( r2 ) );
         field.move( vecx( r2 ) + vecy( r2 ) );
         field.push( line );
-        line.push( sphere );
+        line.push( ball );
         line.rotate( rotz( 90 ) );
         field.push( line );
         line.rotate( rotz( -90 ) );
@@ -102,13 +101,12 @@ create_matter =
     pyramid.move( vec( -0.5, 2, 0 ) );
 
 
-    ball = sphere + vecz( r - 1.0 );
     pyramid : 
-    ( ball + vec( -1, -2, 0 ) ) :
-    ( ball + vec( -2.5, -0.5, 0 ) ) :
-    ( ball + vec(  3, 3, 0 ) ) :
-    ( ball + vec(  2, 5, 0 ) ) :
-    ( ball + vec(  3, 5, 0 ) ) ;
+    ( ball + vec( -1,   -2,   r - 1.0 ) ) :
+    ( ball + vec( -2.5, -0.5, r - 1.0 ) ) :
+    ( ball + vec(  3,    3,   r - 1.0 ) ) :
+    ( ball + vec(  2,    5,   r - 1.0 ) ) :
+    ( ball + vec(  3,    5,   r - 1.0 ) ) ;
 };
 
 {
