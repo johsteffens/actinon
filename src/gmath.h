@@ -25,6 +25,12 @@
 
 void compute_refraction( v3d_s dir_i, v3d_s nor, f3_t rix, f3_t* intensity_r, v3d_s* dir_r, f3_t* intensity_t, v3d_s* dir_t );
 
+// returns reflection intensity; rix: refractive index ratio when entering object; nor: surface normal
+f3_t fresnel_reflection( v3d_s dir_i, v3d_s exit_nor, f3_t trix, v3d_s* dir );
+
+// rix: refractive index ratio when entering object; nor: surface normal
+void fresnel_refraction( v3d_s dir_i, v3d_s exit_nor, f3_t trix, v3d_s* dir );
+
 /**********************************************************************************************************************/
 
 static inline f3_t plane_ray_hit( v3d_s pos, v3d_s nor, const ray_s* ray, v3d_s* p_nor )

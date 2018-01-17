@@ -192,6 +192,15 @@ static inline v3d_s v3d_s_orthogonal_projection( v3d_s o, v3d_s nor )
     };
 }
 
+/** Returns the reflected direction to dir according to surface given by normal 'nor'.
+ *  Requirements: dir and nor must be normalized.
+ *  The returned direction is normalized.
+ */
+static inline v3d_s v3d_s_reflection( v3d_s dir, v3d_s nor )
+{
+    return v3d_s_of_length( v3d_s_sub( dir, v3d_s_mlf( nor, 2.0 * v3d_s_mlv( dir, nor ) ) ), 1.0 );
+}
+
 /**********************************************************************************************************************/
 
 /// m3d_s  (3x3 matrix)

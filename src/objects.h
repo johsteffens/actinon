@@ -32,15 +32,21 @@ typedef struct properties_s
     v3d_s pos;              // reference position of object
     m3d_s rax;              // object's local orthonormal system (reference-axes)
     vd_t  texture_field;    // 3D texture field
+    cl_s  color;            // reflective or radiance color in absence of a texture field
+
     f3_t  radiance;         // radiance (>0: object is active light source)
     f3_t  refractive_index;
-    bl_t  transparent;
 
-    /** Color of the object in absence of a texture field.
-     *  For transparent material the color components are interpreted as absorption-distance:
-     *  Distance at which the corresponding color intensity is halved.
-     */
-    cl_s color;
+    // incoming energy is processed in the order below
+    f3_t fresnel_reflectivity;   // incoming energy taken by fresnel reflection
+    f3_t chromatic_reflectivity; // residual energy taken chromatic (specular) reflection
+    f3_t diffuse_reflectivity;   // residual energy taken by diffuse reflection
+    cl_s transparency;           // residual energy taken by material transition
+
+    // transparency defines the (per color channel) amount of energy absorbed at a transition length of 1 unit
+
+    // deprecated
+    bl_t  transparent; // see transparency
 } properties_s;
 
 /**********************************************************************************************************************/

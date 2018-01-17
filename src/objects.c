@@ -107,16 +107,43 @@ s3_t envelope_s_side( const envelope_s* o, v3d_s pos )
 /**********************************************************************************************************************/
 /// properties_s  (object's properties)
 
+    v3d_s pos;              // reference position of object
+    m3d_s rax;              // object's local orthonormal system (reference-axes)
+    vd_t  texture_field;    // 3D texture field
+    cl_s  color;            // reflective or radiance color in absence of a texture field
+
+    f3_t  radiance;         // radiance (>0: object is active light source)
+    f3_t  refractive_index;
+    bl_t  transparent;      // deprecated (see transparency)
+
+    // incoming energy is processed in the order below
+    f3_t fresnel_reflectivity;   // incoming energy taken by fresnel reflection
+    f3_t chromatic_reflectivity; // residual energy taken chromatic (specular) reflection
+    f3_t diffuse_reflectivity;   // residual energy taken by diffuse reflection
+    cl_s transparency;           // residual energy taken by material transition
+
+    // transparency defines the (per color channel) amount of energy absorbed at a transition length of 1 unit
+
+
 static sc_t properties_s_def =
 "properties_s = bcore_inst"
 "{"
     "v3d_s   pos;"
     "m3d_s   rax;"
     "aware * texture_field;"
+    "cl_s    color;"
+
     "f3_t    radiance;"
     "f3_t    refractive_index;"
-    "bl_t    transparent;"
-    "cl_s    color;"
+
+    "f3_t fresnel_reflectivity;"   // incoming energy taken by fresnel reflection
+    "f3_t chromatic_reflectivity;" // residual energy taken chromatic (specular) reflection
+    "f3_t diffuse_reflectivity;"   // residual energy taken by diffuse reflection
+    "cl_s transparency;"           // residual energy taken by material transition
+
+    // deprecated
+    "bl_t  transparent;" // see transparency
+
 "}";
 
 void properties_s_init( properties_s* o )
@@ -128,6 +155,8 @@ void properties_s_init( properties_s* o )
     o->rax.z = ( v3d_s ){ 0, 0, 1 };
     o->refractive_index = 1.0;
     o->color = ( cl_s  ){ 0.7, 0.7, 0.7 };
+    o->diffuse_reflectivity = 1.0;
+    o->fresnel_reflectivity = 1.0;
 }
 
 DEFINE_FUNCTION_COPY_INST( properties_s )
@@ -281,10 +310,24 @@ void obj_set_color( vd_t obj, cl_s color )
     o->prp.color = color;
 }
 
+void obj_set_transparency( vd_t obj, cl_s color )
+{
+    obj_hdr_s* o = obj;
+    o->prp.transparency = color;
+}
+
 void obj_set_refractive_index( vd_t obj, f3_t refractive_index )
 {
     obj_hdr_s* o = obj;
     o->prp.refractive_index = refractive_index;
+    if( refractive_index == 1.0 )
+    {
+        o->prp.fresnel_reflectivity = 0.0;
+    }
+    else
+    {
+        o->prp.fresnel_reflectivity = 1.0;
+    }
 }
 
 void obj_set_radiance( vd_t obj, f3_t radiance )
@@ -297,6 +340,17 @@ void obj_set_transparent( vd_t obj, bl_t flag )
 {
     obj_hdr_s* o = obj;
     o->prp.transparent = flag;
+    if( o->prp.transparent )
+    {
+        o->prp.transparency = o->prp.color;
+        o->prp.diffuse_reflectivity = 0;
+        o->prp.fresnel_reflectivity = 1;
+    }
+    else
+    {
+        o->prp.transparency = ( cl_s ) { 0, 0, 0 };
+        o->prp.diffuse_reflectivity = 1.0;
+    }
 }
 
 void obj_set_texture_field( vd_t obj, vc_t texture_field )
@@ -1537,6 +1591,12 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
         obj_set_color( sr_o->o, meval_s_eval_v3d( ev ) );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
+    else if( key == typeof( "set_transparency" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        obj_set_transparency( sr_o->o, meval_s_eval_v3d( ev ) );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
     else if( key == TYPEOF_set_refractive_index )
     {
         meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
@@ -1589,7 +1649,28 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
         sr_down( v );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
-    else if( key == typeof( "set_surface" ) )
+    else if( key == typeof( "set_fresnel_reflectivity" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        obj_hdr_s* hdr = sr_o->o;
+        hdr->prp.fresnel_reflectivity = meval_s_eval_f3( ev );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == typeof( "set_chromatic_reflectivity" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        obj_hdr_s* hdr = sr_o->o;
+        hdr->prp.chromatic_reflectivity = meval_s_eval_f3( ev );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == typeof( "set_diffuse_reflectivity" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        obj_hdr_s* hdr = sr_o->o;
+        hdr->prp.diffuse_reflectivity = meval_s_eval_f3( ev );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == typeof( "set_material" ) )
     {
         meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
         sr_s v = meval_s_eval( ev, sr_null() );
@@ -1598,49 +1679,81 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
         obj_hdr_s* hdr = sr_o->o;
         if( st_s_equal_sc( string, "transparent" ) )
         {
-            hdr->prp.transparent = true;
-            hdr->prp.refractive_index = 1.0;
-            hdr->prp.color = ( cl_s ) { 10.0, 10.0, 10.0 };
+            hdr->prp.refractive_index = 1;
+            hdr->prp.transparency = ( cl_s ) { 1, 1, 1 };
+            hdr->prp.fresnel_reflectivity = 1;
+            hdr->prp.chromatic_reflectivity = 0;
+            hdr->prp.diffuse_reflectivity = 0;
         }
         else if( st_s_equal_sc( string, "glass" ) )
         {
-            hdr->prp.transparent = true;
-            hdr->prp.refractive_index = 1.5;
-            hdr->prp.color = ( cl_s ) { 10.0, 10.0, 10.0 };
+            hdr->prp.refractive_index = 1.46; // fused silica
+            hdr->prp.transparency = ( cl_s ) { 0.5, 0.7, 0.6 }; // transparency varies very strongly by glass type
+            hdr->prp.fresnel_reflectivity = 1;
+            hdr->prp.chromatic_reflectivity = 0;
+            hdr->prp.diffuse_reflectivity = 0;
         }
         else if( st_s_equal_sc( string, "water" ) )
         {
-            hdr->prp.transparent = true;
-            hdr->prp.refractive_index = 1.2;
-            hdr->prp.color = ( cl_s ) { 10.0, 10.0, 10.0 };
+            hdr->prp.refractive_index = 1.32;
+            hdr->prp.transparency = ( cl_s ) { 0.5, 0.9, 0.99 }; // coarse approximation of absoption curve of water
+            hdr->prp.fresnel_reflectivity = 1;
+            hdr->prp.chromatic_reflectivity = 0;
+            hdr->prp.diffuse_reflectivity = 0;
         }
         else if( st_s_equal_sc( string, "sapphire" ) )
         {
-            hdr->prp.transparent = true;
             hdr->prp.refractive_index = 1.76;
-            hdr->prp.color = ( cl_s ) { 10.0, 10.0, 10.0 };
+            hdr->prp.transparency = ( cl_s ) { 0.7, 0.7, 0.7 }; // TBD
+            hdr->prp.fresnel_reflectivity = 1;
+            hdr->prp.chromatic_reflectivity = 0;
+            hdr->prp.diffuse_reflectivity = 0;
         }
         else if( st_s_equal_sc( string, "diamond" ) )
         {
-            hdr->prp.transparent = true;
             hdr->prp.refractive_index = 2.42;
-            hdr->prp.color = ( cl_s ) { 10.0, 10.0, 10.0 };
+            hdr->prp.transparency = ( cl_s ) { 0.8, 0.8, 0.8 }; // TBD
+            hdr->prp.fresnel_reflectivity = 1;
+            hdr->prp.chromatic_reflectivity = 0;
+            hdr->prp.diffuse_reflectivity = 0;
         }
         else if( st_s_equal_sc( string, "diffuse" ) )
         {
-            hdr->prp.transparent = false;
-            hdr->prp.refractive_index = 1.0;
-            hdr->prp.color = ( cl_s ) { 1.0, 1.0, 1.0 };
+            hdr->prp.refractive_index = 1;
+            hdr->prp.transparency = ( cl_s ) { 0, 0, 0 };
+            hdr->prp.fresnel_reflectivity = 0;
+            hdr->prp.chromatic_reflectivity = 0;
+            hdr->prp.diffuse_reflectivity = 1;
         }
-        else if( st_s_equal_sc( string, "polished" ) )
+        else if( st_s_equal_sc( string, "diffuse_polished" ) )
         {
-            hdr->prp.transparent = false;
             hdr->prp.refractive_index = 1.5;
-            hdr->prp.color = ( cl_s ) { 1.0, 1.0, 1.0 };
+            hdr->prp.transparency = ( cl_s ) { 0, 0, 0 };
+            hdr->prp.fresnel_reflectivity = 1;
+            hdr->prp.chromatic_reflectivity = 0;
+            hdr->prp.diffuse_reflectivity = 1;
+        }
+        else if( st_s_equal_sc( string, "perfect_mirror" ) )
+        {
+            hdr->prp.refractive_index = 1;
+            hdr->prp.transparency = ( cl_s ) { 0, 0, 0 };
+            hdr->prp.color        = ( cl_s ) { 1, 1, 1 };
+            hdr->prp.fresnel_reflectivity = 0;
+            hdr->prp.chromatic_reflectivity = 1;
+            hdr->prp.diffuse_reflectivity = 0;
+        }
+        else if( st_s_equal_sc( string, "mirror" ) )
+        {
+            hdr->prp.refractive_index = 1;
+            hdr->prp.transparency = ( cl_s ) { 0, 0, 0 };
+            hdr->prp.color        = ( cl_s ) { 0.92, 0.94, 0.87 };
+            hdr->prp.fresnel_reflectivity = 0;
+            hdr->prp.chromatic_reflectivity = 1;
+            hdr->prp.diffuse_reflectivity = 0;
         }
         else
         {
-            meval_s_err_fa( ev, "set_surface: Unknown surface specification '#<sc_t>.", string->sc );
+            meval_s_err_fa( ev, "set_surface: Unknown material specification '#<sc_t>.", string->sc );
         }
 
         sr_down( v );

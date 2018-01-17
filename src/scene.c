@@ -192,11 +192,13 @@ typedef struct scene_s
 
     sz_t direct_samples;
     sz_t path_samples;
+    f3_t max_path_length;  // path rays longer than max_path_length obtain background color
 
     compound_s light;  // light sources
     compound_s matter; // passive objects
 
-    photon_map_s photon_map;
+    s3_t experimental_level; // (default: 0 ) > 0 for experimental approaches
+
 } scene_s;
 
 static sc_t scene_s_def =
@@ -221,10 +223,12 @@ static sc_t scene_s_def =
     "f3_t trace_min_intensity = 0;"
     "sz_t direct_samples      = 100;"
     "sz_t path_samples        = 0;"  // requires trace_depth > 10
+    "f3_t max_path_length     = 1E+30;"  // path rays longer than max_path_length obtain background color
 
     "compound_s light;"
     "compound_s matter;"
-    "photon_map_s photon_map;"
+
+    "s3_t experimental_level = 0;" // (default: 0 ) > 0 for experimental approaches
 "}";
 
 DEFINE_FUNCTIONS_OBJ_INST( scene_s )
@@ -366,168 +370,6 @@ f3_t scene_s_trans_hit( const scene_s* o, const ray_s* r, v3d_s* p_exit_nor, vc_
     return min_a;
 }
 
-cl_s scene_s_lum( const scene_s* scene, const obj_hdr_s* obj, const ray_s* ray, f3_t offs, v3d_s nor, sz_t depth, f3_t intensity )
-{
-    cl_s lum = { 0, 0, 0 };
-    if( depth == 0 || intensity < scene->trace_min_intensity ) return lum;
-
-    v3d_s pos = ray_s_pos( ray, offs );
-
-    if( obj->prp.radiance > 0 )
-    {
-        f3_t diff_sqr = v3d_s_diff_sqr( pos, obj->prp.pos );
-        f3_t light_intensity = ( diff_sqr > 0 ) ? ( obj->prp.radiance / diff_sqr ) : f3_mag;
-        return v3d_s_mlf( obj_color( obj, pos ), light_intensity * intensity );
-    }
-
-    f3_t reflectance = 0;
-    f3_t transmittance = 1.0;
-    bl_t transparent = obj->prp.transparent;
-
-    /// reflections and refractions
-    if( obj->prp.refractive_index > 1.0 )
-    {
-        ray_s out_r;
-        ray_s out_t;
-        out_r.p = pos;
-        out_t.p = ray_s_pos( ray, offs + 2.0 * f3_eps );
-        compute_refraction( ray->d, nor, obj->prp.refractive_index, &reflectance, &out_r.d, &transmittance, transparent ? &out_t.d : NULL );
-        vc_t  hit_obj = NULL;
-        v3d_s hit_nor;
-        f3_t a;
-        if ( ( a = scene_s_hit( scene, &out_r, &hit_nor, &hit_obj ) ) < f3_inf )
-        {
-            lum = scene_s_lum( scene, hit_obj, &out_r, a, hit_nor, depth - 1, reflectance * intensity );
-        }
-        else
-        {
-            lum = v3d_s_mlf( scene->background_color, reflectance * intensity );
-        }
-
-        if( transparent )
-        {
-            if( obj_side( obj, out_r.p ) * obj_side( obj, out_t.p ) == -1 ) // truly stepping through surface
-            {
-                if ( ( a = scene_s_hit( scene, &out_t, &hit_nor, &hit_obj ) ) < f3_inf )
-                {
-                    lum = v3d_s_add( lum, scene_s_lum( scene, hit_obj, &out_t, a, hit_nor, depth - 1, transmittance * intensity ) );
-                }
-                else
-                {
-                    lum = v3d_s_add( lum, v3d_s_mlf( scene->background_color, transmittance * intensity ) );
-                }
-
-                if( v3d_s_mlv( ray->d, nor ) > 0 ) // exiting object
-                {
-                    f3_t rf = obj->prp.color.x > 0 ? pow( 0.5, offs / obj->prp.color.x ) : 0.0;
-                    f3_t gf = obj->prp.color.y > 0 ? pow( 0.5, offs / obj->prp.color.y ) : 0.0;
-                    f3_t bf = obj->prp.color.z > 0 ? pow( 0.5, offs / obj->prp.color.z ) : 0.0;
-                    lum.x *= rf;
-                    lum.y *= gf;
-                    lum.z *= bf;
-                }
-            }
-        }
-    }
-
-    /// direct light
-    if( scene->direct_samples > 0 && !transparent )
-    {
-        bl_t outside = obj_side( obj, pos ) == 1;
-        ray_s surface = { .p = pos, .d = outside ? nor : v3d_s_neg( nor ) };
-
-        /// random seed
-        u2_t rv = surface.p.x * 32944792 + surface.p.y * 76403048 + surface.p.z * 24349373;
-
-        /// peripheral light
-        cl_s cl_per = { 0, 0, 0 };
-
-        f3_t trans_intensity = intensity * transmittance;
-
-        /// process sources with radiance directly  (light-sources)
-        for( sz_t i = 0; i < scene->light.size; i++ )
-        {
-            cl_s cl_sum = { 0, 0, 0 };
-            ray_s out = surface;
-            obj_hdr_s* light_src = scene->light.data[ i ];
-            ray_cone_s fov_to_src = obj_fov( light_src, pos );
-            m3d_s src_con = m3d_s_transposed( m3d_s_con_z( fov_to_src.ray.d ) );
-            f3_t cyl_hgt = areal_coverage( fov_to_src.cos_rs );
-            cl_s color = obj_color( light_src, light_src->prp.pos );
-            bcore_arr_sz_s* idx_arr = compound_s_in_fov_arr( &scene->matter, &fov_to_src );
-            sz_t direct_samples = scene->direct_samples * trans_intensity;
-            direct_samples = ( direct_samples == 0 ) ? 1 : direct_samples;
-            for( sz_t j = 0; j < direct_samples; j++ )
-            {
-                out.d = m3d_s_mlv( &src_con, v3d_s_rsc( &rv, cyl_hgt ) );
-                f3_t weight = v3d_s_mlv( out.d, surface.d );
-                if( weight <= 0 ) continue;
-
-                f3_t a = obj_ray_hit( light_src, &out, NULL );
-                if( a >= f3_inf ) continue;
-                if( compound_s_idx_ray_hit( &scene->matter, idx_arr, &out, NULL, NULL ) > a )
-                {
-                    v3d_s hit_pos = ray_s_pos( &out, a );
-
-                    f3_t diff_sqr = v3d_s_diff_sqr( hit_pos, light_src->prp.pos );
-                    f3_t local_intensity = ( diff_sqr > 0 ) ? ( light_src->prp.radiance / diff_sqr ) : f3_mag;
-
-                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( color, local_intensity * weight * trans_intensity ) );
-                }
-            }
-
-            bcore_arr_sz_s_discard( idx_arr );
-
-            // factor 2 arises from weight distribution across the half-sphere
-            cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 2.0 * cyl_hgt / direct_samples ) );
-
-        }
-
-        // path tracing
-        if( scene->path_samples && depth > 10 )
-        {
-            cl_s cl_sum = { 0, 0, 0 };
-            ray_s out = surface;
-            m3d_s out_con = m3d_s_transposed( m3d_s_con_z( surface.d ) );
-
-            f3_t per_energy = v3d_s_sqr( cl_per );
-            per_energy = per_energy > 0.01 ? per_energy : 0.01;
-
-            sz_t path_samples = scene->path_samples * trans_intensity;
-            path_samples = ( path_samples == 0 ) ? 1 : path_samples;
-
-            for( sz_t i = 0; i < path_samples; i++ )
-            {
-                out.d = m3d_s_mlv( &out_con, v3d_s_rsc( &rv, 1.0 ) );
-                f3_t weight = v3d_s_mlv( out.d, surface.d );
-                if( weight <= 0 ) continue;
-                vc_t  hit_obj = NULL;
-                v3d_s hit_nor;
-                f3_t a = compound_s_ray_hit( &scene->matter, &out, &hit_nor, &hit_obj );
-                if( a < f3_inf && hit_obj )
-                {
-                    cl_s lum = scene_s_lum( scene, hit_obj, &out, a, hit_nor, depth - 10, weight * trans_intensity );
-                    cl_sum = v3d_s_add( cl_sum, lum );
-                }
-                else
-                {
-                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( scene->background_color, weight * trans_intensity ) );
-                }
-            }
-            // factor 2 arises from weight distribution across the half-sphere
-            cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 2.0 / path_samples ) );
-        }
-
-        cl_s cl = obj_color( obj, pos );
-        cl_per.x *= cl.x;
-        cl_per.y *= cl.y;
-        cl_per.z *= cl.z;
-        lum = v3d_s_add( lum, cl_per );
-    }
-
-    return lum;
-}
-
 cl_s scene_s_trans_lum( const scene_s* scene,
                         const ray_s* ray,
                         f3_t offs,
@@ -549,15 +391,14 @@ cl_s scene_s_trans_lum( const scene_s* scene,
         return v3d_s_mlf( obj_color( enter_obj, pos ), light_intensity * intensity );
     }
 
-    f3_t reflectance = 0;
     f3_t transmittance = 1.0;
-//    bl_t transparent = obj->prp.transparent;
 
     f3_t trans_refractive_index = ( enter_obj ? enter_obj->prp.refractive_index : 1.0 ) / ( exit_obj ? exit_obj->prp.refractive_index : 1.0 );
 
     /// reflections and refractions
     if( trans_refractive_index != 1.0 || ( enter_obj && enter_obj->prp.transparent ) )
     {
+        f3_t reflectance = 0;
         ray_s out_r;
         ray_s out_t;
         out_r.p = pos;
@@ -713,52 +554,247 @@ cl_s scene_s_trans_lum( const scene_s* scene,
 
 /**********************************************************************************************************************/
 
-void scene_s_clear( scene_s* o )
+cl_s scene_s_lum( const scene_s* scene,
+                  const ray_s* ray,
+                  f3_t offs,
+                  v3d_s exit_nor,
+                  const obj_hdr_s* exit_obj,
+                  const obj_hdr_s* enter_obj,
+                  sz_t depth,
+                  f3_t intensity )
 {
-    compound_s_clear( &o->light );
-    compound_s_clear( &o->matter );
+    cl_s lum = { 0, 0, 0 };
+    if( depth == 0 || intensity < scene->trace_min_intensity ) return lum;
+
+    v3d_s pos = ray_s_pos( ray, offs );
+
+    if( enter_obj && enter_obj->prp.radiance > 0 )
+    {
+        f3_t diff_sqr = v3d_s_diff_sqr( pos, enter_obj->prp.pos );
+        f3_t light_intensity = ( diff_sqr > 0 ) ? ( enter_obj->prp.radiance / diff_sqr ) : f3_mag;
+        return v3d_s_mlf( obj_color( enter_obj, pos ), light_intensity * intensity );
+    }
+
+    f3_t trans_refractive_index = 1.0;
+    f3_t fresnel_reflectivity = 0;
+    f3_t chromatic_reflectivity = 0;
+    f3_t diffuse_reflectivity = 0;
+    bl_t transparent = false;
+
+    if( enter_obj )
+    {
+        trans_refractive_index = enter_obj->prp.refractive_index;
+        fresnel_reflectivity   = enter_obj->prp.fresnel_reflectivity && enter_obj->prp.refractive_index != 1.0;
+        chromatic_reflectivity = enter_obj->prp.chromatic_reflectivity;
+        diffuse_reflectivity   = enter_obj->prp.diffuse_reflectivity;
+        transparent            = v3d_s_sqr( enter_obj->prp.transparency ) > 0;
+    }
+
+    if( exit_obj )
+    {
+        trans_refractive_index /= exit_obj->prp.refractive_index;
+        fresnel_reflectivity = 1.0;
+        diffuse_reflectivity = chromatic_reflectivity = 0;
+        transparent = true;
+    }
+
+    /// fresnel reflection
+    if( fresnel_reflectivity > 0 && intensity >= scene->trace_min_intensity )
+    {
+        ray_s out;
+        out.p = pos;
+        f3_t reflectance = fresnel_reflection( ray->d, exit_nor, trans_refractive_index, &out.d ) * fresnel_reflectivity;
+        v3d_s hit_exit_nor;
+        vc_t  hit_exit_obj = NULL;
+        vc_t  hit_enter_obj = NULL;
+        f3_t a;
+        cl_s lum_l = { 0, 0, 0 };
+        if ( ( a = scene_s_trans_hit( scene, &out, &hit_exit_nor, &hit_exit_obj, &hit_enter_obj ) ) < f3_inf )
+        {
+            lum_l = scene_s_lum( scene, &out, a, hit_exit_nor, hit_exit_obj, hit_enter_obj, depth - 1, reflectance * intensity );
+        }
+        else
+        {
+            lum_l = v3d_s_mlf( scene->background_color, reflectance * intensity );
+        }
+        lum = v3d_s_add( lum, lum_l );
+
+        intensity *= ( 1.0 - reflectance );
+    }
+
+    /// chromatic reflection
+    if( chromatic_reflectivity > 0 && intensity >= scene->trace_min_intensity )
+    {
+        ray_s out;
+        out.p = pos;
+        out.d = v3d_s_reflection( ray->d, exit_nor );
+        v3d_s hit_exit_nor;
+        vc_t  hit_exit_obj = NULL, hit_enter_obj = NULL;
+        f3_t a;
+        cl_s lum_l = { 0, 0, 0 };
+        if ( ( a = scene_s_trans_hit( scene, &out, &hit_exit_nor, &hit_exit_obj, &hit_enter_obj ) ) < f3_inf )
+        {
+            lum_l = scene_s_lum( scene, &out, a, hit_exit_nor, hit_exit_obj, hit_enter_obj, depth - 1, chromatic_reflectivity * intensity );
+        }
+        else
+        {
+            lum_l = v3d_s_mlf( scene->background_color, chromatic_reflectivity * intensity );
+        }
+
+        cl_s cl = obj_color( enter_obj, pos );
+        lum_l.x *= cl.x;
+        lum_l.y *= cl.y;
+        lum_l.z *= cl.z;
+        lum = v3d_s_add( lum, lum_l );
+
+        intensity *= ( 1.0 - chromatic_reflectivity );
+    }
+
+    /// diffuse reflection
+    if( intensity * diffuse_reflectivity >= scene->trace_min_intensity )
+    {
+        f3_t diffuse_intensity = intensity * diffuse_reflectivity;
+
+        ray_s surface = { .p = pos, .d = v3d_s_neg( exit_nor ) };
+
+        /// random seed
+        u2_t rv = surface.p.x * 3294479285 +
+                  surface.p.y * 7640304827 +
+                  surface.p.z * 2434937345 +
+                  surface.d.x * 3247146734 +
+                  surface.d.y * 4304627463 +
+                  surface.d.z * 5210473891;
+
+        cl_s lum_l = { 0, 0, 0 };
+
+        /// process sources with radiance directly  (light-sources)
+        for( sz_t i = 0; i < scene->light.size; i++ )
+        {
+            cl_s cl_sum = { 0, 0, 0 };
+            ray_s out = surface;
+            obj_hdr_s* light_src = scene->light.data[ i ];
+            ray_cone_s fov_to_src = obj_fov( light_src, pos );
+            m3d_s src_con = m3d_s_transposed( m3d_s_con_z( fov_to_src.ray.d ) );
+            f3_t cyl_hgt = areal_coverage( fov_to_src.cos_rs );
+            cl_s color = obj_color( light_src, light_src->prp.pos );
+            bcore_arr_sz_s* idx_arr = compound_s_in_fov_arr( &scene->matter, &fov_to_src );
+            sz_t direct_samples = scene->direct_samples * diffuse_intensity;
+            direct_samples = ( direct_samples == 0 ) ? 1 : direct_samples;
+            for( sz_t j = 0; j < direct_samples; j++ )
+            {
+                out.d = m3d_s_mlv( &src_con, v3d_s_rsc( &rv, cyl_hgt ) );
+                f3_t weight = v3d_s_mlv( out.d, surface.d );
+                if( weight <= 0 ) continue;
+
+                f3_t a = obj_ray_hit( light_src, &out, NULL );
+                if( a >= f3_inf ) continue;
+                if( compound_s_idx_ray_hit( &scene->matter, idx_arr, &out, NULL, NULL ) > a )
+                {
+                    v3d_s hit_pos = ray_s_pos( &out, a );
+
+                    f3_t diff_sqr = v3d_s_diff_sqr( hit_pos, light_src->prp.pos );
+                    f3_t local_intensity = ( diff_sqr > 0 ) ? ( light_src->prp.radiance / diff_sqr ) : f3_mag;
+
+                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( color, local_intensity * weight * diffuse_intensity ) );
+                }
+            }
+
+            bcore_arr_sz_s_discard( idx_arr );
+
+            // factor 2 arises from weight distribution across the half-sphere
+            lum_l = v3d_s_add( lum_l, v3d_s_mlf( cl_sum, 2.0 * cyl_hgt / direct_samples ) );
+
+        }
+
+        // path tracing
+        if( scene->path_samples && depth > 10 )
+        {
+            cl_s cl_sum = { 0, 0, 0 };
+            ray_s out = surface;
+            m3d_s out_con = m3d_s_transposed( m3d_s_con_z( surface.d ) );
+
+            f3_t per_energy = v3d_s_sqr( lum_l );
+            per_energy = per_energy > 0.01 ? per_energy : 0.01;
+
+            sz_t path_samples = scene->path_samples * diffuse_intensity;
+            path_samples = ( path_samples == 0 ) ? 1 : path_samples;
+
+            for( sz_t i = 0; i < path_samples; i++ )
+            {
+                out.d = m3d_s_mlv( &out_con, v3d_s_rsc( &rv, 1.0 ) );
+                f3_t weight = v3d_s_mlv( out.d, surface.d );
+                if( weight <= 0 ) continue;
+                v3d_s hit_exit_nor;
+                vc_t  hit_exit_obj = NULL;
+                vc_t  hit_enter_obj = NULL;
+
+                f3_t a = compound_s_ray_trans_hit( &scene->matter, &out, &hit_exit_nor, &hit_exit_obj, &hit_enter_obj );
+
+                if( a < scene->max_path_length )
+                {
+                    cl_s lum = scene_s_lum( scene, &out, a, hit_exit_nor, hit_exit_obj, hit_enter_obj, depth - 10, weight * diffuse_intensity );
+                    cl_sum = v3d_s_add( cl_sum, lum );
+                }
+                else
+                {
+                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( scene->background_color, weight * diffuse_intensity ) );
+                }
+            }
+            // factor 2 arises from weight distribution across the half-sphere
+            lum_l = v3d_s_add( lum_l, v3d_s_mlf( cl_sum, 2.0 / path_samples ) );
+        }
+
+        cl_s cl = obj_color( enter_obj, pos );
+        lum_l.x *= cl.x;
+        lum_l.y *= cl.y;
+        lum_l.z *= cl.z;
+        lum = v3d_s_add( lum, lum_l );
+
+        intensity *= ( 1.0 - diffuse_reflectivity );
+    }
+
+    /// refraction
+    if( transparent && intensity >= scene->trace_min_intensity )
+    {
+        ray_s out;
+        out.p = ray_s_pos( ray, offs + 2.0 * f3_eps );
+        fresnel_refraction( ray->d, exit_nor, trans_refractive_index, &out.d );
+        v3d_s hit_exit_nor;
+        vc_t  hit_exit_obj = NULL;
+        vc_t  hit_enter_obj = NULL;
+        f3_t a;
+        cl_s lum_l = { 0, 0, 0 };
+        if ( ( a = scene_s_trans_hit( scene, &out, &hit_exit_nor, &hit_exit_obj, &hit_enter_obj ) ) < f3_inf )
+        {
+            lum_l = scene_s_lum( scene, &out, a, hit_exit_nor, hit_exit_obj, hit_enter_obj, depth - 1, intensity );
+        }
+        else
+        {
+            lum_l = v3d_s_mlf( scene->background_color, intensity );
+        }
+        lum = v3d_s_add( lum, lum_l );
+    }
+
+    /// exiting object
+    if( exit_obj )
+    {
+        f3_t rf = offs > 0 ? pow( exit_obj->prp.transparency.x, offs ) : 1.0;
+        f3_t gf = offs > 0 ? pow( exit_obj->prp.transparency.y, offs ) : 1.0;
+        f3_t bf = offs > 0 ? pow( exit_obj->prp.transparency.z, offs ) : 1.0;
+        lum.x *= rf;
+        lum.y *= gf;
+        lum.z *= bf;
+    }
+
+    return lum;
 }
 
 /**********************************************************************************************************************/
 
-image_cps_s* scene_s_show_photon_map( const scene_s* scene )
+void scene_s_clear( scene_s* o )
 {
-    image_cl_s* image = image_cl_s_create();
-    image_cl_s_set_size( image, scene->image_width, scene->image_height, ( cl_s ){ 0, 0, 0 } );
-
-    sz_t unit_sz = ( image->h >> 1 );
-
-    v3d_s src = scene->camera_position;
-
-    for( sz_t i = 0; i < scene->photon_map.size; i++ )
-    {
-        photon_s ph = scene->photon_map.data[ i ];
-        v3d_s dir = v3d_s_of_length( v3d_s_sub( ph.p, src ), scene->camera_focal_length );
-        f3_t img_x = dir.x;
-        f3_t img_y = dir.z;
-
-        sz_t pix_x = llrint( ( image->w >> 1 ) + img_x * unit_sz );
-        sz_t pix_y = llrint( ( image->h >> 1 ) - img_y * unit_sz );
-
-
-        if( pix_x < image->w && pix_y < image->h )
-        {
-            image_cl_s_add_pixel( image, pix_x, pix_y, ph.c );
-        }
-    }
-
-    image_cps_s* image_cps = image_cps_s_create();
-    image_cps_s_copy_cl( image_cps, image );
-    image_cl_s_discard( image );
-    return image_cps;
-
-}
-
-void scene_s_create_photon_map_image_file( const scene_s* o, sc_t file )
-{
-    image_cps_s* image = scene_s_show_photon_map( o );
-    image_cps_s_write_pnm( image, file );
-    image_cps_s_discard( image );
+    compound_s_clear( &o->light );
+    compound_s_clear( &o->matter );
 }
 
 /**********************************************************************************************************************/
@@ -942,28 +978,24 @@ vd_t lum_machine_s_func( lum_machine_s* o )
 
         cl_s out_clr = o->scene->background_color;
 
-        bl_t trans_method = true;
-
-        if( trans_method )
+        v3d_s exit_nor;
+        vc_t  exit_obj = NULL;
+        vc_t  enter_obj = NULL;
+        f3_t offs = scene_s_trans_hit( o->scene, &ray, &exit_nor, &exit_obj, &enter_obj );
+        if( offs < f3_inf )
         {
-            v3d_s exit_nor;
-            vc_t  exit_obj = NULL;
-            vc_t  enter_obj = NULL;
-            f3_t offs = scene_s_trans_hit( o->scene, &ray, &exit_nor, &exit_obj, &enter_obj );
-            if( offs < f3_inf )
+            if( o->scene->experimental_level == 0 )
             {
+                out_clr = scene_s_lum( o->scene, &ray, offs, exit_nor, exit_obj, enter_obj, o->scene->trace_depth, 1.0 );
+            }
+            else if( o->scene->experimental_level == -1 )
+            {
+                // deprecated
                 out_clr = scene_s_trans_lum( o->scene, &ray, offs, exit_nor, exit_obj, enter_obj, o->scene->trace_depth, 1.0 );
             }
-        }
-        else
-        {
-            // deprecated method (not considering media transition)
-            vc_t  hit_obj = NULL;
-            v3d_s hit_nor;
-            f3_t offs = scene_s_hit( o->scene, &ray, &hit_nor, &hit_obj );
-            if( offs < f3_inf && hit_obj )
+            else
             {
-                out_clr = scene_s_lum( o->scene, hit_obj, &ray, offs, hit_nor, o->scene->trace_depth, 1.0 );
+                bcore_err_fa( "Unsupported experimental level #<s3_t>\n", o->scene->experimental_level );
             }
         }
 
