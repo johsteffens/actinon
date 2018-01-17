@@ -21,7 +21,7 @@
  * Illumination and render parameters are set to demonstrate multiple reflections,
  * refractions and caustics.
  *
- * For more detailed inline commenting of the code see also wine_glass.ray.
+ * For more detailed inline commenting of the code see also wine_glass.acn.
  */
 <mclosure_s></>
 
@@ -68,9 +68,9 @@ create_floor =
 
 create_matter = 
 {
-    pyramid = arr_s;
-    field = arr_s;
-    line = arr_s;
+    pyramid = [];
+    field = [];
+    line = [];
 
     r = 0.5;
     r2 = r * 2;

@@ -25,7 +25,7 @@
 <mclosure_s></>
 
 // This script-language was specifically designed for Actinon.
-// Its syntax is loosely related to popular languages like C, C++, Python.
+// Its basic syntax was inspired by popular languages like C, C++, Python.
 //
 // Special functions and operators are provided for
 // - Vector/Matrix arithmetic
