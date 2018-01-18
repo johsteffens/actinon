@@ -1,0 +1,184 @@
+// Actinon-script
+
+/* Copyright 2018 Johannes Bernhard Steffens
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* This script file represents a small program in Actinon-script.
+ * For more detailed inline commenting of the code see also wine_glass.acn.
+ */
+<mclosure_s></>
+
+scene = scene_s;
+
+scene.image_width         = 600;
+scene.image_height        = 400;
+scene.gamma               = 0.9;
+
+scene.gradient_cycles     = 100;
+scene.gradient_samples    = 2;
+scene.gradient_threshold  = 0.03;
+
+scene.trace_depth         = 25;
+scene.trace_min_intensity = 0.02;
+scene.direct_samples      = 100;
+scene.path_samples        = 100;
+scene.max_path_length     = 4;
+
+camera_position = vec( 0, -16, 8 );
+
+scene.camera_position       = camera_position;
+scene.camera_view_direction = vec( 0, 0, -0.5 ) - camera_position;
+scene.camera_top_direction  = vec( 0, 0, 1 );
+scene.camera_focal_length   = 5;
+scene.background_color = color( 0.5, 0.4, 0.2 );
+
+create_lights = 
+{
+    base_light = obj_sphere_s;
+    base_light.scale( 1 );
+    base_light.set_radiance( 25 );
+    base_light.set_color( color( 1.0, 1.0, 1.0 ) );
+    lights = [];
+    lights.push( base_light );
+    lights.move( vecx( -8 ) );
+    lights.push( base_light );
+    lights.move( vecx( 4 ) );
+    lights.move( vecz( 6 ) );
+    lights;
+};
+
+create_floor =
+{
+    plane = obj_plane_s;
+    plane.set_material( "diffuse_polished" );
+    plane.set_color( color( 0.2, 0.3, 0.5 ) );
+    plane.move( vec( 0, 0, -1 ) );
+    plane;
+};
+
+create_plate = <-( num floor_offs, num radius, num height ) *
+{
+    cloth_height = 0.05;
+    cover = obj_plane_s;
+    cone = obj_cone_s;
+    cone.cosa = cos_d( 45 );
+    cyl = obj_cylinder_s;
+
+    plate = cone & ( cover - vecz( radius + cloth_height ) ) & !( cover - vecz( radius + height ) );
+    plate.move( vecz( floor_offs + radius + height ) );
+
+    list = [];
+    list.push( cover );
+    list.push( cyl * radius * 0.8 );
+
+    cloth = list.compose_inside();
+    cloth.move( vecz( floor_offs + height ) );
+    cloth.set_color( color( 0.7, 0.8, 0.9 ) );
+    plate.set_material( "diffuse_polished" );
+    plate.set_color( color( 0.25, 0.15, 0.1 ) );
+
+    plate : cloth;
+};
+
+create_heart = <-( num floor_offs ) *
+{
+    ball_radius = 0.3;
+    ball0 = obj_sphere_s;
+    ball0.scale( ball_radius );
+    ball0.set_material ( "sapphire" );
+    ball0.set_transparency( color( 1.0, 0.031, 0.01 ) );
+
+    bline = [];
+    balls_in_line = 8;
+    line_length = 3.5;
+    balls_step = line_length / ( balls_in_line - 1 );
+    i = 0;
+    while( i < balls_in_line )
+    {
+        bline.push( ball0 );
+        bline.move( vecx( balls_step ) );        
+        i += 1;
+    } ();
+    lline = bline;
+    lline.rotate( rotz( 90 + 41  ) );
+    rline = bline;
+    rline.rotate( rotz( 90 - 41 ) );
+
+    heart = [];
+    heart.push( lline );
+    heart.push( rline );
+    heart.push( ball0 );
+    heart.move( vecy( -line_length * 1.25 ) );
+
+    balls_in_arc = 8;
+    balls_angle_step = 180 / ( balls_in_arc - 1 );
+    balls_arc_radius = 1.4;
+    lbarc = [];
+    rbarc = [];
+    lball1 = ball0;
+    lball1.move( vecx(  balls_arc_radius ) );
+    rball1 = ball0;
+    rball1.move( vecx( -balls_arc_radius ) );
+    i = 0;
+    while( i < balls_in_arc )
+    {
+        lbarc.push( lball1 );
+        lbarc.rotate( rotz( balls_angle_step ) );
+        rbarc.push( rball1 );
+        rbarc.rotate( rotz( -balls_angle_step ) );
+        i += 1;
+    } ();
+
+    lbarc.move( vecx( -balls_arc_radius - ball_radius ) );
+    rbarc.move( vecx(  balls_arc_radius + ball_radius ) );
+    barcs = [];
+    barcs.push( lbarc );
+    barcs.push( rbarc );
+    barcs.push( ball0 + vecy( ball_radius * 0.7 ) );
+    barcs.move( vecy( -0.2 ) );
+    heart.push( barcs );
+    heart.move( vecy( 2.5 ) + vecz( floor_offs + ball_radius ) );
+
+    heart;
+};
+
+{
+    scene.clear();
+    scene.push( create_lights() );
+    scene.push( create_floor() );
+
+    plate_height = 0.4;
+    scene.push( create_plate( -1, 5, plate_height ) + vecy( 1.5 ) );
+    scene.push( create_heart( -1 + plate_height ) );
+
+    // some extra pearls
+    ball_radius = 0.3;
+    ball = obj_sphere_s;
+    ball.scale( ball_radius );
+    ball.set_material ( "sapphire" );
+    ball.set_transparency( color( 1.0, 0.031, 0.01 ) );
+    scene.push( ball + vec( 0.3, 0.2, -1 + plate_height + ball_radius ) );
+    scene.push( ball + vec( -0.5, 0.8, -1 + plate_height + ball_radius ) );
+    scene.push( ball + vec( -4.1, 0.2, -1 + plate_height + ball_radius - 0.05 ) );
+    scene.push( ball + vec( -2.7, -1,  -1 + plate_height + ball_radius - 0.05 ) );
+    scene.push( ball + vec( 5.5, 2.5,  -1 + ball_radius ) );
+    scene.push( ball + vec(  3, -4,  -1 + ball_radius ) );
+
+
+    file_name = #source_file_name + ".pnm";
+    scene.create_image( file_name );
+}();
+
+
