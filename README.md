@@ -14,9 +14,11 @@ Actinon is based on project [beth](https://github.com/johsteffens/beth).
 
 ## How it works
 
-Actinon works as console application. It takes a script file as argument and executes its content, which normally comprises of the scene design, virtual camera specifications, render specifications and instructions to render one or more images.
+Actinon is a console-application. It takes a script file as argument and executes its content, which normally comprises of the scene design, virtual camera specifications, render specifications and instructions how to render one or more images.
 
-(Technical details will follow..)
+It will render the image in multiple passes, during which intermediate results can be inspected with an image-viewing tool.
+
+(More details will follow ...)
 
 ## How to use it
 
@@ -24,6 +26,7 @@ Instructions below apply to a posix-like environment (e.g. Linux).
 
 ### Build
    * Download [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon).
+   * For simplicity you may want to put all *.c and *.h files of both projects into the same folder.
    * Build actinon binary as follows: `gcc -std=c11 -O3 *.c -lm -lpthread -o actinon`
 
 ### First trial
