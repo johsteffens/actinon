@@ -22,7 +22,7 @@ It will render the image in multiple passes, during which intermediate results c
 
 ## How to use it
 
-Instructions below apply to a posix-like environment (e.g. Linux).
+Instructions below apply to a Posix-like environment (e.g. Linux).
 
 ### Build
    * Download [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon).
