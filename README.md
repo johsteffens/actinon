@@ -45,7 +45,7 @@ The source code in this project, including actinon-script, is licensed under the
 
 Images and videos uploaded into this project and depicting results of the raytracer are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
 
-Images or videos you created with actinon from your own scene sources are yours.
+Images or videos you created with actinon from your own script sources are yours.
 
 ## Motivation
 I've always been fascinated by computer graphics, particluarly employing physics in order to achieve realism. About 25 years ago, I experimented with algorithms using lambertian light distribution on rays casted in a virtual 3D scene in order to generate realistic visual effects. Back then I was even oblivious to the fact that the technique was well-known under the label "ray-tracing".
