@@ -12,6 +12,31 @@ For scene-design a special scripting language has been developed. It is aimed to
 
 Actinon is based on project [beth](https://github.com/johsteffens/beth).
 
+## How it works
+
+Actinon works as console application. It takes a script file as argument and executes its content, which normally comprises of the scene design, virtual camera specifications, render specifications and instructions to render one or more images.
+
+(Technical details will follow..)
+
+## How to use it
+
+Instructions below apply to a posix-like environment (e.g. Linux).
+
+### Build
+   * Download [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon).
+   * Build actinon binary as follows: `gcc -std=c11 -O3 *.c -lm -lpthread -o actinon`
+
+### First trial
+   * Pick a script file from folder [scr_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
+   * Run: `actinon wine_glass.acn`
+   * After 1 ... 2 minutes, it will produce the image file `wine_glass.acn.pnm`. The file gets updated at intervals gradually improving its quality. After around 20 ... 60 min (depending on CPU speed), rendering should be completed.
+   * You may want to convert the image to a more common format with netpbm or similar tool (e.g. `pnmtopng`).
+
+### Next steps
+   * Learn a bit about the Actinon language syntax: A documentation on the syntax is planned. For the time being you might want to glean some insight about its syntax by examining [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn), which is commented for that purpose. 
+   * Try to design your own scene.
+   * Tip: While drafting and testing your scene, switch off path tracing `path_samples = 0` and reduce direct_samples to a low value. E.g.  `direct_samples = 10`. This will yield results in seconds.
+
 ## License
 The source code in this project, including actinon-script, is licensed under the Apache 2.0 License.
 
