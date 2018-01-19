@@ -36,7 +36,7 @@ Instructions below apply to a Posix-like environment (e.g. Linux).
    * You may want to convert the image to a more common format with netpbm or similar tool (e.g. `pnmtopng`).
 
 ### Next Steps
-   * Learn a bit about the Actinon Language: A documentation on the syntax is planned. For the time being you might want to glean some insight by examining [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn), which is commented for that purpose. 
+   * Learn a bit about the Actinon Language: A documentation on the syntax is planned. For the time being, you might want to glean some insight by examining [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn), which is commented for that purpose. 
    * Experiment with the provided scenes or try to design your own scene.
    * **Tip**: While drafting and testing your scene, switch off path tracing `path_samples = 0` and reduce direct_samples to a low value. E.g.  `direct_samples = 10`. This will yield results in seconds.
 
