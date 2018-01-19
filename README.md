@@ -26,16 +26,16 @@ Instructions below apply to a Posix-like environment (e.g. Linux).
 
 ### Build
    * Download [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon).
-   * For simplicity you may want to put all *.c and *.h files of both projects into the same folder.
-   * Build actinon binary as follows: `gcc -std=c11 -O3 *.c -lm -lpthread -o actinon`
+   * For simplicity I'd suggest to place all *.c and *.h files of both projects into the same folder. (Makefiles arr in  planning.)
+   * Build the actinon binary with `-std=c11 -lm -lpthread`. E.g.: `gcc -std=c11 -O3 *.c -lm -lpthread -o actinon`
 
-### First trial
+### First Trial
    * Pick a script file from folder [scr_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
    * Run: `actinon wine_glass.acn`
-   * After 1 ... 2 minutes, it will produce the image file `wine_glass.acn.pnm`. The file gets updated at intervals gradually improving its quality. After around 20 ... 60 min (depending on CPU speed), rendering should be completed.
+   * After 1 ... 2 minutes, it will produce the image file `wine_glass.acn.pnm`. The file gets updated at intervals gradually improving image-quality. After around 20 ... 60 min (depending on CPU speed), rendering should be completed.
    * You may want to convert the image to a more common format with netpbm or similar tool (e.g. `pnmtopng`).
 
-### Next steps
+### Next Steps
    * Learn a bit about the Actinon language syntax: A documentation on the syntax is planned. For the time being you might want to glean some insight about its syntax by examining [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn), which is commented for that purpose. 
    * Try to design your own scene.
    * Tip: While drafting and testing your scene, switch off path tracing `path_samples = 0` and reduce direct_samples to a low value. E.g.  `direct_samples = 10`. This will yield results in seconds.
