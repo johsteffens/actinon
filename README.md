@@ -22,16 +22,16 @@ It will render the image in multiple passes, during which intermediate results c
 
 ## How to use it
 
-Instructions below apply to a Posix-like environment (e.g. Linux).
+The suggstion below apply to a Posix-like environment (e.g. Linux).
 
 ### Build
    * Download [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon).
-   * For simplicity I'd suggest to place all *.c and *.h files of both projects into the same folder. (Makefiles are in  planning.)
-   * Build actinon: `gcc -std=c11 -O3 *.c -lm -lpthread -o actinon`
+   * For the moment copy all *.c and *.h files of both projects into one folder. (Makefiles are in  planning.)
+   * Build actinon in that folder: `gcc -std=c11 -O3 *.c -lm -lpthread -o actinon`
 
 ### First Trial
    * Pick a script file from folder [scr_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
-   * Run: `actinon wine_glass.acn`
+   * Run in a terminal: `actinon wine_glass.acn`
    * After 1 ... 2 minutes, it will produce the image file `wine_glass.acn.pnm`. The file gets updated at intervals gradually improving image-quality. After around 20 ... 60 min (depending on CPU speed), rendering should be completed.
    * You may want to convert the image to a more common format with netpbm or similar tool (e.g. `pnmtopng`).
 
@@ -48,7 +48,7 @@ Images and videos uploaded into this project and depicting results of the raytra
 Images or videos you created with actinon from your own script sources are yours.
 
 ## Motivation
-I've always been fascinated by computer graphics, particluarly employing physics in order to achieve realism. About 25 years ago, I experimented with algorithms using lambertian light distribution on rays casted in a virtual 3D scene in order to generate realistic visual effects. Back then I was even oblivious to the fact that the technique was well-known under the label "ray-tracing".
+I've always been fascinated by computer graphics, particluarly employing physics and mathematics in order to achieve realism. About 25 years ago, I experimented with algorithms using lambertian light distribution on rays casted in a virtual 3D scene in order to generate realistic visual effects. Back then I was even oblivious to the fact that the technique was well-known under the label "ray-tracing".
 
 Today, modern workstations are powerful enough to allow deep recursions into the render equation making experimenting in this field more rewarding.
 
