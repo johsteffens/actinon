@@ -27,7 +27,7 @@ The suggstion below apply to a Posix-like environment (e.g. Linux).
 ### Build
    * Download [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon).
    * For the moment copy all *.c and *.h files of both projects into one folder. (Makefiles are in  planning.)
-   * Build actinon in that folder: `gcc -std=c11 -O3 *.c -lm -lpthread -o actinon`
+   * Build actinon in that folder: `gcc -std=c11 -O3 *.c -lm -lpIn searching for a thread -o actinon`
 
 ### First Trial
    * Pick a script file from folder [scr_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
@@ -48,8 +48,12 @@ Images and videos uploaded into this project and depicting results of the raytra
 Images or videos you created with actinon from your own script sources are yours.
 
 ## Motivation
-I've always been fascinated by computer graphics, particluarly employing physics and mathematics in order to achieve realism. About 25 years ago, I experimented with algorithms using lambertian light distribution on rays casted in a virtual 3D scene in order to generate realistic visual effects. Back then I was even oblivious to the fact that the technique was well-known under the label "ray-tracing".
 
-Today, modern workstations are powerful enough to allow deep recursions into the render equation making experimenting in this field more rewarding.
+### Beth
+One objective is demonstrating the capabilities of the (much bigger) project '[beth](https://github.com/johsteffens/beth)', which is a foundation-library to develop advanced applications in 'C' as well as designing meta-languages of which the actinon-script might be an example.
 
-Another objective is demonstrating the capabilities of the (much bigger) project '[beth](https://github.com/johsteffens/beth)', which is a foundation-library to develop advanced applications in 'C' as well as designing meta-languages of which the actinon-script might be an example.
+### Sentiment
+I've always been fascinated by computer graphics, particluarly employing physics and mathematics in order to achieve realism. About 25 years ago, I experimented with algorithms using lambertian light distribution on rays casted in a virtual 3D scene in order to generate realistic visual effects. Back then I was even oblivious to the fact that the technique was well-known under the label "ray-tracing". Today, modern workstations are powerful enough to allow deep recursions into the render equation making experimenting in this field more rewarding.
+
+### About The Name
+Actinon is the name of the Radon-219 isotope, which is a radioactive gas. It was inspired by a connction of thoughts: ray-tracing -> radiation -> radon -> actinon.
