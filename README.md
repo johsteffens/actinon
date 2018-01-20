@@ -56,4 +56,4 @@ One objective is demonstrating the capabilities of the (much bigger) project '[b
 I've always been fascinated by computer graphics, particluarly employing physics and mathematics in order to achieve realism. About 25 years ago, I experimented with algorithms using lambertian light distribution on rays casted in a virtual 3D scene in order to generate realistic visual effects. Back then I was even oblivious to the fact that the technique was well-known under the label "ray-tracing". Today, modern workstations are powerful enough to allow deep recursions into the render equation making experimenting in this field more rewarding.
 
 ### About The Name
-Actinon is the name of the Radon-219 isotope, which is a radioactive gas. It was inspired by a connction of thoughts: ray-tracing -> radiation -> radon -> actinon.
+Actinon is the name of the Radon-219 isotope, which is a radioactive gas. It was inspired by a train of thought: ray-tracing -> radiation -> radon -> actinon.
