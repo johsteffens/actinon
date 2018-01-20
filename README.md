@@ -8,7 +8,7 @@
 ## What it is
 Actinon is a lightweight ray-tracing renderer and interpreter of a dedicated scripting language. It can render 3D scenes, employing techniques like distributed tracing, path tracing, antialiasing and others. It can visualize transparency, reflection, refraction, media-transition, diffuse-light, indirect-light and more. Realistic surfaces are achieved by mixing fresnel-reflection, chromatic-reflection and diffuse-reflection.
 
-For scene-design a special scripting language has been developed, aimed to simplify object definition and composition. It supports the composition of complex objects from simpler objects. Geometric operations on objects like translation, scaling and rotations can be applied easily and intuitively. Vectors and matrices are dedicated objects with associated operators supporting arithmetic in a 3D vector space. The language also allows computing image sequences (e.g. for videos).
+For scene-design a special scripting language has been developed, aimed to scene-design. It supports the composition of complex objects from simpler objects. Geometric operations on objects like translation, scaling and rotations can be applied easily and intuitively. Vectors and matrices are dedicated objects with associated operators supporting arithmetic in a 3D vector space. The language also allows computing image sequences (e.g. for videos).
 
 Actinon is based on project [beth](https://github.com/johsteffens/beth).
 
