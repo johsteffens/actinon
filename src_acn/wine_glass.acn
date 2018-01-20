@@ -122,7 +122,7 @@ create_glass =
 
     inner_sphere = outer_sphere * 0.96;
 
-    // if liquit exactly touches inner sphere, the renderer calculates media-transition properly
+    // if liquid exactly touches inner sphere, the renderer calculates media-transition properly
     liquid_sphere = inner_sphere; 
     liquid = liquid_sphere & ( cover - vecz( 0.3 ) );
 
