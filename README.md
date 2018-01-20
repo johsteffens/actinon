@@ -26,8 +26,8 @@ Below is a suggstion for a Posix-like environment (e.g. Linux).
 
 ### Build
    * Download [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon).
-   * For the moment copy all *.c and *.h files of both projects into one folder. (Makefiles are in  planning.)
-   * Build actinon in that folder: `gcc -std=c11 -O3 *.c -lm -lpIn searching for a thread -o actinon`
+   * For the moment, copy all *.c and *.h files of both projects into one folder. (Proper makefiles are in  planning.)
+   * Build actinon in that folder: `gcc -std=c11 -O3 *.c -lm -lpthread -o actinon`
 
 ### First Trial
    * Pick a script file from folder [scr_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
