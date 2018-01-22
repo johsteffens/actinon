@@ -25,7 +25,7 @@
  */
 <mclosure_s></>
 
-scene = scene_s;
+def scene = scene_s;
 
 scene.image_width         = 400;
 scene.image_height        = 400;
@@ -40,7 +40,7 @@ scene.trace_min_intensity = 0.02;
 scene.direct_samples      = 100;
 scene.path_samples        = 250;
 
-camera_position = vec( 0, -10, 4 );
+def camera_position = vec( 0, -10, 4 );
 
 scene.camera_position       = camera_position;
 scene.camera_view_direction = vec( 0, 0, 0 ) - camera_position;
@@ -48,40 +48,40 @@ scene.camera_top_direction  = vec( 0, 0, 1 );
 scene.camera_focal_length   = 4;
 scene.background_color = color( 0.2, 0.1, 0.05 );
 
-create_lights = 
+def create_lights = 
 {
-    base_light = obj_sphere_s;
+    def base_light = obj_sphere_s;
     base_light.scale( 0.5 );
     base_light.set_radiance( 50 );
     base_light.set_color( color( 1.0, 1.0, 1.0 ) );
     ( base_light + vec( -2.6, 3, 4 ) );
 };
 
-create_floor =
+def create_floor =
 {
-    plane = obj_plane_s;
+    def plane = obj_plane_s;
     plane.set_material( "diffuse_polished" );
     plane.set_color( color( 0.6, 0.7, 0.8 ) );
     plane.move( vec( 0, 0, -1 ) );
     plane;
 };
 
-create_matter = 
+def create_matter = 
 {
-    pyramid = [];
-    field = [];
-    line = [];
+    def pyramid = [];
+    def field = [];
+    def line = [];
 
-    r = 0.5;
-    r2 = r * 2;
+    def r = 0.5;
+    def r2 = r * 2;
 
-    ball = obj_sphere_s;
+    def ball = obj_sphere_s;
     ball.radius = r;
     ball.set_material( "glass" );
     ball.set_transparency( color( 0.75, 0.55, 0.3 ) );
 
-    layers = 4;
-    i = 0;
+    def layers = 4;
+    def i = 0;
     while( i < layers )
     {
         pyramid.move( vec( r, r, 1.414 * r ) );
@@ -100,7 +100,6 @@ create_matter =
     pyramid.rotate( rotz( 20 ) );
     pyramid.move( vec( -0.5, 2, 0 ) );
 
-
     pyramid : 
     ( ball + vec( -1,   -2,   r - 1.0 ) ) :
     ( ball + vec( -2.5, -0.5, r - 1.0 ) ) :
@@ -114,7 +113,7 @@ create_matter =
     scene.push( create_lights() );
     scene.push( create_floor() );
     scene.push( create_matter() );
-    file_name = #source_file_name + ".pnm";
+    def file_name = #source_file_name + ".pnm";
     scene.create_image( file_name );
 }();
 

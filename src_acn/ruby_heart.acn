@@ -20,7 +20,7 @@
  */
 <mclosure_s></>
 
-scene = scene_s;
+def scene = scene_s;
 
 scene.image_width         = 600;
 scene.image_height        = 400;
@@ -36,7 +36,7 @@ scene.direct_samples      = 100;
 scene.path_samples        = 100;
 scene.max_path_length     = 4;
 
-camera_position = vec( 0, -16, 8 );
+def camera_position = vec( 0, -16, 8 );
 
 scene.camera_position       = camera_position;
 scene.camera_view_direction = vec( 0, 0, -0.5 ) - camera_position;
@@ -44,13 +44,13 @@ scene.camera_top_direction  = vec( 0, 0, 1 );
 scene.camera_focal_length   = 5;
 scene.background_color = color( 0.5, 0.4, 0.2 );
 
-create_lights = 
+def create_lights = 
 {
-    base_light = obj_sphere_s;
+    def base_light = obj_sphere_s;
     base_light.scale( 1 );
     base_light.set_radiance( 25 );
     base_light.set_color( color( 1.0, 1.0, 1.0 ) );
-    lights = [];
+    def lights = [];
     lights.push( base_light );
     lights.move( vecx( -8 ) );
     lights.push( base_light );
@@ -59,31 +59,31 @@ create_lights =
     lights;
 };
 
-create_floor =
+def create_floor =
 {
-    plane = obj_plane_s;
+    def plane = obj_plane_s;
     plane.set_material( "diffuse_polished" );
     plane.set_color( color( 0.2, 0.3, 0.5 ) );
     plane.move( vec( 0, 0, -1 ) );
     plane;
 };
 
-create_plate = <-( num floor_offs, num radius, num height ) *
+def create_plate = <-( num floor_offs, num radius, num height ) *
 {
-    cloth_height = 0.05;
-    cover = obj_plane_s;
-    cone = obj_cone_s;
+    def cloth_height = 0.05;
+    def cover = obj_plane_s;
+    def cone = obj_cone_s;
     cone.cosa = cos_d( 45 );
-    cyl = obj_cylinder_s;
+    def cyl = obj_cylinder_s;
 
-    plate = cone & ( cover - vecz( radius + cloth_height ) ) & !( cover - vecz( radius + height ) );
+    def plate = cone & ( cover - vecz( radius + cloth_height ) ) & !( cover - vecz( radius + height ) );
     plate.move( vecz( floor_offs + radius + height ) );
 
-    list = [];
+    def list = [];
     list.push( cover );
     list.push( cyl * radius * 0.8 );
 
-    cloth = list.compose_inside();
+    def cloth = list.compose_inside();
     cloth.move( vecz( floor_offs + height ) );
     cloth.set_color( color( 0.7, 0.8, 0.9 ) );
     plate.set_material( "diffuse_polished" );
@@ -92,44 +92,44 @@ create_plate = <-( num floor_offs, num radius, num height ) *
     plate : cloth;
 };
 
-create_heart = <-( num floor_offs ) *
+def create_heart = <-( num floor_offs ) *
 {
-    ball_radius = 0.3;
-    ball0 = obj_sphere_s;
+    def ball_radius = 0.3;
+    def ball0 = obj_sphere_s;
     ball0.scale( ball_radius );
     ball0.set_material ( "sapphire" );
     ball0.set_transparency( color( 1.0, 0.031, 0.01 ) );
 
-    bline = [];
-    balls_in_line = 8;
-    line_length = 3.5;
-    balls_step = line_length / ( balls_in_line - 1 );
-    i = 0;
+    def bline = [];
+    def balls_in_line = 8;
+    def line_length = 3.5;
+    def balls_step = line_length / ( balls_in_line - 1 );
+    def i = 0;
     while( i < balls_in_line )
     {
         bline.push( ball0 );
         bline.move( vecx( balls_step ) );        
         i += 1;
     } ();
-    lline = bline;
+    def lline = bline;
     lline.rotate( rotz( 90 + 41  ) );
-    rline = bline;
+    def rline = bline;
     rline.rotate( rotz( 90 - 41 ) );
 
-    heart = [];
+    def heart = [];
     heart.push( lline );
     heart.push( rline );
     heart.push( ball0 );
     heart.move( vecy( -line_length * 1.25 ) );
 
-    balls_in_arc = 8;
-    balls_angle_step = 180 / ( balls_in_arc - 1 );
-    balls_arc_radius = 1.4;
-    lbarc = [];
-    rbarc = [];
-    lball1 = ball0;
+    def balls_in_arc = 8;
+    def balls_angle_step = 180 / ( balls_in_arc - 1 );
+    def balls_arc_radius = 1.4;
+    def lbarc = [];
+    def rbarc = [];
+    def lball1 = ball0;
     lball1.move( vecx(  balls_arc_radius ) );
-    rball1 = ball0;
+    def rball1 = ball0;
     rball1.move( vecx( -balls_arc_radius ) );
     i = 0;
     while( i < balls_in_arc )
@@ -143,7 +143,7 @@ create_heart = <-( num floor_offs ) *
 
     lbarc.move( vecx( -balls_arc_radius - ball_radius ) );
     rbarc.move( vecx(  balls_arc_radius + ball_radius ) );
-    barcs = [];
+    def barcs = [];
     barcs.push( lbarc );
     barcs.push( rbarc );
     barcs.push( ball0 + vecy( ball_radius * 0.7 ) );
@@ -159,13 +159,13 @@ create_heart = <-( num floor_offs ) *
     scene.push( create_lights() );
     scene.push( create_floor() );
 
-    plate_height = 0.4;
+    def plate_height = 0.4;
     scene.push( create_plate( -1, 5, plate_height ) + vecy( 1.5 ) );
     scene.push( create_heart( -1 + plate_height ) );
 
     // some extra pearls
-    ball_radius = 0.3;
-    ball = obj_sphere_s;
+    def ball_radius = 0.3;
+    def ball = obj_sphere_s;
     ball.scale( ball_radius );
     ball.set_material ( "sapphire" );
     ball.set_transparency( color( 1.0, 0.031, 0.01 ) );
@@ -177,7 +177,7 @@ create_heart = <-( num floor_offs ) *
     scene.push( ball + vec(  3, -4,  -1 + ball_radius ) );
 
 
-    file_name = #source_file_name + ".pnm";
+    def file_name = #source_file_name + ".pnm";
     scene.create_image( file_name );
 }();
 

@@ -48,6 +48,7 @@ sc_t code_symbol( code_s o )
         case CL_ROUND_BRACKET_CLOSE:  return ")";
         case CL_SQUARE_BRACKET_OPEN:  return "[";
         case CL_SQUARE_BRACKET_CLOSE: return "]";
+        case CL_DEF:           return "def";
         case CL_FSIGNATURE:    return "<-";
         case CL_DYN_ARRAY:     return "[]";
         case OP_DOT:           return ".";
@@ -283,6 +284,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                 case TYPEOF_XOR:   mcode_s_push_code( o, OP_XOR         ); break;
                 case TYPEOF_NOT:   mcode_s_push_code( o, OP_NOT         ); break;
                 case TYPEOF_CAT:   mcode_s_push_code( o, OP_CAT         ); break;
+                case TYPEOF_def:   mcode_s_push_code( o, CL_DEF         ); break;
                 case TYPEOF_if:
                 {
                     mcode_s_push_code( o, FL_IF );
@@ -538,6 +540,11 @@ void meval_s_err_fa( meval_s* o, sc_t format, ... )
 sr_s* meval_s_get_obj( const meval_s* o, tp_t key )
 {
     return bclos_frame_s_get( o->frame, key );
+}
+
+sr_s* meval_s_get_local_obj( const meval_s* o, tp_t key )
+{
+    return bclos_frame_s_get_local( o->frame, key );
 }
 
 sr_s* meval_s_set_obj( meval_s* o, tp_t key, sr_s obj )
@@ -1185,7 +1192,7 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
         }
 
     }
-    else // specific unary operators processed immediately
+    else // specific unary operators or controls processed immediately
     {
         tp_t code = meval_s_peek_code( o );
         if( code == OP_QUERY )
@@ -1286,8 +1293,11 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
             {
                 if( !p_obj )
                 {
-                    meval_s_expect_code( o, OP_ASSIGN );
-                    obj = sr_s_fork( meval_s_set_obj( o, key, sr_clone( meval_s_eval( o, sr_null() ) ) ) );
+                    sc_t name = meval_s_get_name( o, key );
+                    meval_s_err_fa( o, "'#<sc_t>' was not defined. Use 'def #<sc_t>' to define it.", name, name );
+
+//                    meval_s_expect_code( o, OP_ASSIGN );
+//                    obj = sr_s_fork( meval_s_set_obj( o, key, sr_clone( meval_s_eval( o, sr_null() ) ) ) );
                 }
                 else if( !p_obj->p )
                 {
@@ -1346,6 +1356,21 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
     {
         obj = meval_s_eval( o, sr_null() );
         meval_s_expect_code( o, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( meval_s_try_code( o, CL_DEF ) ) // variable definition
+    {
+        meval_s_expect_code( o, CL_NAME );
+        tp_t key = meval_s_get_code( o );
+        if( meval_s_get_local_obj( o, key ) ) meval_s_err_fa( o, "'#<sc_t>' is already defined.", meval_s_get_name( o, key ) );
+        if( meval_s_try_code( o, OP_ASSIGN ) )
+        {
+            obj = sr_s_fork( meval_s_set_obj( o, key, sr_clone( meval_s_eval( o, sr_null() ) ) ) );
+        }
+        else
+        {
+            meval_s_set_obj( o, key, sr_null() );
+            obj = sr_null();
+        }
     }
 
     /// Operations on object taking priority over standard operators
@@ -1493,12 +1518,19 @@ static sc_t mclosure_s_def =
 "mclosure_s = bclos_closure"
 "{"
     "aware_t _;"
-    "mcode_s*           mcode;"
-    "bclos_signature_s* signature;"
-    "private bclos_frame_s* lexical_frame;"
+    "mcode_s           -> mcode;"
+    "bclos_signature_s -> signature;"
+    "private bclos_frame_s -> lexical_frame;"
 "}";
 
 DEFINE_FUNCTIONS_OBJ_INST( mclosure_s )
+
+static void mclosure_s_copy_a( vd_t nc )
+{
+    struct { ap_t a; vc_t p; mclosure_s* dst; const mclosure_s* src; } * nc_l = nc;
+    nc_l->a( nc ); // default
+    nc_l->dst->lexical_frame = nc_l->src->lexical_frame;
+}
 
 void mclosure_s_define( mclosure_s* o, bclos_frame_s* frame, bclos_signature_s* signature, mcode_s* mcode )
 {
@@ -1604,9 +1636,11 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
 static bcore_flect_self_s* mclosure_s_create_self( void )
 {
     bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( mclosure_s_def, sizeof( mclosure_s ) );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )mclosure_s_copy_a,    "ap_t", "copy" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )mclosure_s_call,      "bclos_closure_fp_call", "call" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )mclosure_s_signature, "bclos_closure_fp_sig",  "sig"  );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )mclosure_s_interpret, "bcore_fp_interpret", "interpret" );
+
     return self;
 }
 

@@ -74,6 +74,7 @@ void run_quicktypes()
 int main( int argc, const char** argv )
 {
 //    run_selftest();
+//    run_quicktypes();
     bcore_library_init( signal );
 
     bcore_msg( "ACTINON: Ray-tracer.\n" );

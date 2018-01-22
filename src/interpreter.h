@@ -42,8 +42,10 @@ typedef enum
     CL_ROUND_BRACKET_CLOSE,  // ')'
     CL_SQUARE_BRACKET_OPEN,  // '['
     CL_SQUARE_BRACKET_CLOSE, // ']'
-    CL_FSIGNATURE,       // '<-' indicates a function signature
-    CL_DYN_ARRAY,        // '[]' indicates a dynamic array
+    CL_DEF,                  // variable definition
+    CL_FSIGNATURE,           // '<-' indicates a function signature
+    CL_DYN_ARRAY,            // '[]' indicates a dynamic array
+
     CL_CL_END, // end of controls
 
     /// operators

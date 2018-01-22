@@ -20,7 +20,7 @@
  */
 <mclosure_s></>
 
-scene = scene_s;
+def scene = scene_s;
 
 scene.image_width         = 400;
 scene.image_height        = 400;
@@ -36,7 +36,7 @@ scene.direct_samples      = 100;
 scene.path_samples        = 100;
 scene.max_path_length     = 1.5;
 
-camera_position = vec( 0, -10, 4 );
+def camera_position = vec( 0, -10, 4 );
 
 scene.camera_position       = camera_position;
 scene.camera_view_direction = vec( 0, 0, 0 ) - camera_position;
@@ -44,36 +44,36 @@ scene.camera_top_direction  = vec( 0, 0, 1 );
 scene.camera_focal_length   = 4;
 scene.background_color = color( 0.2, 0.1, 0.05 );
 
-create_lights = 
+def create_lights = 
 {
-    base_light = obj_sphere_s;
+    def base_light = obj_sphere_s;
     base_light.scale( 0.5 );
     base_light.set_radiance( 30 );
     base_light.set_color( color( 1.0, 1.0, 1.0 ) );
     ( base_light + vec( -4, -2, 3 ) );
 };
 
-create_floor =
+def create_floor =
 {
-    plane = obj_plane_s;
+    def plane = obj_plane_s;
     plane.set_material( "diffuse" );
     plane.set_color( color( 0.6, 0.7, 0.8 ) );
     plane.move( vec( 0, 0, -1 ) );
     plane;
 };
 
-create_matter = 
+def create_matter = 
 {
-    sph = obj_sphere_s;
-    cov = obj_plane_s;
+    def sph = obj_sphere_s;
+    def cov = obj_plane_s;
 
-    radius = 0.6;
+    def radius = 0.6;
 
-    ball = sph * radius;
+    def ball = sph * radius;
 
     ball.set_material( "glass" );
 
-    box_list = [];
+    def box_list = [];
     box_list.push( ( cov * roty(   0 ) ) + vecz( radius * 3 ) );
     box_list.push( ( cov * roty( 180 ) ) - vecz( radius ) );
     box_list.push( ( cov * roty(  90 ) ) + vecx( radius * 0.1 ) );
@@ -81,14 +81,14 @@ create_matter =
     box_list.push( ( cov * rotx(  90 ) ) - vecy( radius * 2 ) );
     box_list.push( ( cov * rotx( -90 ) ) + vecy( radius * 2 ) );
 
-    box = box_list.compose_inside();
+    def box = box_list.compose_inside();
     box.set_material( "diffuse" );
     box.set_color( color( 0.9, 0.6, 0.5 ) );
 
     box.move( vecz( radius - 1.0 ) );
     ball.move( vecz( radius - 1.0 ) );
 
-    objects = [];
+    def objects = [];
     objects.push( ball );
     objects.move( -vecx( radius ) );
     objects.push( box + vecz( radius * 0.5 ) );
@@ -110,7 +110,7 @@ create_matter =
     scene.push( create_lights() );
     scene.push( create_floor() );
     scene.push( create_matter() );
-    file_name = #source_file_name + ".pnm";
+    def file_name = #source_file_name + ".pnm";
     scene.create_image( file_name );
 }();
 
