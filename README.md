@@ -30,15 +30,15 @@ Below is a suggstion for a Posix-like environment (e.g. Linux).
    * Build actinon in that folder: `gcc -std=c11 -O3 *.c -lm -lpthread -o actinon`
 
 ### First Trial
-   * Pick a script file from folder [scr_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
+   * Pick a script file from folder [src_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
    * Run in a terminal: `actinon wine_glass.acn`
-   * After 1 ... 2 minutes, it will produce the image file `wine_glass.acn.pnm`. The file gets updated at intervals gradually improving image-quality. After around 20 ... 60 min (depending on CPU speed), rendering should be completed.
+   * After 1 ... 2 minutes, it will produce the image file `wine_glass.acn.pnm`. The file gets updated at intervals, gradually improving image-quality. After around 20 ... 60 min (depending on CPU speed), rendering should be completed. Interrupt any time with Ctl-C.
    * You may want to convert the image to a more common format with netpbm or similar tool (e.g. `pnmtopng`).
 
 ### Next Steps
    * Learn a bit about the Actinon Language: A documentation on the syntax is planned. For the time being, you might want to glean some insight by examining [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn), which is commented for that purpose. 
    * Experiment with the provided scenes or try to design your own scene.
-   * **Tip**: While drafting and testing your scene, switch off path tracing `path_samples = 0` and reduce direct_samples to a low value. E.g.  `direct_samples = 10`. This will yield results in seconds.
+   * **Tip**: While drafting and testing your scene, switch off path tracing `path_samples = 0` and set `direct_samples` to a low value. E.g.  `direct_samples = 10`. This will yield results in seconds.
 
 ## License
 The source code in this project, including actinon-script, is licensed under the Apache 2.0 License.
@@ -53,7 +53,7 @@ Images or videos you created with actinon from your own script sources are yours
 One objective is demonstrating the capabilities of the (much bigger) project '[beth](https://github.com/johsteffens/beth)', which is a foundation-library to develop advanced applications in 'C' as well as designing meta-languages of which the actinon-script might be an example.
 
 ### Sentiment
-I've always been fascinated by computer graphics, particluarly employing physics and mathematics in order to achieve realism. In the mid 1990s I experimented with algorithms using lambertian light distribution on rays casted in a virtual 3D scene in order to generate realistic visual effects. Back then I was even oblivious to the fact that the technique was well-known under the label "ray-tracing". Today, modern workstations are powerful enough to allow deep recursions into the render equation making experimenting in this field more rewarding.
+I've always been fascinated by computer graphics, particluarly employing physics and mathematics in order to achieve realism. In the mid 1990s I experimented with algorithms using lambertian light distribution on rays casted in a virtual 3D scene in order to generate realistic visual effects. Back then I was even oblivious to the fact that the technique was well-known under the label "ray-tracing". Today, modern workstations are powerful enough to allow deep recursions into the rendering equation, making experimenting in this field more rewarding.
 
 ### About The Name
-Actinon is the name of the Radon-219 isotope, which is a radioactive gas. It was inspired by a train of thought: ray-tracing -> radiation -> radon -> actinon.
+Actinon is the name of the Radon-219 isotope, which is a radioactive gas. As project-name, it was inspired by a train of thought: ray-tracing -> radiation -> radon -> actinon.
