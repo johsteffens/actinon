@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-/* This script file represents a small program in Actinon-script.
+/* This script file represents a small program in Actinon-language.
  * It creates an image file of name <source-file>.pnm depicting a partially
  * filled wine-glass. Illumination and render parameters are set
  * to demonstrate caustics produced by the glass and liquid.
@@ -26,6 +26,7 @@
 
 // This script-language was specifically designed for Actinon.
 // Its basic syntax was inspired by popular languages like C, C++, Python.
+// It should be easy to learn if you are familiar with one of these.
 //
 // Special functions and operators are provided for
 // - Vector/Matrix arithmetic
@@ -36,6 +37,15 @@
 // Functions are first class objects.
 // A block '{ .... }' defines a function body, which can either be assigned
 // to a variable or executed immediately if followed by '()'.'
+//
+// For rudimentary messaging and debugging, operators '?' and '??'
+// are available, which output a variable to stdout.
+//
+// ?  - prints the full internal structure of a variable.
+// ?? - prints only the value of a primitive variable.
+// Examples: 
+//    ?? "Hello World!";
+//    ? vec( 1, 2, 3 );
 
 /***************************************************/
 // Here we specify rendering parameters
@@ -119,18 +129,31 @@ def create_glass =
     def cylinder = obj_cylinder_s;
 
     def outer_sphere = sphere;
+
+    // Operator '&' mutually composes two objects to a new object.
+    // Only surface area 'inside' the other object is valid.
+    // The complement to '&' is operator '|' where only surface
+    // 'outside' the other object is valid.
+    // Unary operator '!' swaps 'inside' and 'outside' areas of an object.
+    // These three operations allow the creation of arbitrarily complex 'composite-objects'
+    // from a suite of very few elementary objects types: sphere, plane, cylinder and cone.
     def bowl = outer_sphere & ( cover + vecz( 0.6 ) );
 
     def inner_sphere = outer_sphere * 0.96;
 
-    // if liquid exactly touches inner sphere, the renderer calculates media-transition properly
+    // If liquid exactly touches inner sphere, the renderer calculates media-transition (water<->glass) properly.
     def liquid_sphere = inner_sphere; 
     def liquid = liquid_sphere & ( cover - vecz( 0.3 ) );
 
     inner_sphere.move( vecz( 0.02 ) );
     liquid.move( vecz( 0.02 ) );
+
+    // Unary operator '!' swaps 'inside' and 'outside' area of an object.
     bowl = bowl & !inner_sphere;
 
+    // The 'envelope' is a (minimal-)sphere enclosing the entire object without touching it.
+    // It is neither required nor visible. But it improves render-efficiency (speed) 
+    // by supporting the renderer in determining the boundaries of an object.
     bowl.  set_envelope( outer_sphere * 1.01 );
     liquid.set_envelope( outer_sphere * 1.01 );
 
@@ -140,6 +163,8 @@ def create_glass =
     def neckcyl = ( cylinder * 0.08 ) & ( cover + vecz( 0.5 ) ) & !( cover - vecz( 0.5 ) );
 
     def perl = ( sphere * 0.15 );
+
+    // Operator '|': See comments about operator '&' above.
     def neck = neckcyl | ( perl + vecz( 0.45 ) ) | ( perl - vecz( 0.45 ) );
     neck.set_envelope( sphere * 1.2 );
 
@@ -168,7 +193,8 @@ def create_glass =
 
 // This block finalizes the scene and computes the scene-image
 {
-    scene.clear(); // not really needed for a single image but useful for a video sequence
+    // 'clear' removes all objects from the scene but keeps scene parameters (rendering & camera) intact.
+    scene.clear(); // This is not really needed for a single image but useful for a video sequence
     scene.push( create_lights() );
     scene.push( create_floor() );
     scene.push( create_glass() );
