@@ -32,12 +32,6 @@
 /**********************************************************************************************************************/
 /// envelope_s  (sphere used to define object boundaries)
 #define TYPEOF_envelope_s typeof( "envelope_s" )
-typedef struct envelope_s
-{
-    v3d_s pos;
-    f3_t radius;
-} envelope_s;
-
 static sc_t envelope_s_def =
 "envelope_s = bcore_inst"
 "{"
@@ -107,24 +101,6 @@ s3_t envelope_s_side( const envelope_s* o, v3d_s pos )
 /**********************************************************************************************************************/
 /// properties_s  (object's properties)
 
-    v3d_s pos;              // reference position of object
-    m3d_s rax;              // object's local orthonormal system (reference-axes)
-    vd_t  texture_field;    // 3D texture field
-    cl_s  color;            // reflective or radiance color in absence of a texture field
-
-    f3_t  radiance;         // radiance (>0: object is active light source)
-    f3_t  refractive_index;
-    bl_t  transparent;      // deprecated (see transparency)
-
-    // incoming energy is processed in the order below
-    f3_t fresnel_reflectivity;   // incoming energy taken by fresnel reflection
-    f3_t chromatic_reflectivity; // residual energy taken chromatic (specular) reflection
-    f3_t diffuse_reflectivity;   // residual energy taken by diffuse reflection
-    cl_s transparency;           // residual energy taken by material transition
-
-    // transparency defines the (per color channel) amount of energy absorbed at a transition length of 1 unit
-
-
 static sc_t properties_s_def =
 "properties_s = bcore_inst"
 "{"
@@ -141,9 +117,7 @@ static sc_t properties_s_def =
     "f3_t diffuse_reflectivity;"   // residual energy taken by diffuse reflection
     "cl_s transparency;"           // residual energy taken by material transition
 
-    // deprecated
-    "bl_t  transparent;" // see transparency
-
+    "envelope_s* envelope;" // optional envelope
 "}";
 
 void properties_s_init( properties_s* o )
@@ -166,17 +140,20 @@ DEFINE_FUNCTIONS_CDC( properties_s )
 void properties_s_move( properties_s* o, const v3d_s* vec )
 {
     v3d_s_o_add( &o->pos, *vec );
+    if( o->envelope ) envelope_s_move( o->envelope, vec );
 }
 
 void properties_s_rotate( properties_s* o, const m3d_s* mat )
 {
     o->rax = m3d_s_mlm( mat, &o->rax );
     o->pos = m3d_s_mlv( mat, o->pos );
+    if( o->envelope ) envelope_s_rotate( o->envelope, mat );
 }
 
 void properties_s_scale( properties_s* o, f3_t fac )
 {
     v3d_s_o_mlf( &o->pos, fac );
+    if( o->envelope ) envelope_s_scale( o->envelope, fac );
 }
 
 static bcore_flect_self_s* properties_s_create_self( void )
@@ -194,8 +171,6 @@ typedef f3_t       (*ray_hit_fp      )( vc_t o, const ray_s* ray, v3d_s* p_nor )
 typedef s2_t       (*side_fp         )( vc_t o, v3d_s pos );
 typedef ray_cone_s (*fov_fp          )( vc_t o, v3d_s pos );
 typedef bl_t       (*is_in_fov_fp    )( vc_t o, const ray_cone_s* fov );
-typedef void       (*set_envelope_fp )( vd_t o, const envelope_s* env );
-
 
 typedef void (*move_fp  )( vd_t o, const v3d_s* vec );
 typedef void (*rotate_fp)( vd_t o, const m3d_s* mat );
@@ -216,7 +191,6 @@ typedef struct spect_obj_s
     scale_fp      fp_scale;
 
     is_in_fov_fp    fp_is_in_fov;
-    set_envelope_fp fp_set_envelope;
 } spect_obj_s;
 
 DEFINE_FUNCTIONS_OBJ_INST( spect_obj_s )
@@ -233,7 +207,6 @@ static spect_obj_s* spect_obj_s_create_from_self( const bcore_flect_self_s* self
     o->fp_ray_hit      = ( ray_hit_fp      )bcore_flect_self_s_get_external_fp( self, entypeof( "ray_hit_fp"      ), 0 );
     o->fp_side         = ( side_fp         )bcore_flect_self_s_get_external_fp( self, entypeof( "side_fp"         ), 0 );
     o->fp_is_in_fov    = ( is_in_fov_fp    )bcore_flect_self_s_get_external_fp( self, entypeof( "is_in_fov_fp"    ), 0 );
-    o->fp_set_envelope = ( set_envelope_fp )bcore_flect_self_s_try_external_fp( self, entypeof( "set_envelope_fp" ), 0 );
     o->fp_move         = ( move_fp         )bcore_flect_self_s_get_external_fp( self, entypeof( "move_fp"         ), 0 );
     o->fp_rotate       = ( rotate_fp       )bcore_flect_self_s_get_external_fp( self, entypeof( "rotate_fp"       ), 0 );
     o->fp_scale        = ( scale_fp        )bcore_flect_self_s_get_external_fp( self, entypeof( "scale_fp"        ), 0 );
@@ -255,6 +228,7 @@ ray_cone_s obj_fov( vc_t o, v3d_s pos )
 f3_t obj_ray_hit( vc_t o, const ray_s* ray, v3d_s* p_nor )
 {
     const obj_hdr_s* hdr = o;
+    if( hdr->prp.envelope && !envelope_s_ray_hits( hdr->prp.envelope, ray ) ) return f3_inf;
     return hdr->p->fp_ray_hit( o, ray, p_nor );
 }
 
@@ -336,23 +310,6 @@ void obj_set_radiance( vd_t obj, f3_t radiance )
     o->prp.radiance = radiance;
 }
 
-void obj_set_transparent( vd_t obj, bl_t flag )
-{
-    obj_hdr_s* o = obj;
-    o->prp.transparent = flag;
-    if( o->prp.transparent )
-    {
-        o->prp.transparency = o->prp.color;
-        o->prp.diffuse_reflectivity = 0;
-        o->prp.fresnel_reflectivity = 1;
-    }
-    else
-    {
-        o->prp.transparency = ( cl_s ) { 0, 0, 0 };
-        o->prp.diffuse_reflectivity = 1.0;
-    }
-}
-
 void obj_set_texture_field( vd_t obj, vc_t texture_field )
 {
     obj_hdr_s* o = obj;
@@ -363,7 +320,8 @@ void obj_set_texture_field( vd_t obj, vc_t texture_field )
 void obj_set_envelope( vd_t obj, const envelope_s* env )
 {
     obj_hdr_s* o = obj;
-    if( o->p->fp_set_envelope ) o->p->fp_set_envelope( obj, env );
+    if( o->prp.envelope ) envelope_s_discard( o->prp.envelope );
+    o->prp.envelope = envelope_s_clone( env );
 }
 
 static bcore_flect_self_s* spect_obj_s_create_self( void )
@@ -435,6 +393,7 @@ s2_t obj_plane_s_side( const obj_plane_s* o, v3d_s pos )
 
 bl_t obj_plane_s_is_in_fov( const obj_plane_s* o, const ray_cone_s* fov )
 {
+    if( o->prp.envelope ) return envelope_s_is_in_fov( o->prp.envelope, fov );
     if( obj_plane_s_ray_hit( o, &fov->ray, NULL ) < f3_inf ) return true;
     f3_t sin_a = v3d_s_mlv( o->prp.rax.z, fov->ray.d );
     sin_a = sin_a < 1.0 ? sin_a : 1.0;
@@ -536,6 +495,7 @@ ray_cone_s obj_sphere_s_fov( const obj_sphere_s* o, v3d_s pos )
 
 bl_t obj_sphere_s_is_in_fov( const obj_sphere_s* o, const ray_cone_s* fov )
 {
+    if( o->prp.envelope ) return envelope_s_is_in_fov( o->prp.envelope, fov );
     return sphere_is_in_fov( o->prp.pos, o->radius, fov );
 }
 
@@ -632,7 +592,7 @@ ray_cone_s obj_cylinder_s_fov( const obj_cylinder_s* o, v3d_s pos )
 
 bl_t obj_cylinder_s_is_in_fov( const obj_cylinder_s* o, const ray_cone_s* fov )
 {
-    /// TODO: provide exact calculation
+    if( o->prp.envelope ) return envelope_s_is_in_fov( o->prp.envelope, fov );
     return true;
 }
 
@@ -729,7 +689,7 @@ ray_cone_s obj_cone_s_fov( const obj_cone_s* o, v3d_s pos )
 
 bl_t obj_cone_s_is_in_fov( const obj_cone_s* o, const ray_cone_s* fov )
 {
-    /// TODO: provide exact calculation
+    if( o->prp.envelope ) return envelope_s_is_in_fov( o->prp.envelope, fov );
     return true;
 }
 
@@ -778,7 +738,6 @@ typedef struct obj_pair_inside_s
             properties_s prp;
         };
     };
-    envelope_s* envelope;
     vd_t o1;
     vd_t o2;
 } obj_pair_inside_s;
@@ -789,7 +748,6 @@ static sc_t obj_pair_inside_s_def =
     "aware_t _;"
     "spect spect_obj_s* p;"
     "properties_s prp;"
-    "envelope_s* envelope;"
     "aware* o1;"
     "aware* o2;"
 "}";
@@ -832,7 +790,7 @@ v2d_s obj_pair_inside_s_projection( const obj_pair_inside_s* o, v3d_s pos )
 
 ray_cone_s obj_pair_inside_s_fov( const obj_pair_inside_s* o, v3d_s pos )
 {
-    if( o->envelope ) return envelope_s_fov( o->envelope, pos );
+    if( o->prp.envelope ) return envelope_s_fov( o->prp.envelope, pos );
     ray_cone_s cne;
     v3d_s diff = v3d_s_sub( o->prp.pos, pos );
     cne.ray.d = v3d_s_of_length( diff, 1.0 );
@@ -843,14 +801,12 @@ ray_cone_s obj_pair_inside_s_fov( const obj_pair_inside_s* o, v3d_s pos )
 
 bl_t obj_pair_inside_s_is_in_fov( const obj_pair_inside_s* o, const ray_cone_s* fov )
 {
-    if( o->envelope ) envelope_s_is_in_fov( o->envelope, fov );
+    if( o->prp.envelope ) envelope_s_is_in_fov( o->prp.envelope, fov );
     return obj_is_in_fov( o->o1, fov ) || obj_is_in_fov( o->o2, fov );
 }
 
 f3_t obj_pair_inside_s_ray_hit( const obj_pair_inside_s* o, const ray_s* r, v3d_s* p_nor )
 {
-    if( o->envelope && !envelope_s_ray_hits( o->envelope, r ) ) return f3_inf;
-
     v3d_s n1, n2;
     f3_t a1 = obj_ray_hit( o->o1, r, &n1 );
     f3_t a2 = obj_ray_hit( o->o2, r, &n2 );
@@ -901,7 +857,6 @@ s2_t obj_pair_inside_s_side( const obj_pair_inside_s* o, v3d_s pos )
 void obj_pair_inside_s_move(   obj_pair_inside_s* o, const v3d_s* vec )
 {
     properties_s_move  ( &o->prp, vec );
-    if( o->envelope ) envelope_s_move( o->envelope, vec );
     obj_move( o->o1, vec );
     obj_move( o->o2, vec );
 }
@@ -909,7 +864,6 @@ void obj_pair_inside_s_move(   obj_pair_inside_s* o, const v3d_s* vec )
 void obj_pair_inside_s_rotate( obj_pair_inside_s* o, const m3d_s* mat )
 {
     properties_s_rotate( &o->prp, mat );
-    if( o->envelope ) envelope_s_rotate( o->envelope, mat );
     obj_rotate( o->o1, mat );
     obj_rotate( o->o2, mat );
 }
@@ -917,15 +871,8 @@ void obj_pair_inside_s_rotate( obj_pair_inside_s* o, const m3d_s* mat )
 void obj_pair_inside_s_scale( obj_pair_inside_s* o, f3_t fac )
 {
     properties_s_scale ( &o->prp, fac );
-    if( o->envelope ) envelope_s_scale( o->envelope, fac );
     obj_scale( o->o1, fac );
     obj_scale( o->o2, fac );
-}
-
-void obj_pair_inside_s_set_envelope( obj_pair_inside_s* o, const envelope_s* env )
-{
-    envelope_s_discard( o->envelope );
-    o->envelope = envelope_s_clone( env );
 }
 
 static bcore_flect_self_s* obj_pair_inside_s_create_self( void )
@@ -937,7 +884,6 @@ static bcore_flect_self_s* obj_pair_inside_s_create_self( void )
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_ray_hit,      "ray_hit_fp",      "ray_hit" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_side,         "side_fp",         "side" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_is_in_fov,    "is_in_fov_fp",    "is_in_fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_set_envelope, "set_envelope_fp", "set_envelope" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_move,         "move_fp",         "move" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_rotate,       "rotate_fp",       "rotate" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_scale,        "scale_fp",        "scale" );
@@ -960,7 +906,6 @@ typedef struct obj_pair_outside_s
             properties_s prp;
         };
     };
-    envelope_s* envelope;
     vd_t o1;
     vd_t o2;
 } obj_pair_outside_s;
@@ -971,7 +916,6 @@ static sc_t obj_pair_outside_s_def =
     "aware_t _;"
     "spect spect_obj_s* p;"
     "properties_s prp;"
-    "envelope_s* envelope;"
     "aware* o1;"
     "aware* o2;"
 "}";
@@ -1014,7 +958,7 @@ v2d_s obj_pair_outside_s_projection( const obj_pair_outside_s* o, v3d_s pos )
 
 ray_cone_s obj_pair_outside_s_fov( const obj_pair_outside_s* o, v3d_s pos )
 {
-    if( o->envelope ) return envelope_s_fov( o->envelope, pos );
+    if( o->prp.envelope ) return envelope_s_fov( o->prp.envelope, pos );
     ray_cone_s cne;
     v3d_s diff = v3d_s_sub( o->prp.pos, pos );
     cne.ray.d = v3d_s_of_length( diff, 1.0 );
@@ -1026,13 +970,11 @@ ray_cone_s obj_pair_outside_s_fov( const obj_pair_outside_s* o, v3d_s pos )
 bl_t obj_pair_outside_s_is_in_fov( const obj_pair_outside_s* o, const ray_cone_s* fov )
 {
     return obj_is_in_fov( o->o1, fov ) || obj_is_in_fov( o->o2, fov );
-    if( o->envelope ) envelope_s_is_in_fov( o->envelope, fov );
+    if( o->prp.envelope ) envelope_s_is_in_fov( o->prp.envelope, fov );
 }
 
 f3_t obj_pair_outside_s_ray_hit( const obj_pair_outside_s* o, const ray_s* r, v3d_s* p_nor )
 {
-    if( o->envelope && !envelope_s_ray_hits( o->envelope, r ) ) return f3_inf;
-
     v3d_s n1, n2;
     f3_t a1 = obj_ray_hit( o->o1, r, &n1 );
     f3_t a2 = obj_ray_hit( o->o2, r, &n2 );
@@ -1083,7 +1025,6 @@ s2_t obj_pair_outside_s_side( const obj_pair_outside_s* o, v3d_s pos )
 void obj_pair_outside_s_move(   obj_pair_outside_s* o, const v3d_s* vec )
 {
     properties_s_move  ( &o->prp, vec );
-    if( o->envelope ) envelope_s_move( o->envelope, vec );
     obj_move( o->o1, vec );
     obj_move( o->o2, vec );
 }
@@ -1091,7 +1032,6 @@ void obj_pair_outside_s_move(   obj_pair_outside_s* o, const v3d_s* vec )
 void obj_pair_outside_s_rotate( obj_pair_outside_s* o, const m3d_s* mat )
 {
     properties_s_rotate( &o->prp, mat );
-    if( o->envelope ) envelope_s_rotate( o->envelope, mat );
     obj_rotate( o->o1, mat );
     obj_rotate( o->o2, mat );
 }
@@ -1099,15 +1039,8 @@ void obj_pair_outside_s_rotate( obj_pair_outside_s* o, const m3d_s* mat )
 void obj_pair_outside_s_scale(  obj_pair_outside_s* o, f3_t fac )
 {
     properties_s_scale ( &o->prp, fac );
-    if( o->envelope ) envelope_s_scale( o->envelope, fac );
     obj_scale( o->o1, fac );
     obj_scale( o->o2, fac );
-}
-
-void obj_pair_outside_s_set_envelope( obj_pair_outside_s* o, const envelope_s* env )
-{
-    envelope_s_discard( o->envelope );
-    o->envelope = envelope_s_clone( env );
 }
 
 static bcore_flect_self_s* obj_pair_outside_s_create_self( void )
@@ -1119,7 +1052,6 @@ static bcore_flect_self_s* obj_pair_outside_s_create_self( void )
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_ray_hit,      "ray_hit_fp",      "ray_hit" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_side,         "side_fp",         "side" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_is_in_fov,    "is_in_fov_fp",    "is_in_fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_set_envelope, "set_envelope_fp", "set_envelope" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_move,         "move_fp",         "move" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_rotate,       "rotate_fp",       "rotate" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_scale,        "scale_fp",        "scale" );
@@ -1177,6 +1109,7 @@ v2d_s obj_neg_s_projection( const obj_neg_s* o, v3d_s pos )
 
 bl_t obj_neg_s_is_in_fov( const obj_neg_s* o, const ray_cone_s* fov )
 {
+    if( o->prp.envelope ) return envelope_s_is_in_fov( o->prp.envelope, fov );
     return obj_is_in_fov( o->o1, fov );
 }
 
@@ -1232,7 +1165,6 @@ typedef struct obj_distance_s
         };
     };
     f3_t scale;
-    envelope_s* envelope;
     vd_t distance;
 } obj_distance_s;
 
@@ -1243,7 +1175,6 @@ static sc_t obj_distance_s_def =
     "spect spect_obj_s* p;"
     "properties_s prp;"
     "f3_t scale = 1.0;"
-    "envelope_s* envelope;"
     "aware* distance;"
 "}";
 
@@ -1252,7 +1183,7 @@ DEFINE_FUNCTIONS_OBJ_INST( obj_distance_s )
 obj_distance_s* obj_distance_s_create_distance( vc_t distance, envelope_s* envelope )
 {
     obj_distance_s* o = obj_distance_s_create();
-    o->envelope = envelope;
+    o->prp.envelope = envelope;
     o->distance = bcore_inst_aware_clone( distance );
     return o;
 }
@@ -1270,7 +1201,7 @@ v2d_s obj_distance_s_projection( const obj_distance_s* o, v3d_s pos )
 
 bl_t obj_distance_s_is_in_fov( const obj_distance_s* o, const ray_cone_s* fov )
 {
-    if( o->envelope ) return envelope_s_is_in_fov( o->envelope, fov );
+    if( o->prp.envelope ) return envelope_s_is_in_fov( o->prp.envelope, fov );
     return true;
 }
 
@@ -1278,9 +1209,9 @@ f3_t obj_distance_s_ray_hit( const obj_distance_s* o, const ray_s* r, v3d_s* p_n
 {
     ray_s ray = *r;
     f3_t offs = 0;
-    if( o->envelope )
+    if( o->prp.envelope )
     {
-        offs = envelope_s_ray_hit( o->envelope, &ray );
+        offs = envelope_s_ray_hit( o->prp.envelope, &ray );
         if( offs >= f3_inf ) return f3_inf;
         ray.p = ray_s_pos( &ray, offs );
     }
@@ -1329,20 +1260,14 @@ f3_t obj_distance_s_ray_hit( const obj_distance_s* o, const ray_s* r, v3d_s* p_n
 
 s2_t obj_distance_s_side( const obj_distance_s* o, v3d_s pos )
 {
-    if( o->envelope && envelope_s_side( o->envelope, pos ) == 1 ) return 1;
+    if( o->prp.envelope && envelope_s_side( o->prp.envelope, pos ) == 1 ) return 1;
     v3d_s p = v3d_s_mlf( m3d_s_mlv( &o->prp.rax, v3d_s_sub( pos, o->prp.pos ) ), 1.0 / o->scale );
     return distance( o->distance, &p ) > 0 ? 1 : -1;
 }
 
-void obj_distance_s_move(   obj_distance_s* o, const v3d_s* vec ) { properties_s_move  ( &o->prp, vec ); if( o->envelope ) envelope_s_move(   o->envelope, vec ); }
-void obj_distance_s_rotate( obj_distance_s* o, const m3d_s* mat ) { properties_s_rotate( &o->prp, mat ); if( o->envelope ) envelope_s_rotate( o->envelope, mat ); }
-void obj_distance_s_scale(  obj_distance_s* o, f3_t fac         ) { properties_s_scale ( &o->prp, fac ); if( o->envelope ) envelope_s_scale(  o->envelope, fac ); o->scale *= fac; }
-
-void obj_distance_s_set_envelope( obj_distance_s* o, const envelope_s* env )
-{
-    envelope_s_discard( o->envelope );
-    o->envelope = envelope_s_clone( env );
-}
+void obj_distance_s_move(   obj_distance_s* o, const v3d_s* vec ) { properties_s_move  ( &o->prp, vec ); }
+void obj_distance_s_rotate( obj_distance_s* o, const m3d_s* mat ) { properties_s_rotate( &o->prp, mat ); }
+void obj_distance_s_scale(  obj_distance_s* o, f3_t fac         ) { properties_s_scale ( &o->prp, fac ); o->scale *= fac; }
 
 static bcore_flect_self_s* obj_distance_s_create_self( void )
 {
@@ -1352,7 +1277,6 @@ static bcore_flect_self_s* obj_distance_s_create_self( void )
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_distance_s_ray_hit,      "ray_hit_fp",    "ray_hit" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_distance_s_side,         "side_fp",       "side" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_distance_s_is_in_fov,    "is_in_fov_fp",  "is_in_fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_distance_s_set_envelope, "set_envelope_fp", "set_envelope" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_distance_s_move,         "move_fp",       "move" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_distance_s_rotate,       "rotate_fp",     "rotate" );
     bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_distance_s_scale,        "scale_fp",      "scale" );
@@ -1591,7 +1515,7 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
         obj_set_color( sr_o->o, meval_s_eval_v3d( ev ) );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
-    else if( key == typeof( "set_transparency" ) )
+    else if( key == TYPEOF_set_transparency )
     {
         meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
         obj_set_transparency( sr_o->o, meval_s_eval_v3d( ev ) );
@@ -1609,12 +1533,6 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
         obj_set_radiance( sr_o->o, meval_s_eval_f3( ev ) );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
-    else if( key == TYPEOF_set_transparent )
-    {
-        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
-        obj_set_transparent( sr_o->o, meval_s_eval_bl( ev ) );
-        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
-    }
     else if( key == TYPEOF_set_texture_field )
     {
         meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
@@ -1627,9 +1545,6 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
     {
         meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
         sr_s v = meval_s_eval( ev, sr_null() );
-        obj_hdr_s* hdr = sr_o->o;
-        if( !hdr->p->fp_set_envelope ) meval_s_err_fa( ev, "Object '#<sc_t>' does not support an envelope.", ifnameof( sr_s_type( sr_o ) ) );
-
         if( sr_s_type( &v ) == TYPEOF_envelope_s )
         {
             obj_set_envelope( sr_o->o, ( const envelope_s* )v.o );

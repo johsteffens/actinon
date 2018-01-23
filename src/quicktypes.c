@@ -78,7 +78,7 @@ static sr_s typelist()
     bcore_array_q_push_sc( &list, "set_color" );
     bcore_array_q_push_sc( &list, "set_refractive_index" );
     bcore_array_q_push_sc( &list, "set_radiance" );
-    bcore_array_q_push_sc( &list, "set_transparent" );
+    bcore_array_q_push_sc( &list, "set_transparency" );
     bcore_array_q_push_sc( &list, "set_texture_field" );
 
     bcore_array_q_push_sc( &list, "create_image" );

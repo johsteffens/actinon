@@ -596,11 +596,6 @@ tp_t lum_s_key( const lum_s* o )
     return bcore_tp_fold_u2( bcore_tp_fold_u2( bcore_tp_init(), x ), y );
 }
 
-cl_s lum_s_avg_clr( const lum_s* o )
-{
-    return v3d_s_mlf( o->clr, 1.0 / o->weight );
-}
-
 lum_s lum_s_add( const lum_s* o1, const lum_s* o2 )
 {
     lum_s sum;
@@ -920,7 +915,6 @@ void scene_s_create_image_file( scene_s* o, sc_t file )
         lum_machine_s_run( o, lum_arr );
         lum_image_s_push_arr( lum_image, lum_arr );
         lum_image_s_create_image_file( lum_image, file );
-
     }
     time = clock() - time;
     bcore_msg( "\n%5.3g cs\n", ( f3_t )time / ( CLOCKS_PER_SEC ) );
@@ -936,8 +930,8 @@ vd_t scene_signal( tp_t target, tp_t signal, vd_t object )
 
     if( signal == typeof( "init1" ) )
     {
-        bcore_flect_define_creator( typeof( "scene_s"      ), scene_s_create_self );
-        bcore_flect_define_creator( typeof( "image_cps_s"  ), image_cps_s_create_self );
+        bcore_flect_define_creator( typeof( "scene_s"     ), scene_s_create_self );
+        bcore_flect_define_creator( typeof( "image_cps_s" ), image_cps_s_create_self );
         bcore_flect_define_creator( typeof( "lum_s"       ), lum_s_create_self     );
         bcore_flect_define_creator( typeof( "lum_arr_s"   ), lum_arr_s_create_self );
         bcore_flect_define_creator( typeof( "lum_image_s" ), lum_image_s_create_self );

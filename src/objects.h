@@ -25,6 +25,14 @@
 #include "quicktypes.h"
 
 /**********************************************************************************************************************/
+/// envelope_s  (sphere used to define object boundaries)
+typedef struct envelope_s
+{
+    v3d_s pos;
+    f3_t radius;
+} envelope_s;
+
+/**********************************************************************************************************************/
 /// properties_s  (object's properties)
 
 typedef struct properties_s
@@ -32,7 +40,7 @@ typedef struct properties_s
     v3d_s pos;              // reference position of object
     m3d_s rax;              // object's local orthonormal system (reference-axes)
     vd_t  texture_field;    // 3D texture field
-    cl_s  color;            // reflective or radiance color in absence of a texture field
+    cl_s  color;            // reflective albedo or radiance color in absence of a texture field
 
     f3_t  radiance;         // radiance (>0: object is active light source)
     f3_t  refractive_index;
@@ -42,11 +50,10 @@ typedef struct properties_s
     f3_t chromatic_reflectivity; // residual energy taken chromatic (specular) reflection
     f3_t diffuse_reflectivity;   // residual energy taken by diffuse reflection
     cl_s transparency;           // residual energy taken by material transition
-
     // transparency defines the (per color channel) amount of energy absorbed at a transition length of 1 unit
 
-    // deprecated
-    bl_t  transparent; // see transparency
+    envelope_s* envelope; // optional envelope
+
 } properties_s;
 
 /**********************************************************************************************************************/
@@ -95,7 +102,6 @@ void obj_scale(  vd_t o, f3_t fac );
 void obj_set_color           ( vd_t o, cl_s color );
 void obj_set_refractive_index( vd_t o, f3_t val );
 void obj_set_radiance        ( vd_t o, f3_t val );
-void obj_set_transparent     ( vd_t o, bl_t flag );
 void obj_set_texture_field   ( vd_t o, vc_t texture_field );
 
 /**********************************************************************************************************************/

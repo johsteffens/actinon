@@ -65,7 +65,7 @@ void quicktypes_to_stdout( tp_t (*hash)( sc_t name ) );
 #define TYPEOF_set_color            3381219579
 #define TYPEOF_set_refractive_index 1131283776
 #define TYPEOF_set_radiance          634022381
-#define TYPEOF_set_transparent      3579453750
+#define TYPEOF_set_transparency      734141362
 #define TYPEOF_set_texture_field    2950758396
 #define TYPEOF_create_image         3309712523
 
