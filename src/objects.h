@@ -83,8 +83,17 @@ v2d_s obj_projection( vc_t o, v3d_s pos );
 /// returns a (minimal) ray-cone with entire object in field of view
 ray_cone_s obj_fov( vc_t o, v3d_s pos );
 
-/// tests if object is (at least partially) in field of view
+/** tests if object is potentially (at least partially) in field of view
+ *  true: object may be in fov
+ *  false: object is definitely not in fov
+ */
 bl_t obj_is_in_fov( vc_t o, const ray_cone_s* fov );
+
+/** tests if object is 'potentially' reachable by rays in a half-sphere around 'ray_field' of maximum length 'length'
+ *  true: object may be reachable
+ *  false: object is definitely not reachable
+ */
+bl_t obj_is_reachable( vc_t o, const ray_s* ray_field, f3_t length );
 
 /// returns object's hit position (offset) or f3_inf if not hit.
 f3_t obj_ray_hit( vc_t o, const ray_s* ray, v3d_s* p_nor );
@@ -131,6 +140,18 @@ DECLARE_FUNCTIONS_OBJ( obj_neg_s )
 obj_neg_s* obj_neg_s_create_neg( vc_t o1 );
 
 /**********************************************************************************************************************/
+/// trans_data_s // ray transition data
+
+typedef struct trans_data_s
+{
+    v3d_s exit_nor;
+    obj_hdr_s* exit_obj;
+    obj_hdr_s* enter_obj;
+} trans_data_s;
+
+DECLARE_FUNCTIONS_OBJ( trans_data_s )
+
+/**********************************************************************************************************************/
 /// compound_s (array of objects)
 
 typedef struct compound_s
@@ -159,13 +180,17 @@ vd_t compound_s_push_q( compound_s* o, const sr_s* object );
 
 /// computes an object hit by given ray; returns f3_inf in case of no hit
 f3_t compound_s_ray_hit( const compound_s* o, const ray_s* r, v3d_s* p_nor, vc_t* hit_obj );
-f3_t compound_s_ray_trans_hit( const compound_s* o, const ray_s* r, v3d_s* p_exit_nor, vc_t* exit_obj, vc_t* enter_obj );
+f3_t compound_s_ray_trans_hit( const compound_s* o, const ray_s* r, trans_data_s* trans );
 
 /// computes a subset of objects in given field of view
 bcore_arr_sz_s* compound_s_in_fov_arr( const compound_s* o, const ray_cone_s* fov );
 
+/// computes a subset of objects reachable by ray field (half-sphere)
+bcore_arr_sz_s* compound_s_reachable_arr( const compound_s* o, const ray_s* ray_field, f3_t length );
+
 /// above hit function on a subset specified by idx_arr
 f3_t compound_s_idx_ray_hit( const compound_s* o, const bcore_arr_sz_s* idx_arr, const ray_s* r, v3d_s* p_nor, vc_t* hit_obj );
+f3_t compound_s_idx_ray_trans_hit( const compound_s* o, const bcore_arr_sz_s* idx_arr, const ray_s* r, trans_data_s* trans );
 
 /// counts number of objects where pos is on the side 'side'
 sz_t compound_s_side_count( const compound_s* o, v3d_s pos, s2_t side );

@@ -63,6 +63,11 @@ bl_t envelope_s_is_in_fov( const envelope_s* o, const ray_cone_s* fov )
     return sphere_is_in_fov( o->pos, o->radius, fov );
 }
 
+bl_t envelope_s_is_reachable( const envelope_s* o, const ray_s* ray_field, f3_t length )
+{
+    return sphere_intersects_half_sphere( o->pos, o->radius, ray_field, length );
+}
+
 ray_cone_s envelope_s_fov( const envelope_s* o, v3d_s pos )
 {
     ray_cone_s cne;
@@ -171,6 +176,7 @@ typedef f3_t       (*ray_hit_fp      )( vc_t o, const ray_s* ray, v3d_s* p_nor )
 typedef s2_t       (*side_fp         )( vc_t o, v3d_s pos );
 typedef ray_cone_s (*fov_fp          )( vc_t o, v3d_s pos );
 typedef bl_t       (*is_in_fov_fp    )( vc_t o, const ray_cone_s* fov );
+typedef bl_t       (*is_reachable_fp )( vc_t o, const ray_s* ray, f3_t length );
 
 typedef void (*move_fp  )( vd_t o, const v3d_s* vec );
 typedef void (*rotate_fp)( vd_t o, const m3d_s* mat );
@@ -191,6 +197,7 @@ typedef struct spect_obj_s
     scale_fp      fp_scale;
 
     is_in_fov_fp    fp_is_in_fov;
+    is_reachable_fp fp_is_reachable;
 } spect_obj_s;
 
 DEFINE_FUNCTIONS_OBJ_INST( spect_obj_s )
@@ -206,7 +213,8 @@ static spect_obj_s* spect_obj_s_create_from_self( const bcore_flect_self_s* self
     o->fp_fov          = ( fov_fp          )bcore_flect_self_s_try_external_fp( self, entypeof( "fov_fp"          ), 0 );
     o->fp_ray_hit      = ( ray_hit_fp      )bcore_flect_self_s_get_external_fp( self, entypeof( "ray_hit_fp"      ), 0 );
     o->fp_side         = ( side_fp         )bcore_flect_self_s_get_external_fp( self, entypeof( "side_fp"         ), 0 );
-    o->fp_is_in_fov    = ( is_in_fov_fp    )bcore_flect_self_s_get_external_fp( self, entypeof( "is_in_fov_fp"    ), 0 );
+    o->fp_is_in_fov    = ( is_in_fov_fp    )bcore_flect_self_s_try_external_fp( self, entypeof( "is_in_fov_fp"    ), 0 );
+    o->fp_is_reachable = ( is_reachable_fp )bcore_flect_self_s_try_external_fp( self, entypeof( "is_reachable_fp" ), 0 );
     o->fp_move         = ( move_fp         )bcore_flect_self_s_get_external_fp( self, entypeof( "move_fp"         ), 0 );
     o->fp_rotate       = ( rotate_fp       )bcore_flect_self_s_get_external_fp( self, entypeof( "rotate_fp"       ), 0 );
     o->fp_scale        = ( scale_fp        )bcore_flect_self_s_get_external_fp( self, entypeof( "scale_fp"        ), 0 );
@@ -234,12 +242,25 @@ f3_t obj_ray_hit( vc_t o, const ray_s* ray, v3d_s* p_nor )
 
 s2_t obj_side( vc_t o, v3d_s pos )
 {
-    return obj_get_spect( o )->fp_side( o, pos );
+    const obj_hdr_s* hdr = o;
+    if( hdr->prp.envelope && envelope_s_side( hdr->prp.envelope, pos ) == 1 ) return 1;
+    return hdr->p->fp_side( o, pos );
 }
 
 bl_t obj_is_in_fov( vc_t o, const ray_cone_s* fov )
 {
-    return obj_get_spect( o )->fp_is_in_fov( o, fov );
+    const obj_hdr_s* hdr = o;
+    if( hdr->prp.envelope && !envelope_s_is_in_fov( hdr->prp.envelope, fov ) ) return false;
+    if( hdr->p->fp_is_in_fov ) return hdr->p->fp_is_in_fov( o, fov );
+    return true;
+}
+
+bl_t obj_is_reachable( vc_t o, const ray_s* ray_field, f3_t length )
+{
+    const obj_hdr_s* hdr = o;
+    if( hdr->prp.envelope && !envelope_s_is_reachable( hdr->prp.envelope, ray_field, length ) ) return false;
+    if( hdr->p->fp_is_reachable ) return hdr->p->fp_is_reachable( o, ray_field, length );
+    return true;
 }
 
 f3_t obj_radiance( vc_t o )
@@ -495,8 +516,12 @@ ray_cone_s obj_sphere_s_fov( const obj_sphere_s* o, v3d_s pos )
 
 bl_t obj_sphere_s_is_in_fov( const obj_sphere_s* o, const ray_cone_s* fov )
 {
-    if( o->prp.envelope ) return envelope_s_is_in_fov( o->prp.envelope, fov );
     return sphere_is_in_fov( o->prp.pos, o->radius, fov );
+}
+
+bl_t obj_sphere_s_is_reachable( const obj_sphere_s* o, const ray_s* ray_field, f3_t length )
+{
+    return sphere_intersects_half_sphere( o->prp.pos, o->radius, ray_field, length );
 }
 
 f3_t obj_sphere_s_ray_hit( const obj_sphere_s* o, const ray_s* r, v3d_s* p_nor )
@@ -516,15 +541,16 @@ void obj_sphere_s_scale(  obj_sphere_s* o, f3_t fac         ) { properties_s_sca
 static bcore_flect_self_s* obj_sphere_s_create_self( void )
 {
     bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_sphere_s_def, sizeof( obj_sphere_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_init_a,     "ap_t",          "init" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_projection, "projection_fp", "projection" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_fov,        "fov_fp",        "fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_ray_hit,    "ray_hit_fp",    "ray_hit" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_side,       "side_fp",       "side" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_is_in_fov,  "is_in_fov_fp",  "is_in_fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_move,       "move_fp",       "move" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_rotate,     "rotate_fp",     "rotate" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_scale,      "scale_fp",      "scale" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_init_a,       "ap_t",          "init" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_projection,   "projection_fp", "projection" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_fov,          "fov_fp",        "fov" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_ray_hit,      "ray_hit_fp",    "ray_hit" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_side,         "side_fp",       "side" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_is_in_fov,    "is_in_fov_fp",  "is_in_fov" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_is_reachable, "is_reachable_fp", "is_reachable" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_move,         "move_fp",       "move" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_rotate,       "rotate_fp",     "rotate" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_scale,        "scale_fp",      "scale" );
     return self;
 }
 
@@ -1284,6 +1310,12 @@ static bcore_flect_self_s* obj_distance_s_create_self( void )
 }
 
 /**********************************************************************************************************************/
+/// trans_data_s // ray transition data
+
+DEFINE_FUNCTIONS_OBJ_FLAT( trans_data_s )
+DEFINE_CREATE_SELF( trans_data_s, "trans_data_s = bcore_inst { v3d_s exit_nor; private vc_t exit_obj; private vc_t enter_obj; }" )
+
+/**********************************************************************************************************************/
 /// compound_s
 
 static sc_t compound_s_def =
@@ -1380,13 +1412,14 @@ f3_t compound_s_ray_hit( const compound_s* o, const ray_s* r, v3d_s* p_nor, vc_t
     }
 }
 
-f3_t compound_s_ray_trans_hit( const compound_s* o, const ray_s* r, v3d_s* p_exit_nor, vc_t* exit_obj, vc_t* enter_obj )
+f3_t compound_s_ray_trans_hit( const compound_s* o, const ray_s* r, trans_data_s* trans )
 {
     v3d_s nor;
     f3_t min_a = f3_inf;
     for( sz_t i = 0; i < o->size; i++ )
     {
-        f3_t a = obj_ray_hit( o->data[ i ], r, &nor );
+        vd_t obj = o->data[ i ];
+        f3_t a = obj_ray_hit( obj, r, &nor );
         if( a < f3_inf )
         {
             if( a < min_a - f3_eps )
@@ -1394,15 +1427,15 @@ f3_t compound_s_ray_trans_hit( const compound_s* o, const ray_s* r, v3d_s* p_exi
                 min_a = a;
                 if( v3d_s_mlv( nor, r->d ) > 0 )
                 {
-                    *p_exit_nor = nor;
-                    if( exit_obj ) *exit_obj = o->data[ i ];
-                    if( enter_obj ) *enter_obj = NULL;
+                    trans->exit_nor = nor;
+                    trans->exit_obj = obj;
+                    trans->enter_obj = NULL;
                 }
                 else
                 {
-                    *p_exit_nor = v3d_s_neg( nor );
-                    if( exit_obj ) *exit_obj = NULL;
-                    if( enter_obj ) *enter_obj = o->data[ i ];
+                    trans->exit_nor = v3d_s_neg( nor );
+                    trans->exit_obj = NULL;
+                    trans->enter_obj = obj;
                 }
             }
             else if( f3_abs( a - min_a ) < f3_eps )
@@ -1410,11 +1443,11 @@ f3_t compound_s_ray_trans_hit( const compound_s* o, const ray_s* r, v3d_s* p_exi
                 min_a = a < min_a ? a : min_a;
                 if( v3d_s_mlv( nor, r->d ) > 0 )
                 {
-                    if( exit_obj ) *exit_obj = o->data[ i ];
+                    trans->exit_obj = obj;
                 }
                 else
                 {
-                    if( enter_obj ) *enter_obj = o->data[ i ];
+                    trans->enter_obj = obj;
                 }
             }
         }
@@ -1458,12 +1491,65 @@ f3_t compound_s_idx_ray_hit( const compound_s* o, const bcore_arr_sz_s* idx_arr,
     }
 }
 
+f3_t compound_s_idx_ray_trans_hit( const compound_s* o, const bcore_arr_sz_s* idx_arr, const ray_s* r, trans_data_s* trans )
+{
+    v3d_s nor;
+    f3_t min_a = f3_inf;
+    for( sz_t i = 0; i < idx_arr->size; i++ )
+    {
+        vd_t obj = o->data[ idx_arr->data[ i ] ];
+        f3_t a = obj_ray_hit( obj, r, &nor );
+        if( a < f3_inf )
+        {
+            if( a < min_a - f3_eps )
+            {
+                min_a = a;
+                if( v3d_s_mlv( nor, r->d ) > 0 )
+                {
+                    trans->exit_nor = nor;
+                    trans->exit_obj = obj;
+                    trans->enter_obj = NULL;
+                }
+                else
+                {
+                    trans->exit_nor = v3d_s_neg( nor );
+                    trans->exit_obj = NULL;
+                    trans->enter_obj = obj;
+                }
+            }
+            else if( f3_abs( a - min_a ) < f3_eps )
+            {
+                min_a = a < min_a ? a : min_a;
+                if( v3d_s_mlv( nor, r->d ) > 0 )
+                {
+                    trans->exit_obj = obj;
+                }
+                else
+                {
+                    trans->enter_obj = obj;
+                }
+            }
+        }
+    }
+    return min_a;
+}
+
 bcore_arr_sz_s* compound_s_in_fov_arr( const compound_s* o, const ray_cone_s* fov )
 {
     bcore_arr_sz_s* arr = bcore_arr_sz_s_create();
     for( sz_t i = 0; i < o->size; i++ )
     {
         if( obj_is_in_fov( o->data[ i ], fov ) ) bcore_arr_sz_s_push( arr, i );
+    }
+    return arr;
+}
+
+bcore_arr_sz_s* compound_s_reachable_arr( const compound_s* o, const ray_s* ray_field, f3_t length )
+{
+    bcore_arr_sz_s* arr = bcore_arr_sz_s_create();
+    for( sz_t i = 0; i < o->size; i++ )
+    {
+        if( obj_is_reachable( o->data[ i ], ray_field, length ) ) bcore_arr_sz_s_push( arr, i );
     }
     return arr;
 }
@@ -1722,6 +1808,7 @@ vd_t objects_signal( tp_t target, tp_t signal, vd_t object )
         bcore_flect_define_creator( typeof( "obj_pair_outside_s" ), obj_pair_outside_s_create_self );
         bcore_flect_define_creator( typeof( "obj_neg_s"          ), obj_neg_s_create_self  );
         bcore_flect_define_creator( typeof( "obj_distance_s"     ), obj_distance_s_create_self  );
+        bcore_flect_define_creator( typeof( "trans_data_s"       ), trans_data_s_create_self );
         bcore_flect_define_creator( typeof( "compound_s"         ), compound_s_create_self );
     }
 

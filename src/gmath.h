@@ -100,6 +100,8 @@ static inline v3d_s sphere_observer_normal( v3d_s pos, f3_t r, v3d_s observer )
     return v3d_s_of_length( diff, 1.0 );
 }
 
+
+/// tests whether a sphere is in the field-of-vie of a ray-cone
 static inline bl_t sphere_is_in_fov( v3d_s pos, f3_t r, const ray_cone_s* fov )
 {
     v3d_s diff = v3d_s_sub( pos, fov->ray.p );
@@ -114,6 +116,21 @@ static inline bl_t sphere_is_in_fov( v3d_s pos, f3_t r, const ray_cone_s* fov )
     f3_t cos_ang1 = ( diff_sqr > radius_sqr ) ? sqrt( 1.0 - ( radius_sqr / diff_sqr ) ) : 0;
 
     return acos( cos_ang0 ) - acos( cos_ang1 ) < acos( fov->cos_rs );
+}
+
+/// tests whether a sphere intersects a half-sphere induced by ray and ray_radius
+static inline bl_t sphere_intersects_half_sphere( v3d_s pos, f3_t r, const ray_s* ray, f3_t ray_radius )
+{
+    v3d_s d = v3d_s_sub( pos, ray->p );
+    f3_t d2 = v3d_s_sqr( d );
+    if( d2 > f3_sqr( r + ray_radius ) ) return false; // spheres do not intersect at all
+    f3_t dp = v3d_s_mlv( d, ray->d );
+    if( dp > 0 ) return true; // half-sphere is oriented towards pos -> must intersect
+    v3d_s dn = v3d_s_of_length( v3d_s_sub( d, v3d_s_mlf( ray->d, dp ) ), ray_radius );
+    f3_t r_sqr = f3_sqr( r );
+    if( v3d_s_sqr( v3d_s_sub( d, dn ) ) < r_sqr ) return true;
+    if( v3d_s_sqr( v3d_s_add( d, dn ) ) < r_sqr ) return true;
+    return false;
 }
 
 /**********************************************************************************************************************/
