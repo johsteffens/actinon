@@ -39,45 +39,6 @@
 bl_t scene_s_overwrite_output_files_g = false;
 
 /**********************************************************************************************************************/
-/// photon_s
-
-typedef struct photon_s { cl_s c; v3d_s p; } photon_s;
-DEFINE_FUNCTIONS_OBJ_FLAT( photon_s )
-DEFINE_CREATE_SELF( photon_s, "photon_s = bcore_inst { cl_s c; v3d_s p; }" )
-
-/**********************************************************************************************************************/
-/// photon_map_s
-
-typedef struct photon_map_s
-{
-    aware_t _;
-    union
-    {
-        bcore_static_array_s arr;
-        struct
-        {
-            photon_s* data;
-            sz_t size;
-            sz_t space;
-        };
-    };
-} photon_map_s;
-
-DEFINE_FUNCTIONS_OBJ_FLAT( photon_map_s )
-DEFINE_CREATE_SELF( photon_map_s, "photon_map_s = bcore_inst { aware_t _; photon_s [] arr; }" )
-
-void photon_map_s_clear( photon_map_s* o )
-{
-    bcore_array_aware_set_space( o, 0 );
-}
-
-void photon_map_s_push( photon_map_s* o, photon_s photon )
-{
-    if( o->space <= o->size ) bcore_array_aware_set_space( o, o->size > 0 ? o->size * 2 : 1 );
-    o->data[ o->size++ ] = photon;
-}
-
-/**********************************************************************************************************************/
 /// image_cps_s
 
 /// composite image format: 8bit rgb(a)
@@ -370,188 +331,6 @@ f3_t scene_s_trans_hit( const scene_s* o, const ray_s* r, v3d_s* p_exit_nor, vc_
     return min_a;
 }
 
-cl_s scene_s_trans_lum( const scene_s* scene,
-                        const ray_s* ray,
-                        f3_t offs,
-                        v3d_s exit_nor,
-                        const obj_hdr_s* exit_obj,
-                        const obj_hdr_s* enter_obj,
-                        sz_t depth,
-                        f3_t intensity )
-{
-    cl_s lum = { 0, 0, 0 };
-    if( depth == 0 || intensity < scene->trace_min_intensity ) return lum;
-
-    v3d_s pos = ray_s_pos( ray, offs );
-
-    if( enter_obj && enter_obj->prp.radiance > 0 )
-    {
-        f3_t diff_sqr = v3d_s_diff_sqr( pos, enter_obj->prp.pos );
-        f3_t light_intensity = ( diff_sqr > 0 ) ? ( enter_obj->prp.radiance / diff_sqr ) : f3_mag;
-        return v3d_s_mlf( obj_color( enter_obj, pos ), light_intensity * intensity );
-    }
-
-    f3_t transmittance = 1.0;
-
-    f3_t trans_refractive_index = ( enter_obj ? enter_obj->prp.refractive_index : 1.0 ) / ( exit_obj ? exit_obj->prp.refractive_index : 1.0 );
-
-    /// reflections and refractions
-    if( trans_refractive_index != 1.0 || ( enter_obj && enter_obj->prp.transparent ) )
-    {
-        f3_t reflectance = 0;
-        ray_s out_r;
-        ray_s out_t;
-        out_r.p = pos;
-        out_t.p = ray_s_pos( ray, offs + 2.0 * f3_eps );
-
-        if( trans_refractive_index > 1.0 )
-        {
-            compute_refraction( ray->d, v3d_s_neg( exit_nor ), trans_refractive_index, &reflectance, &out_r.d, &transmittance, &out_t.d );
-        }
-        else
-        {
-            compute_refraction( ray->d, exit_nor, 1.0 / trans_refractive_index, &reflectance, &out_r.d, &transmittance, &out_t.d );
-        }
-
-        v3d_s hit_exit_nor;
-        vc_t  hit_exit_obj = NULL;
-        vc_t  hit_enter_obj = NULL;
-        f3_t a;
-        if ( ( a = scene_s_trans_hit( scene, &out_r, &hit_exit_nor, &hit_exit_obj, &hit_enter_obj ) ) < f3_inf )
-        {
-            lum = scene_s_trans_lum( scene, &out_r, a, hit_exit_nor, hit_exit_obj, hit_enter_obj, depth - 1, reflectance * intensity );
-        }
-        else
-        {
-            lum = v3d_s_mlf( scene->background_color, reflectance * intensity );
-        }
-
-        if( exit_obj || ( enter_obj && enter_obj->prp.transparent ) )
-        {
-            //if( obj_side( obj, out_r.p ) * obj_side( obj, out_t.p ) == -1 ) // truly stepping through surface
-            {
-                if ( ( a = scene_s_trans_hit( scene, &out_t, &hit_exit_nor, &hit_exit_obj, &hit_enter_obj ) ) < f3_inf )
-                {
-                    lum = v3d_s_add( lum, scene_s_trans_lum( scene, &out_t, a, hit_exit_nor, hit_exit_obj, hit_enter_obj, depth - 1, transmittance * intensity ) );
-                }
-                else
-                {
-                    lum = v3d_s_add( lum, v3d_s_mlf( scene->background_color, transmittance * intensity ) );
-                }
-
-                if( exit_obj ) // exiting object
-                {
-                    f3_t rf = exit_obj->prp.color.x > 0 ? pow( 0.5, offs / exit_obj->prp.color.x ) : 0.0;
-                    f3_t gf = exit_obj->prp.color.y > 0 ? pow( 0.5, offs / exit_obj->prp.color.y ) : 0.0;
-                    f3_t bf = exit_obj->prp.color.z > 0 ? pow( 0.5, offs / exit_obj->prp.color.z ) : 0.0;
-                    lum.x *= rf;
-                    lum.y *= gf;
-                    lum.z *= bf;
-                }
-            }
-        }
-    }
-
-    /// direct light
-    if( scene->direct_samples > 0 && enter_obj && !enter_obj->prp.transparent )
-    {
-        ray_s surface = { .p = pos, .d = v3d_s_neg( exit_nor ) };
-
-        /// random seed
-        u2_t rv = surface.p.x * 32944792 + surface.p.y * 76403048 + surface.p.z * 24349373;
-
-        /// peripheral light
-        cl_s cl_per = { 0, 0, 0 };
-
-        f3_t trans_intensity = intensity * transmittance;
-
-        /// process sources with radiance directly  (light-sources)
-        for( sz_t i = 0; i < scene->light.size; i++ )
-        {
-            cl_s cl_sum = { 0, 0, 0 };
-            ray_s out = surface;
-            obj_hdr_s* light_src = scene->light.data[ i ];
-            ray_cone_s fov_to_src = obj_fov( light_src, pos );
-            m3d_s src_con = m3d_s_transposed( m3d_s_con_z( fov_to_src.ray.d ) );
-            f3_t cyl_hgt = areal_coverage( fov_to_src.cos_rs );
-            cl_s color = obj_color( light_src, light_src->prp.pos );
-            bcore_arr_sz_s* idx_arr = compound_s_in_fov_arr( &scene->matter, &fov_to_src );
-            sz_t direct_samples = scene->direct_samples * trans_intensity;
-            direct_samples = ( direct_samples == 0 ) ? 1 : direct_samples;
-            for( sz_t j = 0; j < direct_samples; j++ )
-            {
-                out.d = m3d_s_mlv( &src_con, v3d_s_rsc( &rv, cyl_hgt ) );
-                f3_t weight = v3d_s_mlv( out.d, surface.d );
-                if( weight <= 0 ) continue;
-
-                f3_t a = obj_ray_hit( light_src, &out, NULL );
-                if( a >= f3_inf ) continue;
-                if( compound_s_idx_ray_hit( &scene->matter, idx_arr, &out, NULL, NULL ) > a )
-                {
-                    v3d_s hit_pos = ray_s_pos( &out, a );
-
-                    f3_t diff_sqr = v3d_s_diff_sqr( hit_pos, light_src->prp.pos );
-                    f3_t local_intensity = ( diff_sqr > 0 ) ? ( light_src->prp.radiance / diff_sqr ) : f3_mag;
-
-                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( color, local_intensity * weight * trans_intensity ) );
-                }
-            }
-
-            bcore_arr_sz_s_discard( idx_arr );
-
-            // factor 2 arises from weight distribution across the half-sphere
-            cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 2.0 * cyl_hgt / direct_samples ) );
-
-        }
-
-        // path tracing
-        if( scene->path_samples && depth > 10 )
-        {
-            cl_s cl_sum = { 0, 0, 0 };
-            ray_s out = surface;
-            m3d_s out_con = m3d_s_transposed( m3d_s_con_z( surface.d ) );
-
-            f3_t per_energy = v3d_s_sqr( cl_per );
-            per_energy = per_energy > 0.01 ? per_energy : 0.01;
-
-            sz_t path_samples = scene->path_samples * trans_intensity;
-            path_samples = ( path_samples == 0 ) ? 1 : path_samples;
-
-            for( sz_t i = 0; i < path_samples; i++ )
-            {
-                out.d = m3d_s_mlv( &out_con, v3d_s_rsc( &rv, 1.0 ) );
-                f3_t weight = v3d_s_mlv( out.d, surface.d );
-                if( weight <= 0 ) continue;
-                v3d_s hit_exit_nor;
-                vc_t  hit_exit_obj = NULL;
-                vc_t  hit_enter_obj = NULL;
-
-                f3_t a = compound_s_ray_trans_hit( &scene->matter, &out, &hit_exit_nor, &hit_exit_obj, &hit_enter_obj );
-
-                if( a < f3_inf )
-                {
-                    cl_s lum = scene_s_trans_lum( scene, &out, a, hit_exit_nor, hit_exit_obj, hit_enter_obj, depth - 10, weight * trans_intensity );
-                    cl_sum = v3d_s_add( cl_sum, lum );
-                }
-                else
-                {
-                    cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( scene->background_color, weight * trans_intensity ) );
-                }
-            }
-            // factor 2 arises from weight distribution across the half-sphere
-            cl_per = v3d_s_add( cl_per, v3d_s_mlf( cl_sum, 2.0 / path_samples ) );
-        }
-
-        cl_s cl = obj_color( enter_obj, pos );
-        cl_per.x *= cl.x;
-        cl_per.y *= cl.y;
-        cl_per.z *= cl.z;
-        lum = v3d_s_add( lum, cl_per );
-    }
-
-    return lum;
-}
-
 /**********************************************************************************************************************/
 
 cl_s scene_s_lum( const scene_s* scene,
@@ -804,10 +583,11 @@ typedef struct lum_s
 {
     v2d_s pos;
     cl_s  clr;
+    f3_t  weight;
 } lum_s;
 
-DEFINE_FUNCTIONS_OBJ_FLAT( lum_s )
-DEFINE_CREATE_SELF( lum_s,  "lum_s = bcore_inst { v2d_s pos; cl_s clr; }" )
+DEFINE_FUNCTIONS_OBJ_INST( lum_s )
+DEFINE_CREATE_SELF( lum_s,  "lum_s = bcore_inst { v2d_s pos; cl_s clr; f3_t weight = 1.0; }" )
 
 tp_t lum_s_key( const lum_s* o )
 {
@@ -815,6 +595,23 @@ tp_t lum_s_key( const lum_s* o )
     s2_t y = o->pos.y;
     return bcore_tp_fold_u2( bcore_tp_fold_u2( bcore_tp_init(), x ), y );
 }
+
+cl_s lum_s_avg_clr( const lum_s* o )
+{
+    return v3d_s_mlf( o->clr, 1.0 / o->weight );
+}
+
+lum_s lum_s_add( const lum_s* o1, const lum_s* o2 )
+{
+    lum_s sum;
+    lum_s_init( &sum );
+    sum.pos = v2d_s_add( o1->pos, o2->pos );
+    sum.clr = v3d_s_add( o1->clr, o2->clr );
+    sum.weight = o1->weight + o2->weight;
+    return sum;
+}
+
+/**********************************************************************************************************************/
 
 typedef struct lum_arr_s
 {
@@ -844,60 +641,114 @@ void lum_arr_s_push( lum_arr_s* o, lum_s lum )
     o->data[ o->size++ ] = lum;
 }
 
-typedef struct lum_map_s
+/// sets position and initializes other values with defaults
+void lum_arr_s_push_pos( lum_arr_s* o, v2d_s pos )
+{
+    lum_s lum;
+    lum_s_init( &lum );
+    lum.pos = pos;
+    lum_arr_s_push( o, lum );
+}
+
+/**********************************************************************************************************************/
+
+/// image of lum_s
+#define TYPEOF_lum_image_s typeof( "lum_image_s" )
+typedef struct lum_image_s
 {
     aware_t _;
-    bcore_hmap_tp_sr_s map;
-} lum_map_s;
+    sz_t width;
+    sz_t height;
+    lum_arr_s arr;
+} lum_image_s;
 
-DEFINE_FUNCTIONS_OBJ_INST( lum_map_s )
-DEFINE_CREATE_SELF( lum_map_s,  "lum_map_s = bcore_inst { aware_t _; bcore_hmap_tp_sr_s map; }" )
+DEFINE_FUNCTIONS_OBJ_INST( lum_image_s )
+DEFINE_CREATE_SELF( lum_image_s,  "lum_image_s = bcore_inst { aware_t _; sz_t width; sz_t height; lum_arr_s arr; }" )
 
-void lum_map_s_clear( lum_map_s* o )
+void lum_image_s_reset( lum_image_s* o, sz_t width, sz_t height )
 {
-    bcore_hmap_tp_sr_s_clear( &o->map );
-}
-
-void lum_map_s_push( lum_map_s* o, lum_s lum )
-{
-    tp_t key = lum_s_key( &lum );
-    sr_s* sr = bcore_hmap_tp_sr_s_get( &o->map, key );
-    if( !sr ) sr = bcore_hmap_tp_sr_s_set( &o->map, key, sr_psd( bcore_array_s_get_typed( TYPEOF_lum_arr_s ), lum_arr_s_create() ) );
-    bcore_array_q_push( sr, sr_twc( TYPEOF_lum_s, &lum ) );
-}
-
-void lum_map_s_push_arr( lum_map_s* o, const lum_arr_s* lum_arr )
-{
-    for( sz_t i = 0; i < lum_arr->size; i++ ) lum_map_s_push( o, lum_arr->data[ i ] );
-}
-
-lum_s lum_map_s_get_plain_avg( const lum_map_s* o, s2_t x, s2_t y )
-{
-    tp_t key = bcore_tp_fold_u2( bcore_tp_fold_u2( bcore_tp_init(), x ), y );
-    sr_s* sr = bcore_hmap_tp_sr_s_get( &o->map, key );
-    lum_s lum_sum = { .pos = { 0, 0 }, .clr = { 0, 0, 0 } };
-    f3_t weight = 0;
-    if( sr )
+    bcore_array_aware_set_size( &o->arr, width * height );
+    for( sz_t i = 0; i < o->arr.size; i++ )
     {
-        sz_t size = bcore_array_q_get_size( sr );
-        for( sz_t i = 0; i < size; i++ )
-        {
-            sr_s lum_sr = bcore_array_q_get( sr, i );
-            lum_s* lum = lum_sr.o;
-            s2_t x_l = lum->pos.x;
-            s2_t y_l = lum->pos.y;
-            if( x == x_l && y == y_l )
-            {
-                lum_sum.pos = v2d_s_add( lum_sum.pos, lum->pos );
-                lum_sum.clr = v3d_s_add( lum_sum.clr, lum->clr );
-                weight += 1.0;
-            }
-            sr_down( lum_sr );
-        }
+        o->arr.data[ i ].clr = ( cl_s ) { 0, 0, 0 };
+        o->arr.data[ i ].pos = ( v2d_s ) { 0, 0 };
+        o->arr.data[ i ].weight = 0;
+    }
+    o->width = width;
+    o->height = height;
+}
+
+void lum_image_s_push( lum_image_s* o, lum_s lum )
+{
+    s2_t x = lum.pos.x / lum.weight;
+    s2_t y = lum.pos.y / lum.weight;
+    if( x >= 0 && x < o->width && y >= 0 && y < o->height )
+    {
+        sz_t idx = y * o->width + x;
+        o->arr.data[ idx ] = lum_s_add( &o->arr.data[ idx ], &lum );
+    }
+}
+
+void lum_image_s_push_arr( lum_image_s* o, const lum_arr_s* lum_arr )
+{
+    for( sz_t i = 0; i < lum_arr->size; i++ ) lum_image_s_push( o, lum_arr->data[ i ] );
+}
+
+lum_s lum_image_s_get_avg( const lum_image_s* o, s2_t x, s2_t y )
+{
+    lum_s lum = { .pos = { 0, 0 }, .clr = { 0, 0, 0 }, .weight = 0 };
+    if( x >= 0 && x < o->width && y >= 0 && y < o->height )
+    {
+        sz_t idx = y * o->height + x;
+        lum = o->arr.data[ idx ];
     }
 
-    f3_t f = ( weight > 0 ) ? 1.0 / weight : 1.0;
-    return ( lum_s ) { .pos = v2d_s_mlf( lum_sum.pos, f ), .clr = v3d_s_mlf( lum_sum.clr, f ) };
+    f3_t f = ( lum.weight > 0 ) ? 1.0 / lum.weight : 1.0;
+    return ( lum_s ) { .pos = v2d_s_mlf( lum.pos, f ), .clr = v3d_s_mlf( lum.clr, f ), .weight = 1.0 };
+}
+
+f3_t lum_image_s_clr_dev( const lum_image_s* o, v3d_s ref, s3_t x, s3_t y )
+{
+    if( x < 0 || x >= o->width  ) return 0;
+    if( y < 0 || y >= o->height ) return 0;
+    return v3d_s_sqr( v3d_s_sub( ref, lum_image_s_get_avg( o, x, y ).clr ) );
+}
+
+f3_t lum_image_s_sqr_grad( const lum_image_s* o, s3_t x, s3_t y )
+{
+    f3_t g0 = 0;
+    f3_t g1 = 0;
+    v3d_s v = lum_image_s_get_avg( o, x, y ).clr;
+    g1 = lum_image_s_clr_dev( o, v, x - 1, y - 1 ); g0 = g1 > g0 ? g1 : g0;
+    g1 = lum_image_s_clr_dev( o, v, x - 1, y + 0 ); g0 = g1 > g0 ? g1 : g0;
+    g1 = lum_image_s_clr_dev( o, v, x - 1, y + 1 ); g0 = g1 > g0 ? g1 : g0;
+    g1 = lum_image_s_clr_dev( o, v, x + 0, y - 1 ); g0 = g1 > g0 ? g1 : g0;
+    g1 = lum_image_s_clr_dev( o, v, x + 0, y + 1 ); g0 = g1 > g0 ? g1 : g0;
+    g1 = lum_image_s_clr_dev( o, v, x + 1, y - 1 ); g0 = g1 > g0 ? g1 : g0;
+    g1 = lum_image_s_clr_dev( o, v, x + 1, y + 0 ); g0 = g1 > g0 ? g1 : g0;
+    g1 = lum_image_s_clr_dev( o, v, x + 1, y + 1 ); g0 = g1 > g0 ? g1 : g0;
+    return g0;
+}
+
+void lum_image_s_create_image_file( const lum_image_s* o, sc_t file )
+{
+    image_cl_s* image = image_cl_s_create();
+    image_cl_s_set_size( image, o->width, o->height, cl_black() );
+    image_cps_s* image_cps = image_cps_s_create();
+
+    for( sz_t j = 0; j < o->height; j++ )
+    {
+        for( sz_t i = 0; i < o->width; i++ )
+        {
+            image_cl_s_set_pixel( image, i, j, lum_image_s_get_avg( o, i, j ).clr );
+        }
+    }
+    image_cps_s_copy_cl( image_cps, image );
+    image_cps_s_write_pnm( image_cps, file );
+    st_s_print_fa( " hash: #<tp_t>", image_cps_s_hash( image_cps ) );
+
+    image_cps_s_discard( image_cps );
+    image_cl_s_discard( image );
 }
 
 /**********************************************************************************************************************/
@@ -988,11 +839,6 @@ vd_t lum_machine_s_func( lum_machine_s* o )
             {
                 out_clr = scene_s_lum( o->scene, &ray, offs, exit_nor, exit_obj, enter_obj, o->scene->trace_depth, 1.0 );
             }
-            else if( o->scene->experimental_level == -1 )
-            {
-                // deprecated
-                out_clr = scene_s_trans_lum( o->scene, &ray, offs, exit_nor, exit_obj, enter_obj, o->scene->trace_depth, 1.0 );
-            }
             else
             {
                 bcore_err_fa( "Unsupported experimental level #<s3_t>\n", o->scene->experimental_level );
@@ -1013,50 +859,6 @@ void lum_machine_s_run( const scene_s* scene, lum_arr_s* lum_arr )
     for( sz_t i = 0; i < threads; i++ ) pthread_join( thread_arr[ i ], NULL );
     bcore_free( thread_arr );
     lum_machine_s_discard( machine );
-}
-
-f3_t lum_dev( const scene_s* o, v3d_s ref, const lum_map_s* lum_map, s3_t x, s3_t y )
-{
-    if( x < 0 || x >= o->image_width  ) return 0;
-    if( y < 0 || y >= o->image_height ) return 0;
-    return v3d_s_sqr( v3d_s_sub( ref, lum_map_s_get_plain_avg( lum_map, x, y ).clr ) );
-}
-
-f3_t lum_sqr_grad( const scene_s* o, const lum_map_s* lum_map, s3_t x, s3_t y )
-{
-    f3_t g0 = 0;
-    f3_t g1 = 0;
-    v3d_s v = lum_map_s_get_plain_avg( lum_map, x, y ).clr;
-    g1 = lum_dev( o, v, lum_map, x - 1, y - 1 ); g0 = g1 > g0 ? g1 : g0;
-    g1 = lum_dev( o, v, lum_map, x - 1, y + 0 ); g0 = g1 > g0 ? g1 : g0;
-    g1 = lum_dev( o, v, lum_map, x - 1, y + 1 ); g0 = g1 > g0 ? g1 : g0;
-    g1 = lum_dev( o, v, lum_map, x + 0, y - 1 ); g0 = g1 > g0 ? g1 : g0;
-    g1 = lum_dev( o, v, lum_map, x + 0, y + 1 ); g0 = g1 > g0 ? g1 : g0;
-    g1 = lum_dev( o, v, lum_map, x + 1, y - 1 ); g0 = g1 > g0 ? g1 : g0;
-    g1 = lum_dev( o, v, lum_map, x + 1, y + 0 ); g0 = g1 > g0 ? g1 : g0;
-    g1 = lum_dev( o, v, lum_map, x + 1, y + 1 ); g0 = g1 > g0 ? g1 : g0;
-    return g0;
-}
-
-void scene_s_create_image_file_from_lum_map( const scene_s* o, const lum_map_s* lum_map, sc_t file )
-{
-    image_cl_s* image = image_cl_s_create();
-    image_cl_s_set_size( image, o->image_width, o->image_height, cl_black() );
-    image_cps_s* image_cps = image_cps_s_create();
-
-    for( sz_t j = 0; j < o->image_height; j++ )
-    {
-        for( sz_t i = 0; i < o->image_width; i++ )
-        {
-            image_cl_s_set_pixel( image, i, j, lum_map_s_get_plain_avg( lum_map, i, j ).clr );
-        }
-    }
-    image_cps_s_copy_cl( image_cps, image );
-    image_cps_s_write_pnm( image_cps, file );
-    st_s_print_fa( " hash: #<tp_t>", image_cps_s_hash( image_cps ) );
-
-    image_cps_s_discard( image_cps );
-    image_cl_s_discard( image );
 }
 
 void scene_s_create_image_file( scene_s* o, sc_t file )
@@ -1082,19 +884,20 @@ void scene_s_create_image_file( scene_s* o, sc_t file )
     {
         for( sz_t i = 0; i < o->image_width; i++ )
         {
-            lum_arr_s_push( lum_arr, ( lum_s ) { .pos = { i + 0.5, j + 0.5 }, .clr = { 0, 0, 0 } } );
+            lum_arr_s_push_pos( lum_arr, ( v2d_s ){ i + 0.5, j + 0.5 } );
         }
     }
 
     lum_machine_s_run( o, lum_arr );
-    lum_map_s* lum_map = bcore_life_s_push_aware( l, lum_map_s_create() );
-    lum_map_s_push_arr( lum_map, lum_arr );
+    lum_image_s* lum_image = bcore_life_s_push_aware( l, lum_image_s_create() );
+    lum_image_s_reset( lum_image, o->image_width, o->image_height );
+    lum_image_s_push_arr( lum_image, lum_arr );
 
     u2_t rv = 1234;
     sz_t rnd_samples = o->gradient_samples;
     f3_t sqr_gradient_theshold = f3_sqr( o->gradient_threshold );
 
-    scene_s_create_image_file_from_lum_map( o, lum_map, file );
+    lum_image_s_create_image_file( lum_image, file );
     for( sz_t k = 0; k < o->gradient_cycles; k++ )
     {
         st_s_print_fa( "\n\tgradient pass #pl3 {#<sz_t>}: ", k + 1 );
@@ -1103,28 +906,27 @@ void scene_s_create_image_file( scene_s* o, sc_t file )
         {
             for( s3_t i = 0; i < o->image_width; i++ )
             {
-                if( lum_sqr_grad( o, lum_map, i, j ) > sqr_gradient_theshold )
+                if( lum_image_s_sqr_grad( lum_image, i, j ) > sqr_gradient_theshold )
                 {
                     for( sz_t k = 0; k < rnd_samples; k++ )
                     {
                         f3_t dx = f3_rnd1( &rv );
                         f3_t dy = f3_rnd1( &rv );
-                        lum_arr_s_push( lum_arr, ( lum_s ) { .pos = { i + dx, j + dy }, .clr = { 0, 0, 0 } } );
+                        lum_arr_s_push_pos( lum_arr, ( v2d_s ){ i + dx, j + dy } );
                     }
                 }
             }
         }
         lum_machine_s_run( o, lum_arr );
-        lum_map_s_push_arr( lum_map, lum_arr );
-        scene_s_create_image_file_from_lum_map( o, lum_map, file );
+        lum_image_s_push_arr( lum_image, lum_arr );
+        lum_image_s_create_image_file( lum_image, file );
+
     }
     time = clock() - time;
     bcore_msg( "\n%5.3g cs\n", ( f3_t )time / ( CLOCKS_PER_SEC ) );
 
-
     bcore_life_s_discard( l );
 }
-
 
 /**********************************************************************************************************************/
 
@@ -1134,14 +936,11 @@ vd_t scene_signal( tp_t target, tp_t signal, vd_t object )
 
     if( signal == typeof( "init1" ) )
     {
-        bcore_flect_define_creator( typeof( "photon_s"     ), photon_s_create_self  );
-        bcore_flect_define_creator( typeof( "photon_map_s" ), photon_map_s_create_self  );
         bcore_flect_define_creator( typeof( "scene_s"      ), scene_s_create_self );
         bcore_flect_define_creator( typeof( "image_cps_s"  ), image_cps_s_create_self );
-
-        bcore_flect_define_creator( typeof( "lum_s"     ), lum_s_create_self     );
-        bcore_flect_define_creator( typeof( "lum_arr_s" ), lum_arr_s_create_self );
-        bcore_flect_define_creator( typeof( "lum_map_s" ), lum_map_s_create_self );
+        bcore_flect_define_creator( typeof( "lum_s"       ), lum_s_create_self     );
+        bcore_flect_define_creator( typeof( "lum_arr_s"   ), lum_arr_s_create_self );
+        bcore_flect_define_creator( typeof( "lum_image_s" ), lum_image_s_create_self );
     }
 
     return NULL;
