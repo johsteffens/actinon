@@ -32,6 +32,8 @@ typedef struct envelope_s
     f3_t radius;
 } envelope_s;
 
+DECLARE_FUNCTIONS_OBJ( envelope_s )
+
 /**********************************************************************************************************************/
 /// properties_s  (object's properties)
 
@@ -49,6 +51,7 @@ typedef struct properties_s
     f3_t fresnel_reflectivity;   // incoming energy taken by fresnel reflection
     f3_t chromatic_reflectivity; // residual energy taken chromatic (specular) reflection
     f3_t diffuse_reflectivity;   // residual energy taken by diffuse reflection
+    f3_t sigma;                  // sigma of Oren-Nayar reflectance model
     cl_s transparency;           // residual energy taken by material transition
     // transparency defines the (per color channel) amount of energy absorbed at a transition length of 1 unit
 
@@ -112,6 +115,47 @@ void obj_set_color           ( vd_t o, cl_s color );
 void obj_set_refractive_index( vd_t o, f3_t val );
 void obj_set_radiance        ( vd_t o, f3_t val );
 void obj_set_texture_field   ( vd_t o, vc_t texture_field );
+void obj_set_envelope        ( vd_t obj, const envelope_s* env );
+
+/**********************************************************************************************************************/
+/// obj_plane_s
+
+typedef struct obj_plane_s obj_plane_s;
+DECLARE_FUNCTIONS_OBJ( obj_plane_s )
+
+/**********************************************************************************************************************/
+/// obj_sphere_s
+
+typedef struct obj_sphere_s obj_sphere_s;
+DECLARE_FUNCTIONS_OBJ( obj_sphere_s )
+
+void obj_sphere_s_set_radius( obj_sphere_s* o, f3_t radius );
+
+/**********************************************************************************************************************/
+/// obj_cylinder_s
+
+typedef struct obj_cylinder_s obj_cylinder_s;
+DECLARE_FUNCTIONS_OBJ( obj_cylinder_s )
+
+void obj_cylinder_s_set_radius( obj_cylinder_s* o, f3_t radius );
+
+/**********************************************************************************************************************/
+/// obj_cone_s
+
+typedef struct obj_cone_s obj_cone_s;
+DECLARE_FUNCTIONS_OBJ( obj_cone_s )
+
+/// full angle of cone opening (not half-angle) in degrees
+void obj_cone_s_set_angle_d( obj_cone_s* o, f3_t angle );
+
+/**********************************************************************************************************************/
+/// obj_distance_s
+
+typedef struct obj_distance_s obj_distance_s;
+DECLARE_FUNCTIONS_OBJ( obj_distance_s )
+
+void obj_distance_s_set_distance( obj_distance_s* o, vc_t distance );
+void obj_distance_s_set_cycles( obj_distance_s* o, sz_t cycles );
 
 /**********************************************************************************************************************/
 /// obj_pair_inside_s  (combination of two objects)
@@ -140,6 +184,14 @@ DECLARE_FUNCTIONS_OBJ( obj_neg_s )
 obj_neg_s* obj_neg_s_create_neg( vc_t o1 );
 
 /**********************************************************************************************************************/
+/// obj_scale_s  (scales object independently in directions)
+
+typedef struct obj_scale_s obj_scale_s;
+DECLARE_FUNCTIONS_OBJ( obj_scale_s )
+
+obj_scale_s* obj_scale_s_create_scale( vc_t o1, v3d_s scale );
+
+/**********************************************************************************************************************/
 /// trans_data_s // ray transition data
 
 typedef struct trans_data_s
@@ -154,43 +206,23 @@ DECLARE_FUNCTIONS_OBJ( trans_data_s )
 /**********************************************************************************************************************/
 /// compound_s (array of objects)
 
-typedef struct compound_s
-{
-    aware_t _;
-    union
-    {
-        bcore_aware_link_array_s arr;
-        struct
-        {
-            vd_t* data;
-            sz_t size;
-            sz_t space;
-        };
-    };
-} compound_s;
+typedef struct compound_s compound_s;
+
+DECLARE_FUNCTIONS_OBJ( compound_s )
+
+sz_t           compound_s_get_size(   const compound_s* o );
+const aware_t* compound_s_get_object( const compound_s* o, sz_t index );
 
 /// empties compound
 void compound_s_clear( compound_s* o );
 
-/// pushes an object to compound
-vd_t compound_s_push( compound_s* o, tp_t type );
-
 /// pushes an object to compound (copies object)
-vd_t compound_s_push_q( compound_s* o, const sr_s* object );
+void compound_s_push_q( compound_s* o, const sr_s* object );
+void compound_s_push(   compound_s* o, sr_s object );
 
 /// computes an object hit by given ray; returns f3_inf in case of no hit
 f3_t compound_s_ray_hit( const compound_s* o, const ray_s* r, v3d_s* p_nor, vc_t* hit_obj );
 f3_t compound_s_ray_trans_hit( const compound_s* o, const ray_s* r, trans_data_s* trans );
-
-/// computes a subset of objects in given field of view
-bcore_arr_sz_s* compound_s_in_fov_arr( const compound_s* o, const ray_cone_s* fov );
-
-/// computes a subset of objects reachable by ray field (half-sphere)
-bcore_arr_sz_s* compound_s_reachable_arr( const compound_s* o, const ray_s* ray_field, f3_t length );
-
-/// above hit function on a subset specified by idx_arr
-f3_t compound_s_idx_ray_hit( const compound_s* o, const bcore_arr_sz_s* idx_arr, const ray_s* r, v3d_s* p_nor, vc_t* hit_obj );
-f3_t compound_s_idx_ray_trans_hit( const compound_s* o, const bcore_arr_sz_s* idx_arr, const ray_s* r, trans_data_s* trans );
 
 /// counts number of objects where pos is on the side 'side'
 sz_t compound_s_side_count( const compound_s* o, v3d_s pos, s2_t side );

@@ -44,6 +44,8 @@
 /// f3_t
 static inline f3_t f3_sqr( f3_t v ) { return v * v; }
 static inline f3_t f3_abs( f3_t v ) { return v < 0 ? -v : v; }
+static inline f3_t f3_max( f3_t v1, f3_t v2  ) { return v1 > v2 ? v1 : v2; }
+static inline f3_t f3_min( f3_t v1, f3_t v2  ) { return v1 < v2 ? v1 : v2; }
 
 // Note: generators xsg, xsg2 show strong hyper-structures on polar coordinates
 
@@ -58,6 +60,9 @@ static inline f3_t f3_rnd0( u2_t* rv ) { return ( *rv = bcore_xsg1_u2( *rv ) ) *
 /// v2d_s (2D Vector)
 typedef struct v2d_s { f3_t x; f3_t y; } v2d_s;
 DECLARE_FUNCTIONS_OBJ( v2d_s )
+
+/// zero
+static inline v2d_s v2d_s_zero() { return ( v2d_s ) { .x = 0, .y = 0 }; }
 
 /// negation
 static inline v2d_s v2d_s_neg( v2d_s o ) { return ( v2d_s ) { .x = -o.x , .y = -o.y }; }
@@ -84,6 +89,10 @@ static inline f3_t v2d_s_sub_mlv( v2d_s o, v2d_s s, v2d_s m ) { return ((o.x-s.x
 
 static inline f3_t v2d_s_diff_sqr( v2d_s o, v2d_s v ) { return f3_sqr( o.x - v.x ) + f3_sqr( o.y - v.y ); }
 
+/// max/min value
+static inline f3_t v2d_s_max( v2d_s o ) { return ( o.x > o.y ) ? o.x : o.y; }
+static inline f3_t v2d_s_min( v2d_s o ) { return ( o.x < o.y ) ? o.x : o.y; }
+
 /// sets length of vector to abs(a) (negative a inverts vector's direction)
 static inline v2d_s v2d_s_of_lenth( v2d_s o, f3_t a )
 {
@@ -105,6 +114,9 @@ static inline v2d_s v2d_s_con( v2d_s o )
 typedef struct v3d_s { f3_t x; f3_t y; f3_t z; } v3d_s;
 DECLARE_FUNCTIONS_OBJ( v3d_s )
 
+/// zero
+static inline v3d_s v3d_s_zero() { return ( v3d_s ) { .x = 0, .y = 0, .z = 0 }; }
+
 /// negation
 static inline v3d_s v3d_s_neg( v3d_s o ) { return ( v3d_s ) { .x = -o.x, .y = -o.y, .z = -o.z }; }
 
@@ -119,6 +131,9 @@ static inline v3d_s v3d_s_mlf( v3d_s o, f3_t f  ) { return ( v3d_s ) { .x = (o.x
 /// o x f (cross-product)
 static inline v3d_s v3d_s_mlx( v3d_s o, v3d_s f ) { return ( v3d_s ) { .x = (o.y*f.z-o.z*f.y), .y = (o.z*f.x-o.x*f.z), .z = (o.x*f.y-o.y*f.x) }; }
 
+/// o * diag_mat( f ) (f representing a diagonal matrix)
+static inline v3d_s v3d_s_mld( v3d_s o, v3d_s f ) { return ( v3d_s ) { .x = o.x * f.x, .y = o.y * f.y, .z = o.z * f.z }; }
+
 /// o = o 'op' s
 static inline void v3d_s_o_add( v3d_s* o, v3d_s s ) { o->x += s.x; o->y += s.y; o->z += s.z; }
 static inline void v3d_s_o_sub( v3d_s* o, v3d_s s ) { o->x -= s.x; o->y -= s.y; o->z -= s.z; }
@@ -130,7 +145,12 @@ static inline f3_t v3d_s_mlv( v3d_s o, v3d_s m ) { return (o.x*m.x) + (o.y*m.y) 
 /// ( o - s ) * m
 static inline f3_t v3d_s_sub_mlv( v3d_s o, v3d_s s, v3d_s m ) { return ((o.x-s.x)*m.x) + ((o.y-s.y)*m.y) + ((o.z-s.z)*m.z); }
 
+/// ( o - v )^2
 static inline f3_t v3d_s_diff_sqr( v3d_s o, v3d_s v ) { return f3_sqr( o.x - v.x ) + f3_sqr( o.y - v.y ) + f3_sqr( o.z - v.z ); }
+
+/// max/min value
+static inline f3_t v3d_s_max( v3d_s o ) { f3_t v = ( o.x > o.y ) ? o.x : o.y; return ( v > o.z ) ? v : o.z; }
+static inline f3_t v3d_s_min( v3d_s o ) { f3_t v = ( o.x < o.y ) ? o.x : o.y; return ( v < o.z ) ? v : o.z; }
 
 /// sets length of vector to abs(a) (negative a inverts vector's direction)
 static inline v3d_s v3d_s_of_length( v3d_s o, f3_t a )
@@ -207,9 +227,33 @@ static inline v3d_s v3d_s_reflection( v3d_s dir, v3d_s nor )
 typedef struct m3d_s { v3d_s x, y, z; } m3d_s;
 DECLARE_FUNCTIONS_OBJ( m3d_s )
 
+// returns identity
+static inline m3d_s m3d_s_ident()
+{
+    return ( m3d_s ) { .x = ( v3d_s ){ 1, 0, 0 }, .y = ( v3d_s ){ 0, 1, 0 }, .z = ( v3d_s ){ 0, 0, 1 } };
+}
+
+// o * v
 static inline v3d_s m3d_s_mlv( const m3d_s* o, v3d_s v )
 {
-    return ( v3d_s ) { .x = v3d_s_mlv( o->x, v ), .y = v3d_s_mlv( o->y, v ), .z = v3d_s_mlv( o->z, v ) };
+    return ( v3d_s )
+    {
+        .x = o->x.x * v.x + o->x.y * v.y + o->x.z * v.z,
+        .y = o->y.x * v.x + o->y.y * v.y + o->y.z * v.z,
+        .z = o->z.x * v.x + o->z.y * v.y + o->z.z * v.z
+    };
+
+}
+
+// transposed( o ) * v
+static inline v3d_s m3d_s_tmlv( const m3d_s* o, v3d_s v )
+{
+    return ( v3d_s )
+    {
+        .x = o->x.x * v.x + o->y.x * v.y + o->z.x * v.z,
+        .y = o->x.y * v.x + o->y.y * v.y + o->z.y * v.z,
+        .z = o->x.z * v.x + o->y.z * v.y + o->z.z * v.z
+    };
 }
 
 static inline m3d_s m3d_s_mlm( const m3d_s* o, const m3d_s* a )
@@ -220,12 +264,6 @@ static inline m3d_s m3d_s_mlm( const m3d_s* o, const m3d_s* a )
 static inline m3d_s m3d_s_mlf( const m3d_s* o, f3_t f )
 {
     return ( m3d_s ) { .x = v3d_s_mlf( o->x, f ), .y = v3d_s_mlf( o->y, f ), .z = v3d_s_mlf( o->z, f ) };
-}
-
-// returns identity
-static inline m3d_s m3d_s_ident()
-{
-    return ( m3d_s ) { .x = ( v3d_s ){ 1, 0, 0 }, .y = ( v3d_s ){ 0, 1, 0 }, .z = ( v3d_s ){ 0, 0, 1 } };
 }
 
 // returns rotation around x

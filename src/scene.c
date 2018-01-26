@@ -155,8 +155,8 @@ typedef struct scene_s
     sz_t path_samples;
     f3_t max_path_length;  // path rays longer than max_path_length obtain background color
 
-    compound_s light;  // light sources
-    compound_s matter; // passive objects
+    compound_s* light;  // light sources
+    compound_s* matter; // passive objects
 
     s3_t experimental_level; // (default: 0 ) > 0 for experimental approaches
 
@@ -186,8 +186,8 @@ static sc_t scene_s_def =
     "sz_t path_samples        = 0;"  // requires trace_depth > 10
     "f3_t max_path_length     = 1E+30;"  // path rays longer than max_path_length obtain background color
 
-    "compound_s light;"
-    "compound_s matter;"
+    "compound_s* light;"
+    "compound_s* matter;"
 
     "s3_t experimental_level = 0;" // (default: 0 ) > 0 for experimental approaches
 "}";
@@ -202,11 +202,13 @@ sz_t scene_s_push( scene_s* o, const sr_s* object )
     {
         if( obj_radiance( object->o ) > 0 )
         {
-            compound_s_push_q( &o->light, object );
+            if( !o->light ) o->light = compound_s_create();
+            compound_s_push_q( o->light, object );
         }
         else
         {
-            compound_s_push_q( &o->matter, object );
+            if( !o->matter ) o->matter = compound_s_create();
+            compound_s_push_q( o->matter, object );
         }
         return 1;
     }
@@ -236,7 +238,10 @@ sz_t scene_s_push( scene_s* o, const sr_s* object )
 
 sz_t scene_s_objects( const scene_s* o )
 {
-    return o->light.size + o->matter.size;
+    sz_t size = 0;
+    size += o->light ? compound_s_get_size( o->light ) : 0;
+    size += o->matter ? compound_s_get_size( o->matter ) : 0;
+    return size;
 }
 
 sr_s scene_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
@@ -287,14 +292,14 @@ f3_t scene_s_hit( const scene_s* o, const ray_s* r, v3d_s* p_nor, vc_t* hit_obj 
 
     v3d_s nor;
 
-    if( ( a = compound_s_ray_hit( &o->light, r, &nor, &hit_obj_l ) ) < min_a )
+    if( ( a = compound_s_ray_hit( o->light, r, &nor, &hit_obj_l ) ) < min_a )
     {
         min_a = a;
         if( hit_obj ) *hit_obj = hit_obj_l;
         if( p_nor ) *p_nor = nor;
     }
 
-    if( ( a = compound_s_ray_hit( &o->matter, r, &nor, &hit_obj_l ) ) < min_a )
+    if( ( a = compound_s_ray_hit( o->matter, r, &nor, &hit_obj_l ) ) < min_a )
     {
         min_a = a;
         if( hit_obj ) *hit_obj = hit_obj_l;
@@ -311,13 +316,13 @@ f3_t scene_s_trans_hit( const scene_s* o, const ray_s* r, trans_data_s* trans )
 
     trans_data_s trans_l;
 
-    if( ( a = compound_s_ray_trans_hit( &o->light, r, &trans_l ) ) < min_a )
+    if( ( a = compound_s_ray_trans_hit( o->light, r, &trans_l ) ) < min_a )
     {
         min_a = a;
         *trans = trans_l;
     }
 
-    if( ( a = compound_s_ray_trans_hit( &o->matter, r, &trans_l ) ) < min_a )
+    if( ( a = compound_s_ray_trans_hit( o->matter, r, &trans_l ) ) < min_a )
     {
         min_a = a;
         *trans = trans_l;
@@ -327,6 +332,34 @@ f3_t scene_s_trans_hit( const scene_s* o, const ray_s* r, trans_data_s* trans )
 }
 
 /**********************************************************************************************************************/
+
+/** This function computes a weight according to the Oren-Nayar (1993) reflectance model
+ *  using the simplified version.
+ *  See http://www1.cs.columbia.edu/CAVE/publications/pdfs/Oren_SIGGRAPH94.pdf for details.
+ */
+f3_t oren_nayar_weight( f3_t weight, f3_t theta_i, f3_t on_a, f3_t on_b, v3d_s out_d, v3d_s nor, v3d_s ray_prj )
+{
+    /// oren-nayar-reflection
+    f3_t theta_r = acos( weight );
+
+    // '-' from negation of ray_projection
+    f3_t cos_phi = -v3d_s_mlv
+    (
+        v3d_s_of_length( v3d_s_orthogonal_projection( out_d, nor ), 1.0 ),
+        ray_prj
+    );
+
+    return weight *
+    (
+        on_a +
+        (
+            on_b *
+            f3_max( cos_phi, 0 ) *
+            sin( f3_max( theta_i, theta_r ) ) *
+            tan( f3_min( theta_i, theta_r ) )
+        )
+    );
+}
 
 cl_s scene_s_lum( const scene_s* scene,
                   const ray_s* ray,
@@ -351,6 +384,9 @@ cl_s scene_s_lum( const scene_s* scene,
     f3_t fresnel_reflectivity = 0;
     f3_t chromatic_reflectivity = 0;
     f3_t diffuse_reflectivity = 0;
+    f3_t on_a = 1.0; // oren-nayar-term A
+    f3_t on_b = 0.0; // oren-nayar-term B
+
     bl_t transparent = false;
 
     if( trans->enter_obj )
@@ -360,6 +396,13 @@ cl_s scene_s_lum( const scene_s* scene,
         chromatic_reflectivity = trans->enter_obj->prp.chromatic_reflectivity;
         diffuse_reflectivity   = trans->enter_obj->prp.diffuse_reflectivity;
         transparent            = v3d_s_sqr( trans->enter_obj->prp.transparency ) > 0;
+        f3_t sigma             = trans->enter_obj->prp.sigma;
+        if( sigma > 0 )
+        {
+            f3_t sigma_sqr = f3_sqr( sigma );
+            on_a = 1.0 - 0.5 * sigma_sqr / ( sigma_sqr + 0.33 );
+            on_b = 0.45 * sigma_sqr / ( sigma_sqr + 0.09 );
+        }
     }
 
     if( trans->exit_obj )
@@ -377,7 +420,8 @@ cl_s scene_s_lum( const scene_s* scene,
         out.p = pos;
         f3_t reflectance = fresnel_reflection( ray->d, trans->exit_nor, trans_refractive_index, &out.d ) * fresnel_reflectivity;
 
-        trans_data_s trans_l = { 0 };
+        trans_data_s trans_l;
+        trans_data_s_init( &trans_l );
 
         f3_t a;
         cl_s lum_l = { 0, 0, 0 };
@@ -400,7 +444,8 @@ cl_s scene_s_lum( const scene_s* scene,
         ray_s out;
         out.p = pos;
         out.d = v3d_s_reflection( ray->d, trans->exit_nor );
-        trans_data_s trans_l = { 0 };
+        trans_data_s trans_l;
+        trans_data_s_init( &trans_l );
         f3_t a;
         cl_s lum_l = { 0, 0, 0 };
         if ( ( a = scene_s_trans_hit( scene, &out, &trans_l ) ) < f3_inf )
@@ -428,6 +473,10 @@ cl_s scene_s_lum( const scene_s* scene,
 
         ray_s surface = { .p = pos, .d = v3d_s_neg( trans->exit_nor ) };
 
+        /// oren-nayar-reflection
+        f3_t theta_i = acos( -v3d_s_mlv( ray->d, surface.d ) );
+        v3d_s ray_projection = v3d_s_of_length( v3d_s_orthogonal_projection( ray->d, surface.d ), 1.0 );
+
         /// random seed
         u2_t rv = surface.p.x * 3294479285 +
                   surface.p.y * 7640304827 +
@@ -439,32 +488,38 @@ cl_s scene_s_lum( const scene_s* scene,
         cl_s lum_l = { 0, 0, 0 };
 
         /// process sources with radiance directly  (light-sources)
-        for( sz_t i = 0; i < scene->light.size; i++ )
+        for( sz_t i = 0; i < compound_s_get_size( scene->light ); i++ )
         {
             cl_s cl_sum = { 0, 0, 0 };
             ray_s out = surface;
-            obj_hdr_s* light_src = scene->light.data[ i ];
+            const aware_t* cmp_object = compound_s_get_object( scene->light, i );
+            assert( bcore_trait_is_of( *cmp_object, TYPEOF_spect_obj ) );
+            obj_hdr_s* light_src = ( obj_hdr_s* )cmp_object;
             ray_cone_s fov_to_src = obj_fov( light_src, pos );
             m3d_s src_con = m3d_s_transposed( m3d_s_con_z( fov_to_src.ray.d ) );
             f3_t cyl_hgt = areal_coverage( fov_to_src.cos_rs );
             cl_s color = obj_color( light_src, light_src->prp.pos );
             sz_t direct_samples = scene->direct_samples * diffuse_intensity;
             direct_samples = ( direct_samples == 0 ) ? 1 : direct_samples;
+
             for( sz_t j = 0; j < direct_samples; j++ )
             {
                 out.d = m3d_s_mlv( &src_con, v3d_s_rsc( &rv, cyl_hgt ) );
                 f3_t weight = v3d_s_mlv( out.d, surface.d );
+
                 if( weight <= 0 ) continue;
+
 
                 f3_t a = obj_ray_hit( light_src, &out, NULL );
                 if( a >= f3_inf ) continue;
-                if( compound_s_ray_hit( &scene->matter, &out, NULL, NULL ) > a )
+
+                if( on_b > 0 ) weight = oren_nayar_weight( weight, theta_i, on_a, on_b, out.d, surface.d, ray_projection );
+
+                if( compound_s_ray_hit( scene->matter, &out, NULL, NULL ) > a )
                 {
                     v3d_s hit_pos = ray_s_pos( &out, a );
-
                     f3_t diff_sqr = v3d_s_diff_sqr( hit_pos, light_src->prp.pos );
                     f3_t local_intensity = ( diff_sqr > 0 ) ? ( light_src->prp.radiance / diff_sqr ) : f3_mag;
-
                     cl_sum = v3d_s_add( cl_sum, v3d_s_mlf( color, local_intensity * weight * diffuse_intensity ) );
                 }
             }
@@ -493,8 +548,11 @@ cl_s scene_s_lum( const scene_s* scene,
                 f3_t weight = v3d_s_mlv( out.d, surface.d );
                 if( weight <= 0 ) continue;
 
-                trans_data_s trans_l = { 0 };
-                f3_t a = compound_s_ray_trans_hit( &scene->matter, &out, &trans_l );
+                if( on_b > 0 ) weight = oren_nayar_weight( weight, theta_i, on_a, on_b, out.d, surface.d, ray_projection );
+
+                trans_data_s trans_l;
+                trans_data_s_init( &trans_l );
+                f3_t a = compound_s_ray_trans_hit( scene->matter, &out, &trans_l );
 
                 if( a < scene->max_path_length )
                 {
@@ -527,7 +585,9 @@ cl_s scene_s_lum( const scene_s* scene,
         out.p = ray_s_pos( ray, offs + 2.0 * f3_eps );
         fresnel_refraction( ray->d, trans->exit_nor, trans_refractive_index, &out.d );
 
-        trans_data_s trans_l = { 0 };
+        trans_data_s trans_l;
+        trans_data_s_init( &trans_l );
+
         f3_t a;
         cl_s lum_l = { 0, 0, 0 };
         if ( ( a = scene_s_trans_hit( scene, &out, &trans_l ) ) < f3_inf )
@@ -559,8 +619,8 @@ cl_s scene_s_lum( const scene_s* scene,
 
 void scene_s_clear( scene_s* o )
 {
-    compound_s_clear( &o->light );
-    compound_s_clear( &o->matter );
+    if( o->light  ) compound_s_clear( o->light );
+    if( o->matter ) compound_s_clear( o->matter );
 }
 
 /**********************************************************************************************************************/
@@ -811,7 +871,8 @@ vd_t lum_machine_s_func( lum_machine_s* o )
 
         cl_s out_clr = o->scene->background_color;
 
-        trans_data_s trans_l = { 0 };
+        trans_data_s trans_l;
+        trans_data_s_init( &trans_l );
 
         f3_t offs = scene_s_trans_hit( o->scene, &ray, &trans_l );
         if( offs < f3_inf )

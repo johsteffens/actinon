@@ -219,27 +219,11 @@ static inline f3_t cone_ray_hit( v3d_s pos, v3d_s dir, f3_t cosa, const ray_s* r
     f3_t offs = f3_inf;
     if( s < 0 && q > 0 ) // entry hit is positive
     {
-        offs = -s - sqrt( s2 - q );
-        if( a + offs * b > 0 )
-        {
-            offs = f3_inf; // opposite cone direction
-        }
-        else
-        {
-            offs -= f3_eps;
-        }
+        offs = -s - sqrt( s2 - q ) - f3_eps;
     }
     else if( s < 0 || q < 0 ) // exit hit is positive
     {
-        offs = -s + sqrt( s2 - q );
-        if( a + offs * b > 0 )
-        {
-            offs = f3_inf; // opposite cone direction
-        }
-        else
-        {
-            offs -= f3_eps;
-        }
+        offs = -s + sqrt( s2 - q ) - f3_eps;
     }
 
     if( offs < f3_inf && p_nor )
@@ -254,7 +238,7 @@ static inline f3_t cone_ray_hit( v3d_s pos, v3d_s dir, f3_t cosa, const ray_s* r
         {
             f3_t pd = v3d_s_mlv( p, dir );
             v3d_s n = v3d_s_sub( dir, v3d_s_mlf( p, pd / p2 ) );
-            *p_nor = v3d_s_of_length( n, 1.0 );
+            *p_nor = v3d_s_of_length( n, ( pd < 0 ) ? 1.0 : -1.0 );
         }
     }
     return offs;
@@ -266,7 +250,7 @@ static inline bl_t cone_observer_outside( v3d_s pos, v3d_s dir, f3_t cosa, v3d_s
     v3d_s p = v3d_s_sub( observer, pos );
     f3_t p2 = v3d_s_sqr( p );
     if( p2 == 0 ) return true;
-    f3_t coso = -v3d_s_mlv( p, dir ) / sqrt( p2 );
+    f3_t coso = f3_abs( v3d_s_mlv( p, dir ) / sqrt( p2 ) );
     return coso < cosa;
 }
 
@@ -275,7 +259,7 @@ static inline s2_t cone_observer_side( v3d_s pos, v3d_s dir, f3_t cosa, v3d_s ob
     v3d_s p = v3d_s_sub( observer, pos );
     f3_t p2 = v3d_s_sqr( p );
     if( p2 == 0 ) return true;
-    f3_t coso = -v3d_s_mlv( p, dir ) / sqrt( p2 );
+    f3_t coso = f3_abs( v3d_s_mlv( p, dir ) / sqrt( p2 ) );
     return coso < cosa ? 1 : -1;
 }
 

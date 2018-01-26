@@ -664,6 +664,7 @@ static sr_s meval_s_mul( meval_s* o, sr_s v1, sr_s v2 )
                     case TYPEOF_s3_t:  r = sr_clone( v1 ); v1 = sr_null(); obj_scale(  r.o, *( s3_t* )v2.o ); break;
                     case TYPEOF_f3_t:  r = sr_clone( v1 ); v1 = sr_null(); obj_scale(  r.o, *( f3_t* )v2.o ); break;
                     case TYPEOF_m3d_s: r = sr_clone( v1 ); v1 = sr_null(); obj_rotate( r.o,  ( m3d_s* )v2.o ); break;
+                    case TYPEOF_v3d_s: r = sr_asd( obj_scale_s_create_scale( v1.o, *( v3d_s* )v2.o ) ); break;
                 }
             }
         }
@@ -1616,7 +1617,16 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     bclos_frame_s_set( frame, typeof( "atan"  ), sr_cc( sr_create( typeof( "atan_s"         ) ) ) );
     bclos_frame_s_set( frame, typeof( "pow"   ), sr_cc( sr_create( typeof( "pow_s"          ) ) ) );
 
-    bclos_frame_s_set( frame, typeof( "string_fa" ), sr_create( typeof( "create_string_fa_s" ) ) );
+    /// object creation functions
+    bclos_frame_s_set( frame, typeof( "create_plane"    ), sr_create( typeof( "create_plane_s"    ) ) );
+    bclos_frame_s_set( frame, typeof( "create_sphere"   ), sr_create( typeof( "create_sphere_s"   ) ) );
+    bclos_frame_s_set( frame, typeof( "create_cylinder" ), sr_create( typeof( "create_cylinder_s" ) ) );
+    bclos_frame_s_set( frame, typeof( "create_cone"     ), sr_create( typeof( "create_cone_s"     ) ) );
+    bclos_frame_s_set( frame, typeof( "create_torus"    ), sr_create( typeof( "create_torus_s"    ) ) );
+
+    /// special functions
+    bclos_frame_s_set( frame, typeof( "string_fa"   ), sr_create( typeof( "create_string_fa_s" ) ) );
+    bclos_frame_s_set( frame, typeof( "beth_object" ), sr_create( typeof( "create_beth_object_s" ) ) );
 
     /// Built-in constants
     bclos_frame_s_set( frame, typeof( "scene_s"        ), sr_create( typeof( "scene_s"        ) ) );
