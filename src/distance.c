@@ -57,6 +57,56 @@ static bcore_flect_self_s* distance_sphere_s_create_self( void )
 
 /**********************************************************************************************************************/
 
+#define TYPEOF_distance_torus_s typeof( "distance_torus_s" )
+typedef struct distance_torus_s
+{
+    aware_t _;
+    distance_fp fp_distance;
+    f3_t ex_radius; // ex-planar radius
+} distance_torus_s;
+
+static sc_t distance_torus_s_def =
+"distance_torus_s = distance"
+"{"
+    "aware_t _;"
+    "fp_t fp_distance;"
+    "f3_t ex_radius = 0.5;" // ex-planar radius
+"}";
+
+DEFINE_FUNCTIONS_OBJ_INST( distance_torus_s )
+
+void distance_torus_s_set_ex_radius( distance_torus_s* o, f3_t radius )
+{
+    o->ex_radius = radius;
+}
+
+f3_t distance_torus_s_call( const distance_torus_s* o, const v3d_s* pos )
+{
+    f3_t x = pos->x;
+    f3_t y = pos->y;
+    f3_t f = sqrt( x * x + y * y );
+    f3_t f_inv = ( f > 0 ) ? ( 1.0 / f ) : 1.0;
+    x *= f_inv;
+    y *= f_inv;
+    return sqrt( f3_sqr( x - pos->x ) + f3_sqr( y - pos->y ) + f3_sqr( pos->z ) ) - o->ex_radius;
+}
+
+static void distance_torus_s_init_a( vd_t nc )
+{
+    struct { ap_t a; vc_t p; distance_torus_s* o; } * nc_l = nc;
+    nc_l->a( nc ); // default
+    nc_l->o->fp_distance = ( distance_fp )distance_torus_s_call;
+}
+
+static bcore_flect_self_s* distance_torus_s_create_self( void )
+{
+    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( distance_torus_s_def, sizeof( distance_torus_s ) );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )distance_torus_s_init_a, "ap_t", "init" );
+    return self;
+}
+
+/**********************************************************************************************************************/
+
 vd_t distance_signal( tp_t target, tp_t signal, vd_t object )
 {
     if( target != typeof( "all" ) && target != typeof( "distance" ) ) return NULL;
@@ -65,6 +115,7 @@ vd_t distance_signal( tp_t target, tp_t signal, vd_t object )
     {
         bcore_trait_set( entypeof( "distance" ), entypeof( "bcore_inst" ) );
         bcore_flect_define_creator( typeof( "distance_sphere_s" ), distance_sphere_s_create_self );
+        bcore_flect_define_creator( typeof( "distance_torus_s" ), distance_torus_s_create_self );
     }
 
     return NULL;

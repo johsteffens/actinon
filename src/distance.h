@@ -31,10 +31,18 @@ typedef struct distance_hdr_s
 } distance_hdr_s;
 
 /// distance function
-static inline f3_t distance( vc_t o, const v3d_s* pos )
+static inline f3_t distance( vc_t o, v3d_s pos )
 {
-    return ( ( const distance_hdr_s* )o )->fp_distance( o, pos );
+    return ( ( const distance_hdr_s* )o )->fp_distance( o, &pos );
 }
+
+/**********************************************************************************************************************/
+/// distance_torus_s
+
+typedef struct distance_torus_s distance_torus_s;
+DECLARE_FUNCTIONS_OBJ( distance_torus_s )
+
+void distance_torus_s_set_ex_radius( distance_torus_s* o, f3_t radius );
 
 /**********************************************************************************************************************/
 
