@@ -34,6 +34,13 @@ typedef struct envelope_s
 
 DECLARE_FUNCTIONS_OBJ( envelope_s )
 
+void envelope_s_move(           envelope_s* o, const v3d_s* vec );
+void envelope_s_rotate(         envelope_s* o, const m3d_s* mat );
+void envelope_s_scale(          envelope_s* o, f3_t fac );
+bl_t envelope_s_ray_hits( const envelope_s* o, const ray_s* r );
+f3_t envelope_s_ray_hit(  const envelope_s* o, const ray_s* r );
+s3_t envelope_s_side(     const envelope_s* o, v3d_s pos );
+
 /**********************************************************************************************************************/
 /// properties_s  (object's properties)
 
@@ -190,42 +197,6 @@ typedef struct obj_scale_s obj_scale_s;
 DECLARE_FUNCTIONS_OBJ( obj_scale_s )
 
 obj_scale_s* obj_scale_s_create_scale( vc_t o1, v3d_s scale );
-
-/**********************************************************************************************************************/
-/// trans_data_s // ray transition data
-
-typedef struct trans_data_s
-{
-    v3d_s exit_nor;
-    obj_hdr_s* exit_obj;
-    obj_hdr_s* enter_obj;
-} trans_data_s;
-
-DECLARE_FUNCTIONS_OBJ( trans_data_s )
-
-/**********************************************************************************************************************/
-/// compound_s (array of objects)
-
-typedef struct compound_s compound_s;
-
-DECLARE_FUNCTIONS_OBJ( compound_s )
-
-sz_t           compound_s_get_size(   const compound_s* o );
-const aware_t* compound_s_get_object( const compound_s* o, sz_t index );
-
-/// empties compound
-void compound_s_clear( compound_s* o );
-
-/// pushes an object to compound (copies object)
-void compound_s_push_q( compound_s* o, const sr_s* object );
-void compound_s_push(   compound_s* o, sr_s object );
-
-/// computes an object hit by given ray; returns f3_inf in case of no hit
-f3_t compound_s_ray_hit( const compound_s* o, const ray_s* r, v3d_s* p_nor, vc_t* hit_obj );
-f3_t compound_s_ray_trans_hit( const compound_s* o, const ray_s* r, trans_data_s* trans );
-
-/// counts number of objects where pos is on the side 'side'
-sz_t compound_s_side_count( const compound_s* o, v3d_s pos, s2_t side );
 
 /**********************************************************************************************************************/
 

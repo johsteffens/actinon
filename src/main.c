@@ -25,6 +25,7 @@
 
 #include "vectors.h"
 #include "objects.h"
+#include "compound.h"
 #include "textures.h"
 #include "scene.h"
 #include "interpreter.h"
@@ -46,6 +47,7 @@ vd_t signal( tp_t target, tp_t signal, vd_t object )
     if( ( ret = vectors_signal(     target, signal, object ) ) ) return ret;
     if( ( ret = textures_signal(    target, signal, object ) ) ) return ret;
     if( ( ret = objects_signal(     target, signal, object ) ) ) return ret;
+    if( ( ret = compound_signal(    target, signal, object ) ) ) return ret;
     if( ( ret = scene_signal(       target, signal, object ) ) ) return ret;
     if( ( ret = interpreter_signal( target, signal, object ) ) ) return ret;
     if( ( ret = container_signal(   target, signal, object ) ) ) return ret;

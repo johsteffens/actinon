@@ -30,6 +30,7 @@
 
 #include "scene.h"
 #include "objects.h"
+#include "compound.h"
 #include "container.h"
 #include "gmath.h"
 
