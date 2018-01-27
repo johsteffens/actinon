@@ -1,6 +1,6 @@
-/** Compound of compound */
+/** Compound of objects */
 
-/** Copyright 2017 Johannes Bernhard Steffens
+/** Copyright 2018 Johannes Bernhard Steffens
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -62,6 +62,12 @@ DEFINE_FUNCTIONS_OBJ_INST( compound_s )
 sz_t compound_s_get_size( const compound_s* o )
 {
     return o ? o->size : 0;
+}
+
+void compound_s_set_envelope( compound_s* o, const envelope_s* envelope )
+{
+    if( o->envelope ) envelope_s_discard( o->envelope );
+    o->envelope = envelope_s_clone( envelope );
 }
 
 const aware_t* compound_s_get_object( const compound_s* o, sz_t index )
@@ -253,6 +259,140 @@ static bcore_flect_self_s* compound_s_create_self( void )
 {
     bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( compound_s_def, sizeof( compound_s ) );
     return self;
+}
+
+void compound_s_move( compound_s* o, const v3d_s* vec )
+{
+    if( o->envelope ) envelope_s_move( o->envelope, vec );
+    for( sz_t i = 0; i < o->size; i++ )
+    {
+        vd_t obj = o->data[ i ];
+        if( obj )
+        {
+            tp_t type = *( aware_t* )obj;
+            if( type == TYPEOF_compound_s )
+            {
+                compound_s_move( obj, vec );
+            }
+            else if( bcore_trait_is_of( type, TYPEOF_spect_obj ) )
+            {
+                obj_move( obj, vec );
+            }
+        }
+    }
+}
+
+void compound_s_rotate( compound_s* o, const m3d_s* mat )
+{
+    if( o->envelope ) envelope_s_rotate( o->envelope, mat );
+    for( sz_t i = 0; i < o->size; i++ )
+    {
+        vd_t obj = o->data[ i ];
+        if( obj )
+        {
+            tp_t type = *( aware_t* )obj;
+            if( type == TYPEOF_compound_s )
+            {
+                compound_s_rotate( obj, mat );
+            }
+            else if( bcore_trait_is_of( type, TYPEOF_spect_obj ) )
+            {
+                obj_rotate( obj, mat );
+            }
+        }
+    }
+}
+
+void compound_s_scale( compound_s* o, f3_t fac )
+{
+    if( o->envelope ) envelope_s_scale( o->envelope, fac );
+    for( sz_t i = 0; i < o->size; i++ )
+    {
+        vd_t obj = o->data[ i ];
+        if( obj )
+        {
+            tp_t type = *( aware_t* )obj;
+            if( type == TYPEOF_compound_s )
+            {
+                compound_s_scale( obj, fac );
+            }
+            else if( bcore_trait_is_of( type, TYPEOF_spect_obj ) )
+            {
+                obj_scale( obj, fac );
+            }
+        }
+    }
+}
+
+sr_s compound_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
+{
+    if( !sr_o ) return sr_null();
+    assert( sr_s_type( sr_o ) == TYPEOF_compound_s );
+    compound_s* o = sr_o->o;
+
+    sr_s ret = sr_null();
+
+    if( key == TYPEOF_push )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        sr_s obj = meval_s_eval( ev, sr_null() );
+        tp_t type = sr_s_type( &obj );
+        if( type != TYPEOF_compound_s && !bcore_trait_is_of( type, TYPEOF_spect_obj ) )
+        {
+            meval_s_err_fa( ev, "Cannot push '#<sc_t>' to compound_s.", ifnameof( type ) );
+        }
+        compound_s_push( o, obj );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == TYPEOF_move )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        v3d_s v = meval_s_eval_v3d( ev );
+        compound_s_move( o, &v );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == TYPEOF_rotate )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        m3d_s rot = meval_s_eval_rot( ev );
+        compound_s_rotate( o, &rot );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == TYPEOF_scale )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        compound_s_scale( o, meval_s_eval_f3( ev ) );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == typeof( "set_envelope" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        sr_s v = meval_s_eval( ev, sr_null() );
+        if( sr_s_type( &v ) == TYPEOF_envelope_s )
+        {
+            compound_s_set_envelope( sr_o->o, ( const envelope_s* )v.o );
+        }
+        else if( sr_s_type( &v ) == TYPEOF_obj_sphere_s )
+        {
+            envelope_s env;
+            env.pos = ( ( obj_hdr_s* )v.o )->prp.pos;
+            env.radius = obj_sphere_s_get_radius( v.o );
+            compound_s_set_envelope( sr_o->o, &env );
+        }
+        else
+        {
+            meval_s_err_fa( ev, "Object '#<sc_t>' cannot be used as envelope (use a sphere).", ifnameof( sr_s_type( &v ) ) );
+        }
+
+        sr_down( v );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else
+    {
+        meval_s_err_fa( ev, "Compound has no element of name #<sc_t>.", meval_s_get_name( ev, key ) );
+    }
+
+    return sr_fork( ret );
 }
 
 /**********************************************************************************************************************/

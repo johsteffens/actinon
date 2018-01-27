@@ -26,6 +26,7 @@
 
 /**********************************************************************************************************************/
 /// envelope_s  (sphere used to define object boundaries)
+#define TYPEOF_envelope_s typeof( "envelope_s" )
 typedef struct envelope_s
 {
     v3d_s pos;
@@ -127,20 +128,24 @@ void obj_set_envelope        ( vd_t obj, const envelope_s* env );
 /**********************************************************************************************************************/
 /// obj_plane_s
 
+#define TYPEOF_obj_plane_s typeof( "obj_plane_s" )
 typedef struct obj_plane_s obj_plane_s;
 DECLARE_FUNCTIONS_OBJ( obj_plane_s )
 
 /**********************************************************************************************************************/
 /// obj_sphere_s
 
+#define TYPEOF_obj_sphere_s typeof( "obj_sphere_s" )
 typedef struct obj_sphere_s obj_sphere_s;
 DECLARE_FUNCTIONS_OBJ( obj_sphere_s )
 
 void obj_sphere_s_set_radius( obj_sphere_s* o, f3_t radius );
+f3_t obj_sphere_s_get_radius( const obj_sphere_s* o );
 
 /**********************************************************************************************************************/
 /// obj_cylinder_s
 
+#define TYPEOF_obj_cylinder_s typeof( "obj_cylinder_s" )
 typedef struct obj_cylinder_s obj_cylinder_s;
 DECLARE_FUNCTIONS_OBJ( obj_cylinder_s )
 
@@ -149,6 +154,7 @@ void obj_cylinder_s_set_radius( obj_cylinder_s* o, f3_t radius );
 /**********************************************************************************************************************/
 /// obj_cone_s
 
+#define TYPEOF_obj_cone_s typeof( "obj_cone_s" )
 typedef struct obj_cone_s obj_cone_s;
 DECLARE_FUNCTIONS_OBJ( obj_cone_s )
 
@@ -158,6 +164,7 @@ void obj_cone_s_set_angle_d( obj_cone_s* o, f3_t angle );
 /**********************************************************************************************************************/
 /// obj_distance_s
 
+#define TYPEOF_obj_distance_s typeof( "obj_distance_s" )
 typedef struct obj_distance_s obj_distance_s;
 DECLARE_FUNCTIONS_OBJ( obj_distance_s )
 
@@ -167,6 +174,7 @@ void obj_distance_s_set_cycles( obj_distance_s* o, sz_t cycles );
 /**********************************************************************************************************************/
 /// obj_pair_inside_s  (combination of two objects)
 
+#define TYPEOF_obj_pair_inside_s typeof( "obj_pair_inside_s" )
 typedef struct obj_pair_inside_s obj_pair_inside_s;
 DECLARE_FUNCTIONS_OBJ( obj_pair_inside_s )
 
@@ -176,6 +184,7 @@ sr_s obj_pair_inside_s_create_pair_sr( sr_s o1, sr_s o2 );
 /**********************************************************************************************************************/
 /// obj_pair_outside_s  (combination of two objects)
 
+#define TYPEOF_obj_pair_outside_s typeof( "obj_pair_outside_s" )
 typedef struct obj_pair_outside_s obj_pair_outside_s;
 DECLARE_FUNCTIONS_OBJ( obj_pair_outside_s )
 
@@ -185,6 +194,7 @@ sr_s obj_pair_outside_s_create_pair_sr( sr_s o1, sr_s o2 );
 /**********************************************************************************************************************/
 /// obj_neg_s  (negated objects inside <-> outside)
 
+#define TYPEOF_obj_neg_s typeof( "obj_neg_s" )
 typedef struct obj_neg_s obj_neg_s;
 DECLARE_FUNCTIONS_OBJ( obj_neg_s )
 
@@ -193,6 +203,7 @@ obj_neg_s* obj_neg_s_create_neg( vc_t o1 );
 /**********************************************************************************************************************/
 /// obj_scale_s  (scales object independently in directions)
 
+#define TYPEOF_obj_scale_s typeof( "obj_scale_s" )
 typedef struct obj_scale_s obj_scale_s;
 DECLARE_FUNCTIONS_OBJ( obj_scale_s )
 

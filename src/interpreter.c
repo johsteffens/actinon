@@ -34,6 +34,7 @@
 #include "container.h"
 #include "scene.h"
 #include "closures.h"
+#include "compound.h"
 
 /**********************************************************************************************************************/
 // code_s: metacode elements
@@ -58,6 +59,8 @@ sc_t code_symbol( code_s o )
         case OP_MUL_ASSIGN:    return "*=";
         case OP_DIV:           return "/";
         case OP_DIV_ASSIGN:    return "/=";
+        case OP_MOD:           return "%";
+        case OP_MOD_ASSIGN:    return "%=";
         case OP_ADD:           return "+";
         case OP_ADD_ASSIGN:    return "+=";
         case OP_SUB:           return "-";
@@ -328,7 +331,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
             st_s_discard( name );
         }
         // controls and operators
-        else if( bcore_source_q_parse_bl_fa( src, "#?([0]=='!'||[0]=='?'||[0]=='.'||[0]=='='||[0]=='+'||[0]=='-'||[0]=='*'||[0]=='/'||[0]=='>'||[0]=='<'||[0]=='&'||[0]=='|'||[0]==':')" ) ) // operator
+        else if( bcore_source_q_parse_bl_fa( src, "#?([0]=='!'||[0]=='?'||[0]=='.'||[0]=='='||[0]=='+'||[0]=='-'||[0]=='*'||[0]=='/'||[0]=='%'||[0]=='>'||[0]=='<'||[0]=='&'||[0]=='|'||[0]==':')" ) ) // operator
         {
             char c = bcore_source_q_get_u0( src );
             switch( c )
@@ -346,6 +349,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                 case '-': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_SUB_ASSIGN    : OP_SUB ); break;
                 case '*': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_MUL_ASSIGN    : OP_MUL ); break;
                 case '/': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_DIV_ASSIGN    : OP_DIV ); break;
+                case '%': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_MOD_ASSIGN    : OP_MOD ); break;
                 case '<':
                 {
                     if     ( bcore_source_q_parse_bl_fa( src, "#?'='" ) ) mcode_s_push_code( o, OP_SMALLER_EQUAL );
@@ -675,6 +679,33 @@ static sr_s meval_s_mul( meval_s* o, sr_s v1, sr_s v2 )
     if( !r.o )
     {
         meval_s_err_fa( o, "Cannot evaluate '#<sc_t>' * '#<sc_t>'\n", ifnameof( t1 ), ifnameof( t2 ) );
+    }
+
+    sr_down( v1 );
+    sr_down( v2 );
+
+    return r;
+}
+
+static sr_s meval_s_mod( meval_s* o, sr_s v1, sr_s v2 )
+{
+    tp_t t1 = sr_s_type( &v1 );
+    tp_t t2 = sr_s_type( &v2 );
+    sr_s r = sr_null();
+
+    switch( t1 )
+    {
+        case TYPEOF_s3_t:
+        switch( t2 )
+        {
+            case TYPEOF_s3_t:  r = sr_s3( *( s3_t* )v1.o % *( s3_t* )v2.o ); break;
+        }
+        break;
+    }
+
+    if( !r.o )
+    {
+        meval_s_err_fa( o, "Cannot evaluate '#<sc_t>' % '#<sc_t>'\n", ifnameof( t1 ), ifnameof( t2 ) );
     }
 
     sr_down( v1 );
@@ -1185,6 +1216,7 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
                 case OP_SUB_ASSIGN: obj = meval_s_add( o, sr_cw( front_obj ), meval_s_mul( o, sr_f3( -1 ), obj ) ); break;
                 case OP_MUL_ASSIGN: obj = meval_s_mul( o, sr_cw( front_obj ), obj ); break;
                 case OP_DIV_ASSIGN: obj = meval_s_mul( o, sr_cw( front_obj ), meval_s_inverse( o, obj ) ); break;
+                case OP_MOD_ASSIGN: obj = meval_s_mod( o, sr_cw( front_obj ), obj ); break;
                 default: break;
             }
             bcore_inst_typed_copy_typed( sr_s_type( &front_obj ), front_obj.o, sr_s_type( &obj ), obj.o );
@@ -1266,9 +1298,10 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
                 tp_t type = sr_s_type( &front_obj );
                 switch( type )
                 {
-                    case TYPEOF_scene_s: obj = scene_s_meval_key( &front_obj, o, key ); break;
-                    case TYPEOF_map_s:   obj =   map_s_meval_key( &front_obj, o, key ); break;
-                    case TYPEOF_arr_s:   obj =   arr_s_meval_key( &front_obj, o, key ); break;
+                    case TYPEOF_scene_s:    obj =    scene_s_meval_key( &front_obj, o, key ); break;
+                    case TYPEOF_map_s:      obj =      map_s_meval_key( &front_obj, o, key ); break;
+                    case TYPEOF_arr_s:      obj =      arr_s_meval_key( &front_obj, o, key ); break;
+                    case TYPEOF_compound_s: obj = compound_s_meval_key( &front_obj, o, key ); break;
                     default:
                     {
                         if( bcore_trait_is_of( type, TYPEOF_spect_obj ) )
@@ -1397,6 +1430,7 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
 
                 case OP_MUL: return meval_s_eval( o, meval_s_mul( o, front_obj, obj ) );
                 case OP_DIV: return meval_s_eval( o, meval_s_mul( o, front_obj, meval_s_inverse( o, obj ) ) );
+                case OP_MOD: return meval_s_eval( o, meval_s_mod( o, front_obj, obj ) );
 
                 case OP_EQUAL:         return meval_s_eval( o, sr_bl( meval_s_cmp( o, front_obj, obj ) == 0 ) );
                 case OP_SMALLER:       return meval_s_eval( o, sr_bl( meval_s_cmp( o, front_obj, obj ) >  0 ) );

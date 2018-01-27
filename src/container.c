@@ -30,6 +30,7 @@
 #include "vectors.h"
 #include "objects.h"
 #include "container.h"
+#include "compound.h"
 
 /**********************************************************************************************************************/
 // map of objects
@@ -76,6 +77,10 @@ void map_s_move( map_s* o, const v3d_s* vec )
             {
                 arr_s_move( sr->o, vec );
             }
+            else if( type == TYPEOF_compound_s )
+            {
+                compound_s_move( sr->o, vec );
+            }
             else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
             {
                 obj_move( sr->o, vec );
@@ -101,6 +106,10 @@ void map_s_rotate( map_s* o, const m3d_s* mat )
             {
                 arr_s_rotate( sr->o, mat );
             }
+            else if( type == TYPEOF_compound_s )
+            {
+                compound_s_rotate( sr->o, mat );
+            }
             else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
             {
                 obj_rotate( sr->o, mat );
@@ -125,6 +134,10 @@ void map_s_scale( map_s* o, f3_t fac )
             else if( type == TYPEOF_arr_s )
             {
                 arr_s_scale( sr->o, fac );
+            }
+            else if( type == TYPEOF_compound_s )
+            {
+                compound_s_scale( sr->o, fac );
             }
             else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
             {
@@ -252,6 +265,10 @@ void arr_s_move( arr_s* o, const v3d_s* vec )
             {
                 map_s_move( sr->o, vec );
             }
+            else if( type == TYPEOF_compound_s )
+            {
+                compound_s_move( sr->o, vec );
+            }
             else if( bcore_trait_is_of( sr_s_type( sr ), TYPEOF_spect_obj ) )
             {
                 obj_move( sr->o, vec );
@@ -276,6 +293,10 @@ void arr_s_rotate( arr_s* o, const m3d_s* mat )
             else if( type == TYPEOF_map_s )
             {
                 map_s_rotate( sr->o, mat );
+            }
+            else if( type == TYPEOF_compound_s )
+            {
+                compound_s_rotate( sr->o, mat );
             }
             else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
             {
@@ -302,6 +323,10 @@ void arr_s_scale( arr_s* o, f3_t fac )
             {
                 map_s_scale( sr->o, fac );
             }
+            else if( type == TYPEOF_compound_s )
+            {
+                compound_s_scale( sr->o, fac );
+            }
             else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
             {
                 obj_scale( sr->o, fac );
@@ -325,6 +350,16 @@ sr_s arr_s_create_inside_composite( arr_s* o, sz_t start, sz_t size )
         );
     }
     return sr_null();
+}
+
+sr_s arr_s_create_compound( arr_s* o, sz_t start, sz_t size )
+{
+    sr_s sr = sr_create( TYPEOF_compound_s );
+    for( sz_t i = start; i < size; i++ )
+    {
+        compound_s_push_q( sr.o, arr_s_get( o, i ) );
+    }
+    return sr;
 }
 
 sr_s arr_s_create_outside_composite( arr_s* o, sz_t start, sz_t size )
@@ -391,16 +426,22 @@ sr_s arr_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
         arr_s_clear( o );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
-    else if( key == typeof( "compose_inside" ) )
+    else if( key == typeof( "create_inside_composite" ) )
     {
         meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
         obj = arr_s_create_inside_composite( o, 0, o->a.size );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
-    else if( key == typeof( "compose_outside" ) )
+    else if( key == typeof( "create_outside_composite" ) )
     {
         meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
         obj = arr_s_create_outside_composite( o, 0, o->a.size );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == typeof( "create_compound" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        obj = arr_s_create_compound( o, 0, o->a.size );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
     else

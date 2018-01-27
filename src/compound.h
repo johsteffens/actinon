@@ -1,6 +1,6 @@
 /** Compound of objects */
 
-/** Copyright 2017 Johannes Bernhard Steffens
+/** Copyright 2018 Johannes Bernhard Steffens
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -58,6 +58,13 @@ f3_t compound_s_ray_trans_hit( const compound_s* o, const ray_s* r, trans_data_s
 
 /// counts number of objects where pos is on the side 'side'
 sz_t compound_s_side_count( const compound_s* o, v3d_s pos, s2_t side );
+
+void compound_s_move(   compound_s* o, const v3d_s* vec );
+void compound_s_rotate( compound_s* o, const m3d_s* mat );
+void compound_s_scale(  compound_s* o, f3_t fac );
+
+/// executes a function given by key
+sr_s compound_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key );
 
 /**********************************************************************************************************************/
 

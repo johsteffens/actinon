@@ -55,6 +55,7 @@ typedef enum
     OP_DOUBLE_QUERY,  // '??' data content of leaf type to stdout
     OP_MUL, // '*'
     OP_DIV, // '/'
+    OP_MOD, // '%'
     OP_ADD, // '+'
     OP_SUB, // '-'
 
@@ -64,6 +65,7 @@ typedef enum
     OP_ADD_ASSIGN, // '+='
     OP_SUB_ASSIGN, // '-='
     OP_DIV_ASSIGN, // '/='
+    OP_MOD_ASSIGN, // '%='
     CL_ASSIGN_OPS_END,
 
     OP_EQUAL,   // '=='

@@ -190,11 +190,25 @@ static sc_t scene_s_def =
     "compound_s* light;"
     "compound_s* matter;"
 
-    "s3_t experimental_level = 0;" // (default: 0 ) > 0 for experimental approaches
+    "s3_t experimental_level = 0;" // (default: 0 ) > 0 for experimental code; < 0 for deprecated code
 "}";
 
 DEFINE_FUNCTIONS_OBJ_INST( scene_s )
-DEFINE_CREATE_SELF( scene_s, scene_s_def )
+
+void scene_s_init_a( vd_t nc )
+{
+    struct { ap_t a; vc_t p; scene_s* o; } * nc_l = nc;
+    nc_l->a( nc ); // default
+    nc_l->o->light = compound_s_create();
+    nc_l->o->matter = compound_s_create();
+}
+
+static bcore_flect_self_s* scene_s_create_self( void )
+{
+    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( scene_s_def, sizeof( scene_s ) );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )scene_s_init_a, "ap_t", "init" );
+    return self;
+}
 
 sz_t scene_s_push( scene_s* o, const sr_s* object )
 {
@@ -203,15 +217,17 @@ sz_t scene_s_push( scene_s* o, const sr_s* object )
     {
         if( obj_radiance( object->o ) > 0 )
         {
-            if( !o->light ) o->light = compound_s_create();
             compound_s_push_q( o->light, object );
         }
         else
         {
-            if( !o->matter ) o->matter = compound_s_create();
             compound_s_push_q( o->matter, object );
         }
         return 1;
+    }
+    else if( type == TYPEOF_compound_s )
+    {
+        compound_s_push_q( o->matter, object );
     }
     else if( type == TYPEOF_map_s )
     {
@@ -240,8 +256,8 @@ sz_t scene_s_push( scene_s* o, const sr_s* object )
 sz_t scene_s_objects( const scene_s* o )
 {
     sz_t size = 0;
-    size += o->light ? compound_s_get_size( o->light ) : 0;
-    size += o->matter ? compound_s_get_size( o->matter ) : 0;
+    size += compound_s_get_size( o->light );
+    size += compound_s_get_size( o->matter );
     return size;
 }
 
@@ -620,8 +636,8 @@ cl_s scene_s_lum( const scene_s* scene,
 
 void scene_s_clear( scene_s* o )
 {
-    if( o->light  ) compound_s_clear( o->light );
-    if( o->matter ) compound_s_clear( o->matter );
+    compound_s_clear( o->light );
+    compound_s_clear( o->matter );
 }
 
 /**********************************************************************************************************************/

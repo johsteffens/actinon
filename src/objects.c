@@ -31,7 +31,6 @@
 
 /**********************************************************************************************************************/
 /// envelope_s  (sphere used to define object boundaries)
-#define TYPEOF_envelope_s typeof( "envelope_s" )
 static sc_t envelope_s_def =
 "envelope_s = bcore_inst"
 "{"
@@ -363,7 +362,6 @@ static bcore_flect_self_s* spect_obj_s_create_self( void )
 /**********************************************************************************************************************/
 /// obj_plane_s
 
-#define TYPEOF_obj_plane_s typeof( "obj_plane_s" )
 typedef struct obj_plane_s
 {
     union
@@ -451,7 +449,6 @@ static bcore_flect_self_s* obj_plane_s_create_self( void )
 /**********************************************************************************************************************/
 /// obj_sphere_s
 
-#define TYPEOF_obj_sphere_s typeof( "obj_sphere_s" )
 typedef struct obj_sphere_s
 {
     union
@@ -487,6 +484,11 @@ static void obj_sphere_s_init_a( vd_t nc )
 void obj_sphere_s_set_radius( obj_sphere_s* o, f3_t radius )
 {
     o->radius = radius;
+}
+
+f3_t obj_sphere_s_get_radius( const obj_sphere_s* o )
+{
+    return o->radius;
 }
 
 v2d_s obj_sphere_s_projection( const obj_sphere_s* o, v3d_s pos )
@@ -569,7 +571,6 @@ static bcore_flect_self_s* obj_sphere_s_create_self( void )
 /**********************************************************************************************************************/
 /// obj_cylinder_s
 
-#define TYPEOF_obj_cylinder_s typeof( "obj_cylinder_s" )
 typedef struct obj_cylinder_s
 {
     union
@@ -671,7 +672,6 @@ static bcore_flect_self_s* obj_cylinder_s_create_self( void )
 /**********************************************************************************************************************/
 /// obj_cone_s
 
-#define TYPEOF_obj_cone_s typeof( "obj_cone_s" )
 typedef struct obj_cone_s
 {
     union
@@ -773,7 +773,6 @@ static bcore_flect_self_s* obj_cone_s_create_self( void )
 /**********************************************************************************************************************/
 /// obj_distance_s  (object based on distance function)
 
-#define TYPEOF_obj_distance_s typeof( "obj_distance_s" )
 typedef struct obj_distance_s
 {
     union
@@ -925,7 +924,6 @@ static bcore_flect_self_s* obj_distance_s_create_self( void )
 /**********************************************************************************************************************/
 /// obj_pair_inside_s  (combining two objects mutual inside area)
 
-#define TYPEOF_obj_pair_inside_s typeof( "obj_pair_inside_s" )
 typedef struct obj_pair_inside_s
 {
     union
@@ -1087,7 +1085,6 @@ static bcore_flect_self_s* obj_pair_inside_s_create_self( void )
 /**********************************************************************************************************************/
 /// obj_pair_outside_s  (combining two objects mutual outside area)
 
-#define TYPEOF_obj_pair_outside_s typeof( "obj_pair_outside_s" )
 typedef struct obj_pair_outside_s
 {
     union
@@ -1256,7 +1253,6 @@ static bcore_flect_self_s* obj_pair_outside_s_create_self( void )
 /**********************************************************************************************************************/
 /// obj_neg_s  (negated object inside <-> outside)
 
-#define TYPEOF_obj_neg_s typeof( "obj_neg_s" )
 typedef struct obj_neg_s
 {
     union
@@ -1340,7 +1336,6 @@ static bcore_flect_self_s* obj_neg_s_create_self( void )
 /**********************************************************************************************************************/
 /// obj_scale_s  (scales object independently in directions)
 
-#define TYPEOF_obj_scale_s typeof( "obj_scale_s" )
 typedef struct obj_scale_s
 {
     union
