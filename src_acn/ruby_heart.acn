@@ -46,7 +46,7 @@ scene.background_color = color( 0.5, 0.4, 0.2 );
 
 def create_lights = 
 {
-    def base_light = obj_sphere_s;
+    def base_light = create_sphere( 1 );
     base_light.scale( 1 );
     base_light.set_radiance( 25 );
     base_light.set_color( color( 1.0, 1.0, 1.0 ) );
@@ -61,7 +61,7 @@ def create_lights =
 
 def create_floor =
 {
-    def plane = obj_plane_s;
+    def plane = create_plane();
     plane.set_material( "diffuse_polished" );
     plane.set_color( color( 0.2, 0.3, 0.5 ) );
     plane.move( vec( 0, 0, -1 ) );
@@ -71,10 +71,9 @@ def create_floor =
 def create_plate = <-( num floor_offs, num radius, num height ) *
 {
     def cloth_height = 0.05;
-    def cover = obj_plane_s;
-    def cone = obj_cone_s;
-    cone.cosa = cos_d( 45 );
-    def cyl = obj_cylinder_s;
+    def cover = create_plane();
+    def cone = create_cone( 1, 1, 1 );
+    def cyl = create_cylinder( 1, 1 );
 
     def plate = cone & ( cover - vecz( radius + cloth_height ) ) & !( cover - vecz( radius + height ) );
     plate.move( vecz( floor_offs + radius + height ) );
@@ -83,8 +82,9 @@ def create_plate = <-( num floor_offs, num radius, num height ) *
     list.push( cover );
     list.push( cyl * radius * 0.8 );
 
-    def cloth = list.compose_inside();
+    def cloth = list.create_inside_composite();
     cloth.move( vecz( floor_offs + height ) );
+    cloth.set_material( "diffuse" );
     cloth.set_color( color( 0.7, 0.8, 0.9 ) );
     plate.set_material( "diffuse_polished" );
     plate.set_color( color( 0.25, 0.15, 0.1 ) );
@@ -95,7 +95,7 @@ def create_plate = <-( num floor_offs, num radius, num height ) *
 def create_heart = <-( num floor_offs ) *
 {
     def ball_radius = 0.3;
-    def ball0 = obj_sphere_s;
+    def ball0 = create_sphere( 1 );
     ball0.scale( ball_radius );
     ball0.set_material ( "sapphire" );
     ball0.set_transparency( color( 1.0, 0.031, 0.01 ) );
@@ -165,7 +165,7 @@ def create_heart = <-( num floor_offs ) *
 
     // some extra pearls
     def ball_radius = 0.3;
-    def ball = obj_sphere_s;
+    def ball = create_sphere( 1 );
     ball.scale( ball_radius );
     ball.set_material ( "sapphire" );
     ball.set_transparency( color( 1.0, 0.031, 0.01 ) );

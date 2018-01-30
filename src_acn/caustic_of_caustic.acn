@@ -46,7 +46,7 @@ scene.background_color = color( 0.2, 0.1, 0.05 );
 
 def create_lights = 
 {
-    def base_light = obj_sphere_s;
+    def base_light = create_sphere( 1 );
     base_light.scale( 0.5 );
     base_light.set_radiance( 30 );
     base_light.set_color( color( 1.0, 1.0, 1.0 ) );
@@ -55,7 +55,7 @@ def create_lights =
 
 def create_floor =
 {
-    def plane = obj_plane_s;
+    def plane = create_plane();
     plane.set_material( "diffuse" );
     plane.set_color( color( 0.6, 0.7, 0.8 ) );
     plane.move( vec( 0, 0, -1 ) );
@@ -64,8 +64,8 @@ def create_floor =
 
 def create_matter = 
 {
-    def sph = obj_sphere_s;
-    def cov = obj_plane_s;
+    def sph = create_sphere( 1 );
+    def cov = create_plane();
 
     def radius = 0.6;
 
@@ -81,7 +81,7 @@ def create_matter =
     box_list.push( ( cov * rotx(  90 ) ) - vecy( radius * 2 ) );
     box_list.push( ( cov * rotx( -90 ) ) + vecy( radius * 2 ) );
 
-    def box = box_list.compose_inside();
+    def box = box_list.create_inside_composite();
     box.set_material( "diffuse" );
     box.set_color( color( 0.9, 0.6, 0.5 ) );
 

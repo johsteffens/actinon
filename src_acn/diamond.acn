@@ -44,7 +44,7 @@ scene.background_color = color( 0.6, 0.7, 0.8 );
 
 def create_light = <-( lamp_radius, radiance ) *
 {
-    def sph = obj_sphere_s;
+    def sph = create_sphere( 1 );
     def light = sph * lamp_radius;
     light.set_radiance( radiance );
     light;
@@ -52,7 +52,8 @@ def create_light = <-( lamp_radius, radiance ) *
 
 def create_floor = <-( num zoffs ) *
 {
-    def plane = obj_plane_s;
+    def plane = create_plane();
+    plane.set_material( "diffuse" );
     plane.set_color( color( 0.6, 0.4, 0.2 ) );
     plane.set_refractive_index( 1.2 );
     plane.move( vec( 0, 0, zoffs ) );
@@ -62,9 +63,8 @@ def create_floor = <-( num zoffs ) *
 def create_plate = <-( num floor_offs, num radius, num height ) *
 {
     def cloth_height = 0.00075;
-    def cover = obj_plane_s;
-    def cone = obj_cone_s;
-    cone.cosa = cos_d( 45 );
+    def cover = create_plane();
+    def cone = create_cone( 1, 1, 1 );
     def cyl = obj_cylinder_s;
 
     def plate = cone & ( cover - vecz( radius + cloth_height ) ) & !( cover - vecz( radius + height ) );
@@ -79,22 +79,23 @@ def create_plate = <-( num floor_offs, num radius, num height ) *
     list.push( ( cover * roty(  90 ) ) + vecx( chw ) );
     list.push( ( cover * roty( -90 ) ) - vecx( chw ) );
 
-    def cloth = list.compose_inside();
+    def cloth = list.create_inside_composite();
     cloth.move( vecz( floor_offs + height ) );
     cloth.rotate( rotz( 45 ) );
+    cloth.set_material( "diffuse" );
     cloth.set_color( color( 0.9, 0.1, 0.2 ) );
+    plate.set_material( "diffuse_polished" );
     plate.set_color( color( 0.2, 0.1, 0.05 ) );
-    plate.set_refractive_index( 1.5 );
 
     plate : cloth;
 };
 
 def create_diamond = <-( num radius ) *
 {
-    def plane = obj_plane_s;
+    def plane = create_plane();
     plane.set_color( color( 1, 0.5, 0.3 ) );
 
-    def sphere = obj_sphere_s;
+    def sphere = create_sphere( 1 );
 
     def plate = plane + vecz( 0.24 );
     def side = plane * rotx( 90 );
@@ -121,7 +122,7 @@ def create_diamond = <-( num radius ) *
     append_to_cuts( ( ( side * rotx( 90 - 40 ) ) - vecy( 1.02 ) ) * rotz(  180 / 16 ),  8 );
 
     // together with plate and bounding sphere we compose the diamond
-    def gem = cuts.compose_inside() & plate & sphere;
+    def gem = cuts.create_inside_composite() & plate & sphere;
 
     // diamond material parameters
     gem.set_material( "diamond" );
@@ -136,8 +137,8 @@ def create_diamond = <-( num radius ) *
 
 def create_stand = <-( num bottom_zoffs, num radius ) *
 {
-    def sph = obj_sphere_s;
-    def cov = obj_plane_s;
+    def sph = create_sphere( 1 );
+    def cov = create_plane();
 
     def list = [];
     list.push( ( sph * radius ) );
@@ -145,7 +146,7 @@ def create_stand = <-( num bottom_zoffs, num radius ) *
     list.push( !( ( sph * radius ) + vecz( radius * 0.4 ) ) );
     list.push( cov + vecz( radius * 0.08 ) );
 
-    def ring = list.compose_inside();
+    def ring = list.create_inside_composite();
 
     ring.set_color( color( 0.83, 0.68, 0.22 ) );
     ring.set_chromatic_reflectivity( 0.7 );
@@ -158,17 +159,13 @@ def create_stand = <-( num bottom_zoffs, num radius ) *
     list.push( ( cov * rotx( -90 ) ) * rotz(  7 ) );
     list.push( ( cov * roty( -90 ) ) + vecx( radius * 0.5 ) );
     list.push( !cov );
-    def bar = list.compose_inside();
+    def bar = list.create_inside_composite();
     bar.set_envelope( ( ( sph * radius * 0.8 ) + vecx( radius ) ) * roty( -45 ) );
     bar.move( vec( radius * 0.45, 0, bottom_zoffs ) );
     bar.set_color( color( 0.83, 0.68, 0.22 ) );
     bar.set_chromatic_reflectivity( 0.7 );
 
     ring.move( vec( 0, 0, bottom_zoffs + radius * 0.85 ) );
-
-//    bar.rotate( rotz( 30 ) );
-
-//    ring.set_refractive_index( 100.0 );
 
     def stand = [];
     stand.push( ring );

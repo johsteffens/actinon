@@ -50,7 +50,7 @@ scene.background_color = color( 0.2, 0.1, 0.05 );
 
 def create_lights = 
 {
-    def base_light = obj_sphere_s;
+    def base_light = create_sphere( 1 );
     base_light.scale( 0.5 );
     base_light.set_radiance( 50 );
     base_light.set_color( color( 1.0, 1.0, 1.0 ) );
@@ -59,7 +59,7 @@ def create_lights =
 
 def create_floor =
 {
-    def plane = obj_plane_s;
+    def plane = create_plane();
     plane.set_material( "diffuse_polished" );
     plane.set_color( color( 0.6, 0.7, 0.8 ) );
     plane.move( vec( 0, 0, -1 ) );
@@ -75,7 +75,7 @@ def create_matter =
     def r = 0.5;
     def r2 = r * 2;
 
-    def ball = obj_sphere_s;
+    def ball = create_sphere( 1 );
     ball.radius = r;
     ball.set_material( "glass" );
     ball.set_transparency( color( 0.75, 0.55, 0.3 ) );

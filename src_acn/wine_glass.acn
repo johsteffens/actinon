@@ -102,7 +102,7 @@ scene.background_color = color( 0.4, 0.4, 0.3 );
 // Defining a function with no arguments.
 def create_lights =
 {
-    def base_light = obj_sphere_s * 1.0;
+    def base_light = create_sphere( 1 );
     base_light.set_radiance( 40 );
     base_light.set_color( color( 1.0, 1.0, 1.0 ) );
     base_light.move( vec( -2, 2, 5 ) );
@@ -114,7 +114,8 @@ def create_lights =
 
 def create_floor =
 {
-    def plane = obj_plane_s;
+    def plane = create_plane();
+    plane.set_material( "diffuse" );
     plane.set_color( color( 0.8, 0.7, 0.6 ) );
     plane.set_refractive_index( 1.0 );
     plane.move( vec( 0, 0, -1 ) );
@@ -124,9 +125,9 @@ def create_floor =
 // This function creates the wine-glass
 def create_glass =
 {
-    def sphere   = obj_sphere_s;
-    def cover    = obj_plane_s;
-    def cylinder = obj_cylinder_s;
+    def sphere   = create_sphere( 1 );
+    def cover    = create_plane();
+    def cylinder = create_cylinder( 1, 1 );
 
     def outer_sphere = sphere;
 
