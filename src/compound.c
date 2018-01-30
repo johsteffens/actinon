@@ -109,6 +109,23 @@ void compound_s_push_q( compound_s* o, const sr_s* object )
     {
         vd_t dst = compound_s_push_type( o, type );
         bcore_inst_typed_copy( type, dst, object->o );
+        obj_hdr_s* hdr = dst;
+        if( o->envelope )
+        {
+            if( hdr->prp.envelope )
+            {
+                *o->envelope = envelope_of_pair( o->envelope, hdr->prp.envelope );
+            }
+            else
+            {
+                envelope_s_discard( o->envelope );
+                o->envelope = NULL;
+            }
+        }
+        else if( o->size == 1 )
+        {
+            o->envelope = envelope_s_clone( hdr->prp.envelope );
+        }
     }
     else if( type == TYPEOF_compound_s )
     {

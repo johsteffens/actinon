@@ -521,7 +521,7 @@ cl_s scene_s_lum( const scene_s* scene,
 
             for( sz_t j = 0; j < direct_samples; j++ )
             {
-                out.d = m3d_s_mlv( &src_con, v3d_s_rsc( &rv, cyl_hgt ) );
+                out.d = m3d_s_mlv( &src_con, v3d_s_random_sphere_cap( &rv, cyl_hgt ) );
                 f3_t weight = v3d_s_mlv( out.d, surface.d );
 
                 if( weight <= 0 ) continue;
@@ -561,7 +561,7 @@ cl_s scene_s_lum( const scene_s* scene,
 
             for( sz_t i = 0; i < path_samples; i++ )
             {
-                out.d = m3d_s_mlv( &out_con, v3d_s_rsc( &rv, 1.0 ) );
+                out.d = m3d_s_mlv( &out_con, v3d_s_random_sphere_cap( &rv, 1.0 ) );
                 f3_t weight = v3d_s_mlv( out.d, surface.d );
                 if( weight <= 0 ) continue;
 

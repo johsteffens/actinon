@@ -42,6 +42,9 @@ bl_t envelope_s_ray_hits( const envelope_s* o, const ray_s* r );
 f3_t envelope_s_ray_hit(  const envelope_s* o, const ray_s* r );
 s3_t envelope_s_side(     const envelope_s* o, v3d_s pos );
 
+envelope_s envelope_create( v3d_s pos, f3_t radius );
+envelope_s envelope_of_pair( const envelope_s* env1, const envelope_s* env2 );
+
 /**********************************************************************************************************************/
 /// properties_s  (object's properties)
 
@@ -109,6 +112,12 @@ bl_t obj_is_reachable( vc_t o, const ray_s* ray_field, f3_t length );
 /// returns object's hit position (offset) or f3_inf if not hit.
 f3_t obj_ray_hit( vc_t o, const ray_s* ray, v3d_s* p_nor );
 
+/// returns object's exit position on ray (latest hit where ray exits object); f3_inf if no such position
+f3_t obj_ray_exit( vc_t o, const ray_s* ray, v3d_s* p_nor );
+
+/// estimates an envelope for given object via random ray-casting
+envelope_s obj_estimate_envelope( vc_t o, sz_t samples, u2_t rseed, f3_t radius_factor );
+
 /// return 1 when pos is outside object, -1 otherwise
 s2_t obj_side( vc_t o, v3d_s pos );
 
@@ -124,6 +133,7 @@ void obj_set_refractive_index( vd_t o, f3_t val );
 void obj_set_radiance        ( vd_t o, f3_t val );
 void obj_set_texture_field   ( vd_t o, vc_t texture_field );
 void obj_set_envelope        ( vd_t obj, const envelope_s* env );
+void obj_set_auto_envelope   ( vd_t obj ); // estimates envelope for object (overwrites existing envelope)
 
 /**********************************************************************************************************************/
 /// obj_plane_s
@@ -143,23 +153,19 @@ void obj_sphere_s_set_radius( obj_sphere_s* o, f3_t radius );
 f3_t obj_sphere_s_get_radius( const obj_sphere_s* o );
 
 /**********************************************************************************************************************/
-/// obj_cylinder_s
+/// obj_squaroid_s
 
-#define TYPEOF_obj_cylinder_s typeof( "obj_cylinder_s" )
-typedef struct obj_cylinder_s obj_cylinder_s;
-DECLARE_FUNCTIONS_OBJ( obj_cylinder_s )
+#define TYPEOF_obj_squaroid_s typeof( "obj_squaroid_s" )
+typedef struct obj_squaroid_s obj_squaroid_s;
+DECLARE_FUNCTIONS_OBJ( obj_squaroid_s )
 
-void obj_cylinder_s_set_radius( obj_cylinder_s* o, f3_t radius );
+void obj_squaroid_s_set_param( obj_squaroid_s* o, f3_t a, f3_t b, f3_t c, f3_t r );
 
-/**********************************************************************************************************************/
-/// obj_cone_s
-
-#define TYPEOF_obj_cone_s typeof( "obj_cone_s" )
-typedef struct obj_cone_s obj_cone_s;
-DECLARE_FUNCTIONS_OBJ( obj_cone_s )
-
-/// full angle of cone opening (not half-angle) in degrees
-void obj_cone_s_set_angle_d( obj_cone_s* o, f3_t angle );
+obj_squaroid_s* obj_squaroid_s_create_ellipsoid(    f3_t rx, f3_t ry, f3_t rz ); // with envelope
+obj_squaroid_s* obj_squaroid_s_create_hyperboloid1( f3_t rx, f3_t ry, f3_t rz ); // 1-sheet (ellipse at z=0)
+obj_squaroid_s* obj_squaroid_s_create_hyperboloid2( f3_t rx, f3_t ry, f3_t rz ); // 2-sheet (ellipse at z/rz=sqrt(2))
+obj_squaroid_s* obj_squaroid_s_create_cone(         f3_t rx, f3_t ry, f3_t rz ); // ellipse at z/rz=1
+obj_squaroid_s* obj_squaroid_s_create_cylinder(     f3_t rx, f3_t ry          ); // ellipse at perpendicular section
 
 /**********************************************************************************************************************/
 /// obj_distance_s

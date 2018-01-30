@@ -102,6 +102,39 @@ s3_t envelope_s_side( const envelope_s* o, v3d_s pos )
     return sphere_observer_side( o->pos, o->radius, pos );
 }
 
+envelope_s envelope_create( v3d_s pos, f3_t radius )
+{
+    envelope_s env;
+    env.pos = pos;
+    env.radius = radius;
+    return env;
+}
+
+envelope_s envelope_of_pair( const envelope_s* env1, const envelope_s* env2 )
+{
+    f3_t r1 = env1->radius;
+    f3_t r2 = env2->radius;
+    v3d_s diff = v3d_s_sub( env1->pos, env2->pos );
+    f3_t d = sqrt( v3d_s_sqr( diff ) );
+
+    f3_t rmax = r1 > r2 ? r1 : r2;
+    f3_t rmin = r1 < r2 ? r1 : r2;
+
+    if( rmin + d <= rmax ) // the smaller envelope is completely inside the bigger one
+    {
+        return r1 > r2 ? *env1 : *env2;
+    }
+    else
+    {
+        v3d_s p1 = v3d_s_add( env1->pos, v3d_s_of_length( diff, r1 ) );
+        v3d_s p2 = v3d_s_sub( env2->pos, v3d_s_of_length( diff, r2 ) );
+        envelope_s env;
+        env.pos = v3d_s_mlf( v3d_s_add( p1, p2 ), 0.5 );
+        env.radius = ( r1 + r2 + d ) * 0.5;
+        return env;
+    }
+}
+
 /**********************************************************************************************************************/
 /// properties_s  (object's properties)
 
@@ -246,6 +279,85 @@ f3_t obj_ray_hit( vc_t o, const ray_s* ray, v3d_s* p_nor )
     return hdr->p->fp_ray_hit( o, ray, p_nor );
 }
 
+f3_t obj_ray_exit( vc_t o, const ray_s* ray, v3d_s* p_nor )
+{
+    v3d_s nor;
+    f3_t a = obj_ray_hit( o, ray, &nor );
+    if( a >= f3_inf ) return f3_inf;
+    ray_s ray_l = *ray;
+    f3_t sum = 0;
+    while( a < f3_inf )
+    {
+        a += f3_eps * 2;
+        sum += a;
+        ray_l.p = ray_s_pos( &ray_l, a );
+        a = obj_ray_hit( o, &ray_l, &nor );
+    }
+
+    if( v3d_s_mlv( nor, ray->d ) > 0 )
+    {
+       if( p_nor ) *p_nor = nor;
+       return sum;
+    }
+    else
+    {
+       return f3_inf;
+    }
+}
+
+envelope_s obj_estimate_envelope( vc_t o, sz_t samples, u2_t rseed, f3_t radius_factor )
+{
+    const obj_hdr_s* hdr = o;
+
+    tp_t pos_arr_type = bcore_flect_type_parse_sc( "{ v3d_s [] arr; }" );
+    const bcore_array_s* pos_arr_spect = bcore_array_s_get_typed( pos_arr_type );
+    struct { v3d_s* data; sz_t size; sz_t space; } * pos_arr = bcore_inst_typed_create( pos_arr_type );
+
+    v3d_s sum = v3d_s_zero();
+
+    u2_t rv = rseed;
+    ray_s ray;
+    ray.p = hdr->prp.pos;
+    for( sz_t i = 0; i < samples; i++ )
+    {
+        ray.d = v3d_s_random_sphere_belt( &rv, 1.0 );
+        f3_t a = obj_ray_exit( o, &ray, NULL );
+        if( a < f3_inf )
+        {
+            v3d_s pos = ray_s_pos( &ray, a );
+            bcore_array_spect_push( pos_arr_spect, pos_arr, sr_twc( TYPEOF_v3d_s, &pos ) );
+            sum = v3d_s_add( sum, ray_s_pos( &ray, a ) );
+            ray.p = v3d_s_mlf( sum, ( 1.0 / pos_arr->size ) );
+
+            /// add a little noise to the position in case it sits exactly on a surface
+            ray.p.x += f3_eps * f3_rnd0( &rv );
+            ray.p.y += f3_eps * f3_rnd0( &rv );
+            ray.p.z += f3_eps * f3_rnd0( &rv );
+        }
+    }
+
+    envelope_s env;
+    env.pos = ray.p;
+    env.radius = f3_mag;
+
+    if( pos_arr->size > 0 )
+    {
+        f3_t max_r2 = 0;
+        for( sz_t i = 0; i < pos_arr->size; i++ )
+        {
+            v3d_s pos = pos_arr->data[ i ];
+            f3_t r = v3d_s_diff_sqr( ray.p, pos );
+            max_r2 = r > max_r2 ? r : max_r2;
+        }
+
+        env.radius = sqrt( max_r2 ) * radius_factor;
+    }
+
+    bcore_inst_typed_discard( pos_arr_type, pos_arr );
+
+    return env;
+}
+
 s2_t obj_side( vc_t o, v3d_s pos )
 {
     const obj_hdr_s* hdr = o;
@@ -349,6 +461,14 @@ void obj_set_envelope( vd_t obj, const envelope_s* env )
     obj_hdr_s* o = obj;
     if( o->prp.envelope ) envelope_s_discard( o->prp.envelope );
     o->prp.envelope = envelope_s_clone( env );
+}
+
+void obj_set_auto_envelope( vd_t obj )
+{
+    envelope_s env = obj_estimate_envelope( obj, 1000, 123, 1.1 );
+    obj_hdr_s* o = obj;
+    if( o->prp.envelope ) envelope_s_discard( o->prp.envelope );
+    o->prp.envelope = envelope_s_clone( &env );
 }
 
 static bcore_flect_self_s* spect_obj_s_create_self( void )
@@ -569,9 +689,12 @@ static bcore_flect_self_s* obj_sphere_s_create_self( void )
 }
 
 /**********************************************************************************************************************/
-/// obj_cylinder_s
+/** obj_squaroid_s
+ *  A surface with distance function a*x^2 + b*y^2 + c*z^2 + r = 0;
+ *  Many basic surfaces like sphere, ellipsoid, hyperboloid, cone, plane, etc are special cases of the squaroid
+ */
 
-typedef struct obj_cylinder_s
+typedef struct obj_squaroid_s
 {
     union
     {
@@ -583,190 +706,154 @@ typedef struct obj_cylinder_s
             properties_s prp;
         };
     };
-    f3_t radius;
-} obj_cylinder_s;
 
-static sc_t obj_cylinder_s_def =
-"obj_cylinder_s = spect_obj"
+    f3_t a, b, c, r;
+} obj_squaroid_s;
+
+static sc_t obj_squaroid_s_def =
+"obj_squaroid_s = spect_obj"
 "{"
     "aware_t _;"
     "spect spect_obj_s* p;"
     "properties_s prp;"
-    "f3_t radius = 1.0;"
+    "f3_t a =  1.0;"
+    "f3_t b =  1.0;"
+    "f3_t c =  1.0;"
+    "f3_t r = -1.0;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( obj_cylinder_s )
+DEFINE_FUNCTIONS_OBJ_INST( obj_squaroid_s )
 
-static void obj_cylinder_s_init_a( vd_t nc )
+static void obj_squaroid_s_init_a( vd_t nc )
 {
-    struct { ap_t a; vc_t p; obj_cylinder_s* o; } * nc_l = nc;
+    struct { ap_t a; vc_t p; obj_squaroid_s* o; } * nc_l = nc;
     nc_l->a( nc ); // default
 }
 
-void obj_cylinder_s_set_radius( obj_cylinder_s* o, f3_t radius )
+void obj_squaroid_s_set_param( obj_squaroid_s* o, f3_t a, f3_t b, f3_t c, f3_t r )
 {
-    o->radius = radius;
+    o->a = a;
+    o->b = b;
+    o->c = c;
+    o->r = r;
 }
 
-v2d_s obj_cylinder_s_projection( const obj_cylinder_s* o, v3d_s pos )
+obj_squaroid_s* obj_squaroid_s_create_ellipsoid( f3_t rx, f3_t ry, f3_t rz )
 {
-    v3d_s r = v3d_s_of_length( v3d_s_sub( pos, o->prp.pos ), 1.0 );
-    f3_t x = v3d_s_mlv( r, o->prp.rax.x );
-    f3_t y = v3d_s_mlv( r, v3d_s_mlx( o->prp.rax.z, o->prp.rax.x ) );
-    f3_t z = v3d_s_mlv( r, o->prp.rax.z );
-
-    f3_t azimuth = atan2( x, y );
-
-    return ( v2d_s ) { azimuth, z };
+    obj_squaroid_s* o = obj_squaroid_s_create();
+    o->a = ( rx != 0 ) ? 1.0 / f3_sqr( rx ) : 1.0;
+    o->b = ( ry != 0 ) ? 1.0 / f3_sqr( ry ) : 1.0;
+    o->c = ( rz != 0 ) ? 1.0 / f3_sqr( rz ) : 1.0;
+    o->r = -1;
+    f3_t rmax = rx > ry ? rx : ry;
+    rmax = rmax > rz ? rmax : rz;
+    envelope_s env = envelope_create( v3d_s_zero(), rmax + 2 * f3_eps );
+    obj_set_envelope( o, &env );
+    return o;
 }
 
-v3d_s obj_cylinder_s_normal( const obj_cylinder_s* o, v3d_s pos )
+obj_squaroid_s* obj_squaroid_s_create_hyperboloid1( f3_t rx, f3_t ry, f3_t rz )
 {
-    return cylinder_observer_normal( o->prp.pos, o->prp.rax.z, o->radius, pos );
+    obj_squaroid_s* o = obj_squaroid_s_create();
+    o->a =    ( rx != 0 ) ? 1.0 / f3_sqr( rx ) : 1.0;
+    o->b =    ( ry != 0 ) ? 1.0 / f3_sqr( ry ) : 1.0;
+    o->c = -( ( rz != 0 ) ? 1.0 / f3_sqr( rz ) : 1.0 );
+    o->r = -1;
+    return o;
 }
 
-ray_cone_s obj_cylinder_s_fov( const obj_cylinder_s* o, v3d_s pos )
+obj_squaroid_s* obj_squaroid_s_create_hyperboloid2( f3_t rx, f3_t ry, f3_t rz )
 {
-    ray_cone_s cne;
-    cne.ray.p  = pos;
-    cne.ray.d  = v3d_s_neg( obj_cylinder_s_normal( o, pos ) );
-    cne.cos_rs = 0;
-    return cne;
+    obj_squaroid_s* o = obj_squaroid_s_create();
+    o->a =    ( rx != 0 ) ? 1.0 / f3_sqr( rx ) : 1.0;
+    o->b =    ( ry != 0 ) ? 1.0 / f3_sqr( ry ) : 1.0;
+    o->c = -( ( rz != 0 ) ? 1.0 / f3_sqr( rz ) : 1.0 );
+    o->r =  1;
+    return o;
 }
 
-bl_t obj_cylinder_s_is_in_fov( const obj_cylinder_s* o, const ray_cone_s* fov )
+obj_squaroid_s* obj_squaroid_s_create_cone( f3_t rx, f3_t ry, f3_t rz )
 {
-    if( o->prp.envelope ) return envelope_s_is_in_fov( o->prp.envelope, fov );
-    return true;
+    obj_squaroid_s* o = obj_squaroid_s_create();
+    o->a =    ( rx != 0 ) ? 1.0 / f3_sqr( rx ) : 1.0;
+    o->b =    ( ry != 0 ) ? 1.0 / f3_sqr( ry ) : 1.0;
+    o->c = -( ( rz != 0 ) ? 1.0 / f3_sqr( rz ) : 1.0 );
+    o->r = 0;
+    return o;
 }
 
-f3_t obj_cylinder_s_ray_hit( const obj_cylinder_s* o, const ray_s* r, v3d_s* p_nor )
+obj_squaroid_s* obj_squaroid_s_create_cylinder( f3_t rx, f3_t ry )
 {
-    return cylinder_ray_hit( o->prp.pos, o->prp.rax.z, o->radius, r, p_nor );
+    obj_squaroid_s* o = obj_squaroid_s_create();
+    o->a =    ( rx != 0 ) ? 1.0 / f3_sqr( rx ) : 1.0;
+    o->b =    ( ry != 0 ) ? 1.0 / f3_sqr( ry ) : 1.0;
+    o->c =  0;
+    o->r = -1;
+    return o;
 }
 
-s2_t obj_cylinder_s_side( const obj_cylinder_s* o, v3d_s pos )
+f3_t obj_squaroid_s_ray_hit( const obj_squaroid_s* o, const ray_s* r, v3d_s* p_nor )
 {
-    return cylinder_observer_side( o->prp.pos, o->prp.rax.z, o->radius, pos );
-}
+    v3d_s p = m3d_s_mlv( &o->prp.rax, v3d_s_sub( r->p, o->prp.pos ) );
+    v3d_s d = m3d_s_mlv( &o->prp.rax, r->d );
 
-void obj_cylinder_s_move(   obj_cylinder_s* o, const v3d_s* vec ) { properties_s_move  ( &o->prp, vec ); }
-void obj_cylinder_s_rotate( obj_cylinder_s* o, const m3d_s* mat ) { properties_s_rotate( &o->prp, mat ); }
-void obj_cylinder_s_scale(  obj_cylinder_s* o, f3_t fac         ) { properties_s_scale ( &o->prp, fac ); o->radius *= fac; }
+    f3_t f  = o->a * d.x * d.x + o->b * d.y * d.y + o->c * d.z * d.z;
+    f3_t fs = o->a * d.x * p.x + o->b * d.y * p.y + o->c * d.z * p.z;
+    f3_t fq = o->a * p.x * p.x + o->b * p.y * p.y + o->c * p.z * p.z + o->r;
+    f3_t a = f3_inf;
 
-static bcore_flect_self_s* obj_cylinder_s_create_self( void )
-{
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_cylinder_s_def, sizeof( obj_cylinder_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_init_a,     "ap_t",          "init" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_projection, "projection_fp", "projection" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_fov,        "fov_fp",        "fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_ray_hit,    "ray_hit_fp",    "ray_hit" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_side,       "side_fp",       "side" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_is_in_fov,  "is_in_fov_fp",  "is_in_fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_move,       "move_fp",       "move" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_rotate,     "rotate_fp",     "rotate" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cylinder_s_scale,      "scale_fp",      "scale" );
-    return self;
-}
-
-/**********************************************************************************************************************/
-/// obj_cone_s
-
-typedef struct obj_cone_s
-{
-    union
+    if( f != 0 )
     {
-        obj_hdr_s hdr;
-        struct
-        {
-            aware_t _;
-            const spect_obj_s* p;
-            properties_s prp;
-        };
-    };
-    f3_t cosa;
-} obj_cone_s;
+        f3_t f_inv = 1.0 / f;
+        f3_t s = fs * f_inv;
+        f3_t q = fq * f_inv;
+        f3_t r = s * s - q;
+        if( r < 0 )  return f3_inf; // missing object
+        r = sqrt( r );
+        a = -s - r;
+        if( a < 0 ) a = -s + r;
+        if( a < 0 ) a = f3_inf;
+    }
+    else
+    {
+        a = ( fq != 0 ) ? -fs / ( 2 * fq ) : f3_inf;
+    }
 
-static sc_t obj_cone_s_def =
-"obj_cone_s = spect_obj"
-"{"
-    "aware_t _;"
-    "spect spect_obj_s* p;"
-    "properties_s prp;"
-    "f3_t cosa = 0.5;"
-"}";
+    if( a == f3_inf ) return f3_inf;
 
-DEFINE_FUNCTIONS_OBJ_INST( obj_cone_s )
+    f3_t x = p.x + a * d.x;
+    f3_t y = p.y + a * d.y;
+    f3_t z = p.z + a * d.z;
 
-static void obj_cone_s_init_a( vd_t nc )
-{
-    struct { ap_t a; vc_t p; obj_cone_s* o; } * nc_l = nc;
-    nc_l->a( nc ); // default
+    v3d_s n1;
+    n1.x = 2 * x * o->a;
+    n1.y = 2 * y * o->b;
+    n1.z = 2 * z * o->c;
+
+    if( p_nor ) *p_nor = v3d_s_of_length( m3d_s_tmlv( &o->prp.rax, n1 ), 1.0 );
+    return a - f3_eps;
 }
 
-void obj_cone_s_set_angle_d( obj_cone_s* o, f3_t angle )
+s2_t obj_squaroid_s_side( const obj_squaroid_s* o, v3d_s pos )
 {
-    o->cosa = cos( angle * 0.5 * M_PI / 180.0 );
+    v3d_s p = m3d_s_mlv( &o->prp.rax, v3d_s_sub( pos, o->prp.pos ) );
+    return ( o->a * p.x * p.x + o->b * p.y * p.y + o->c * p.z * p.z + o->r ) > 0  ? 1 : -1;
 }
 
-v2d_s obj_cone_s_projection( const obj_cone_s* o, v3d_s pos )
+void obj_squaroid_s_move(   obj_squaroid_s* o, const v3d_s* vec ) { properties_s_move  ( &o->prp, vec ); }
+void obj_squaroid_s_rotate( obj_squaroid_s* o, const m3d_s* mat ) { properties_s_rotate( &o->prp, mat ); }
+
+void obj_squaroid_s_scale(  obj_squaroid_s* o, f3_t fac         ) { properties_s_scale ( &o->prp, fac ); o->r *= f3_sqr( fac ); }
+
+static bcore_flect_self_s* obj_squaroid_s_create_self( void )
 {
-    v3d_s r = v3d_s_of_length( v3d_s_sub( pos, o->prp.pos ), 1.0 );
-    f3_t x = v3d_s_mlv( r, o->prp.rax.x );
-    f3_t y = v3d_s_mlv( r, v3d_s_mlx( o->prp.rax.z, o->prp.rax.x ) );
-    f3_t z = v3d_s_mlv( r, o->prp.rax.z );
-
-    f3_t azimuth = atan2( x, y );
-
-    return ( v2d_s ) { azimuth, z };
-}
-
-v3d_s obj_cone_s_normal( const obj_cone_s* o, v3d_s pos )
-{
-    return cone_observer_normal( o->prp.pos, o->prp.rax.z, o->cosa, pos );
-}
-
-ray_cone_s obj_cone_s_fov( const obj_cone_s* o, v3d_s pos )
-{
-    ray_cone_s cne;
-    cne.ray.p  = pos;
-    cne.ray.d  = v3d_s_neg( obj_cone_s_normal( o, pos ) );
-    cne.cos_rs = 0;
-    return cne;
-}
-
-bl_t obj_cone_s_is_in_fov( const obj_cone_s* o, const ray_cone_s* fov )
-{
-    if( o->prp.envelope ) return envelope_s_is_in_fov( o->prp.envelope, fov );
-    return true;
-}
-
-f3_t obj_cone_s_ray_hit( const obj_cone_s* o, const ray_s* r, v3d_s* p_nor )
-{
-    return cone_ray_hit( o->prp.pos, o->prp.rax.z, o->cosa, r, p_nor );
-}
-
-s2_t obj_cone_s_side( const obj_cone_s* o, v3d_s pos )
-{
-    return cone_observer_side( o->prp.pos, o->prp.rax.z, o->cosa, pos );
-}
-
-void obj_cone_s_move(   obj_cone_s* o, const v3d_s* vec ) { properties_s_move  ( &o->prp, vec ); }
-void obj_cone_s_rotate( obj_cone_s* o, const m3d_s* mat ) { properties_s_rotate( &o->prp, mat ); }
-void obj_cone_s_scale(  obj_cone_s* o, f3_t fac         ) { properties_s_scale ( &o->prp, fac ); }
-
-static bcore_flect_self_s* obj_cone_s_create_self( void )
-{
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_cone_s_def, sizeof( obj_cone_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_init_a,     "ap_t",          "init" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_projection, "projection_fp", "projection" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_fov,        "fov_fp",        "fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_ray_hit,    "ray_hit_fp",    "ray_hit" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_side,       "side_fp",       "side" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_is_in_fov,  "is_in_fov_fp",  "is_in_fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_move,       "move_fp",       "move" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_rotate,     "rotate_fp",     "rotate" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_cone_s_scale,      "scale_fp",      "scale" );
+    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_squaroid_s_def, sizeof( obj_squaroid_s ) );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_init_a,     "ap_t",          "init" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_ray_hit,    "ray_hit_fp",    "ray_hit" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_side,       "side_fp",       "side" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_move,       "move_fp",       "move" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_rotate,     "rotate_fp",     "rotate" );
+    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_scale,      "scale_fp",      "scale" );
     return self;
 }
 
@@ -972,6 +1059,7 @@ sr_s obj_pair_inside_s_create_pair_sr( sr_s o1, sr_s o2 )
     sr_s ret = sr_tsd( TYPEOF_obj_pair_inside_s, obj_pair_inside_s_create_pair( o1.o, o2.o ) );
     sr_down( o1 );
     sr_down( o2 );
+
     return ret;
 }
 
@@ -1118,14 +1206,15 @@ obj_pair_outside_s* obj_pair_outside_s_create_pair( vc_t o1, vc_t o2 )
     obj_pair_outside_s* o = obj_pair_outside_s_create();
     properties_s_copy( &o->prp, &( ( obj_hdr_s* )o1 )->prp );
 
+    o->o1 = bcore_inst_aware_clone( o1 );
+    o->o2 = bcore_inst_aware_clone( o2 );
+
     if( o->prp.envelope ) // discard envelope because o2 is outside o1 (true envelope would be bigger)
     {
         envelope_s_discard( o->prp.envelope );
         o->prp.envelope = NULL;
     }
 
-    o->o1 = bcore_inst_aware_clone( o1 );
-    o->o2 = bcore_inst_aware_clone( o2 );
     return o;
 }
 
@@ -1528,6 +1617,12 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
         sr_down( v );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
+    else if( key == typeof( "set_auto_envelope" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+        obj_set_auto_envelope( sr_o->o );
+    }
     else if( key == typeof( "set_fresnel_reflectivity" ) )
     {
         meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
@@ -1610,7 +1705,7 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
             hdr->prp.fresnel_reflectivity = 0;
             hdr->prp.chromatic_reflectivity = 0;
             hdr->prp.diffuse_reflectivity = 1;
-            hdr->prp.sigma = 0.27;
+            hdr->prp.sigma = 0.29;
         }
         else if( st_s_equal_sc( string, "diffuse_polished" ) )
         {
@@ -1619,7 +1714,7 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
             hdr->prp.fresnel_reflectivity = 1;
             hdr->prp.chromatic_reflectivity = 0;
             hdr->prp.diffuse_reflectivity = 1;
-            hdr->prp.sigma = 0.27;
+            hdr->prp.sigma = 0.29;
         }
         else if( st_s_equal_sc( string, "perfect_mirror" ) )
         {
@@ -1707,8 +1802,7 @@ vd_t objects_signal( tp_t target, tp_t signal, vd_t object )
         bcore_flect_define_creator( typeof( "spect_obj_s"        ), spect_obj_s_create_self  );
         bcore_flect_define_creator( typeof( "obj_plane_s"        ), obj_plane_s_create_self  );
         bcore_flect_define_creator( typeof( "obj_sphere_s"       ), obj_sphere_s_create_self );
-        bcore_flect_define_creator( typeof( "obj_cylinder_s"     ), obj_cylinder_s_create_self );
-        bcore_flect_define_creator( typeof( "obj_cone_s"         ), obj_cone_s_create_self );
+        bcore_flect_define_creator( typeof( "obj_squaroid_s"     ), obj_squaroid_s_create_self );
         bcore_flect_define_creator( typeof( "obj_pair_inside_s"  ), obj_pair_inside_s_create_self  );
         bcore_flect_define_creator( typeof( "obj_pair_outside_s" ), obj_pair_outside_s_create_self );
         bcore_flect_define_creator( typeof( "obj_neg_s"          ), obj_neg_s_create_self  );

@@ -109,6 +109,7 @@ typedef struct mcode_s
     bcore_arr_tp_s    code;
     bcore_name_map_s  names;
     bcore_arr_sz_s    src_map; // map to source code: alternating code and source index
+    bclos_frame_s     local_frame; // local frame used by closures of mcode
 } mcode_s;
 
 static sc_t mcode_s_def =
@@ -120,6 +121,7 @@ static sc_t mcode_s_def =
     "bcore_arr_tp_s   code;"
     "bcore_name_map_s names;"
     "bcore_arr_sz_s   src_map;"
+    "bclos_frame_s    local_frame;"
 "}";
 
 DEFINE_FUNCTIONS_OBJ_INST( mcode_s )
@@ -424,6 +426,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                     st_s_discard( file );
                     file = new_file;
                 }
+                st_s_discard( cur_file );
             }
 
             mcode_s* code = mcode_s_create();
@@ -642,6 +645,17 @@ static sr_s meval_s_mul( meval_s* o, sr_s v1, sr_s v2 )
         }
         break;
 
+        case TYPEOF_compound_s:
+        {
+            switch( t2 )
+            {
+                case TYPEOF_s3_t:  r = sr_clone( v1 ); v1 = sr_null(); compound_s_scale(  r.o, *( s3_t* )v2.o ); break;
+                case TYPEOF_f3_t:  r = sr_clone( v1 ); v1 = sr_null(); compound_s_scale(  r.o, *( f3_t* )v2.o ); break;
+                case TYPEOF_m3d_s: r = sr_clone( v1 ); v1 = sr_null(); compound_s_rotate( r.o,  ( m3d_s* )v2.o ); break;
+            }
+        }
+        break;
+
         case TYPEOF_bclos_signature_s:
         {
             bclos_signature_s* sig = v1.o;
@@ -782,6 +796,15 @@ static sr_s meval_s_add( meval_s* o, sr_s v1, sr_s v2 )
             switch( t2 )
             {
                 case TYPEOF_v3d_s: r = sr_clone( v1 ); v1 = sr_null(); map_s_move(  r.o,  ( v3d_s* )v2.o ); break;
+            }
+        }
+        break;
+
+        case TYPEOF_compound_s:
+        {
+            switch( t2 )
+            {
+                case TYPEOF_v3d_s: r = sr_clone( v1 ); v1 = sr_null(); compound_s_move(  r.o,  ( v3d_s* )v2.o ); break;
             }
         }
         break;
@@ -1570,9 +1593,9 @@ static void mclosure_s_copy_a( vd_t nc )
 void mclosure_s_define( mclosure_s* o, bclos_frame_s* frame, bclos_signature_s* signature, mcode_s* mcode )
 {
     mcode_s_discard(           o->mcode );
-    bclos_frame_s_discard(     o->lexical_frame );
     bclos_signature_s_discard( o->signature );
     o->mcode         = bcore_fork( mcode );
+
     o->lexical_frame = frame;
     o->signature     = bcore_fork( signature );
     if( !o->signature )
@@ -1585,13 +1608,14 @@ static sr_s mclosure_s_call( mclosure_s* o, bclos_frame_s* frame, const bclos_ar
 {
     bcore_life_s* l = bcore_life_s_create();
 
-    bclos_frame_s* local_frame = bcore_life_s_push_aware( l, bclos_frame_s_create() ); // local frame
-    meval_s*       meval       = bcore_life_s_push_aware( l, meval_s_create() );
-
+    bclos_frame_s* local_frame = &o->mcode->local_frame;
     local_frame->external = o->lexical_frame ? o->lexical_frame : frame;
 
+    meval_s*       meval       = bcore_life_s_push_aware( l, meval_s_create() );
     meval->mcode = o->mcode;
     meval->frame = local_frame;
+
+    bclos_frame_s_clear( local_frame );
 
     if( o->signature )
     {
@@ -1652,22 +1676,23 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     bclos_frame_s_set( frame, typeof( "pow"   ), sr_cc( sr_create( typeof( "pow_s"          ) ) ) );
 
     /// object creation functions
-    bclos_frame_s_set( frame, typeof( "create_plane"    ), sr_create( typeof( "create_plane_s"    ) ) );
-    bclos_frame_s_set( frame, typeof( "create_sphere"   ), sr_create( typeof( "create_sphere_s"   ) ) );
-    bclos_frame_s_set( frame, typeof( "create_cylinder" ), sr_create( typeof( "create_cylinder_s" ) ) );
-    bclos_frame_s_set( frame, typeof( "create_cone"     ), sr_create( typeof( "create_cone_s"     ) ) );
-    bclos_frame_s_set( frame, typeof( "create_torus"    ), sr_create( typeof( "create_torus_s"    ) ) );
+    bclos_frame_s_set( frame, typeof( "create_plane"        ), sr_create( typeof( "create_plane_s"        ) ) );
+    bclos_frame_s_set( frame, typeof( "create_sphere"       ), sr_create( typeof( "create_sphere_s"       ) ) );
+    bclos_frame_s_set( frame, typeof( "create_cylinder"     ), sr_create( typeof( "create_cylinder_s"     ) ) );
+    bclos_frame_s_set( frame, typeof( "create_torus"        ), sr_create( typeof( "create_torus_s"        ) ) );
+    bclos_frame_s_set( frame, typeof( "create_hyperboloid1" ), sr_create( typeof( "create_hyperboloid1_s" ) ) );
+    bclos_frame_s_set( frame, typeof( "create_hyperboloid2" ), sr_create( typeof( "create_hyperboloid2_s" ) ) );
+    bclos_frame_s_set( frame, typeof( "create_ellipsoid"    ), sr_create( typeof( "create_ellipsoid_s"    ) ) );
+    bclos_frame_s_set( frame, typeof( "create_cone"         ), sr_create( typeof( "create_cone_s"         ) ) );
 
     /// special functions
-    bclos_frame_s_set( frame, typeof( "string_fa"   ), sr_create( typeof( "create_string_fa_s" ) ) );
+    bclos_frame_s_set( frame, typeof( "string_fa"   ), sr_create( typeof( "create_string_fa_s"   ) ) );
     bclos_frame_s_set( frame, typeof( "beth_object" ), sr_create( typeof( "create_beth_object_s" ) ) );
 
     /// Built-in constants
     bclos_frame_s_set( frame, typeof( "scene_s"        ), sr_create( typeof( "scene_s"        ) ) );
     bclos_frame_s_set( frame, typeof( "obj_sphere_s"   ), sr_create( typeof( "obj_sphere_s"   ) ) );
     bclos_frame_s_set( frame, typeof( "obj_plane_s"    ), sr_create( typeof( "obj_plane_s"    ) ) );
-    bclos_frame_s_set( frame, typeof( "obj_cone_s"     ), sr_create( typeof( "obj_cone_s"     ) ) );
-    bclos_frame_s_set( frame, typeof( "obj_cylinder_s" ), sr_create( typeof( "obj_cylinder_s" ) ) );
     bclos_frame_s_set( frame, typeof( "arr_s"          ), sr_create( typeof( "arr_s"          ) ) );
     bclos_frame_s_set( frame, typeof( "map_s"          ), sr_create( typeof( "map_s"          ) ) );
 

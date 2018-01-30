@@ -182,16 +182,28 @@ static inline v3d_s v3d_s_con( v3d_s o )
     return v3d_s_von( o, v );
 }
 
-/** Random generator with even distribution over a spherical cap of height h.
+/** Random generators with even distribution over a spherical cap of height h.
  *  z component points to cap. Method is derived from Archimedes's sphere-cylinder theorem.
  *  Thanks to H Kong (http://www.bogotobogo.com/Algorithms/uniform_distribution_sphere.php)
  *  for pointing this out.
  */
-static inline v3d_s v3d_s_rsc( u2_t* rv, f3_t h )
+static inline v3d_s v3d_s_random_sphere_cap( u2_t* rv, f3_t h )
 {
     v3d_s v;
     f3_t phi = 2.0 * M_PI * f3_rnd1( rv );
     v.z = 1.0 - f3_rnd1( rv ) * h;
+    f3_t scale = sqrt( 1.0 - v.z * v.z );
+    v.x = sin( phi ) * scale;
+    v.y = cos( phi ) * scale;
+    return v;
+}
+
+/// symmetric belt around unit-sphere (h indicates half-height of belt; h = 1: entire sphere)
+static inline v3d_s v3d_s_random_sphere_belt( u2_t* rv, f3_t h )
+{
+    v3d_s v;
+    f3_t phi = 2.0 * M_PI * f3_rnd1( rv );
+    v.z = f3_rnd0( rv ) * h;
     f3_t scale = sqrt( 1.0 - v.z * v.z );
     v.x = sin( phi ) * scale;
     v.y = cos( phi ) * scale;

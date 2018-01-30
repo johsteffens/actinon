@@ -347,27 +347,70 @@ DEFINE_STD_CLOSURE( create_sphere_s, "spect_obj create_sphere_s( num radius )", 
 
 static sr_s create_cylinder_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
-    ASSERT( args->size == 1 );
-    f3_t radius = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
-    sr_s r = sr_create( typeof( "obj_cylinder_s" ) );
-    obj_cylinder_s_set_radius( r.o, radius );
+    ASSERT( args->size == 2 );
+    f3_t rx = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
+    f3_t ry = sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) );
+    sr_s r = sr_asd( obj_squaroid_s_create_cylinder( rx, ry ) );
     return r;
 }
 
-DEFINE_STD_CLOSURE( create_cylinder_s, "spect_obj create_cylinder_s( num radius )", create_cylinder_s_call )
+DEFINE_STD_CLOSURE( create_cylinder_s, "spect_obj create_cylinder_s( num radius_x, num radius_y )", create_cylinder_s_call )
+
+/**********************************************************************************************************************/
+
+static sr_s create_hyperboloid1_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 3 );
+    f3_t rx = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
+    f3_t ry = sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) );
+    f3_t rz = sr_f3_sr( bclos_arguments_s_get( args, 2, frm ) );
+    sr_s r = sr_asd( obj_squaroid_s_create_hyperboloid1( rx, ry, rz ) );
+    return r;
+}
+
+DEFINE_STD_CLOSURE( create_hyperboloid1_s, "spect_obj create_hyperboloid1_s( num radius_x, num radius_y, num radius_z )", create_hyperboloid1_s_call )
+
+/**********************************************************************************************************************/
+
+static sr_s create_hyperboloid2_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 3 );
+    f3_t rx = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
+    f3_t ry = sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) );
+    f3_t rz = sr_f3_sr( bclos_arguments_s_get( args, 2, frm ) );
+    sr_s r = sr_asd( obj_squaroid_s_create_hyperboloid2( rx, ry, rz ) );
+    return r;
+}
+
+DEFINE_STD_CLOSURE( create_hyperboloid2_s, "spect_obj create_hyperboloid2_s( num radius_x, num radius_y, num radius_z )", create_hyperboloid2_s_call )
 
 /**********************************************************************************************************************/
 
 static sr_s create_cone_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
-    ASSERT( args->size == 1 );
-    f3_t angle = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
-    sr_s r = sr_create( typeof( "obj_cone_s" ) );
-    obj_cone_s_set_angle_d( r.o, angle );
+    ASSERT( args->size == 3 );
+    f3_t rx = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
+    f3_t ry = sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) );
+    f3_t rz = sr_f3_sr( bclos_arguments_s_get( args, 2, frm ) );
+    sr_s r = sr_asd( obj_squaroid_s_create_cone( rx, ry, rz ) );
     return r;
 }
 
-DEFINE_STD_CLOSURE( create_cone_s, "spect_obj create_cone_s( num angle )", create_cone_s_call )
+DEFINE_STD_CLOSURE( create_cone_s, "spect_obj create_cone_s( num radius_x, num radius_y, num radius_z )", create_cone_s_call )
+
+/**********************************************************************************************************************/
+
+static sr_s create_ellipsoid_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 3 );
+    f3_t rx = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
+    f3_t ry = sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) );
+    f3_t rz = sr_f3_sr( bclos_arguments_s_get( args, 2, frm ) );
+    sr_s r = sr_asd( obj_squaroid_s_create_ellipsoid( rx, ry, rz ) );
+    return r;
+}
+
+DEFINE_STD_CLOSURE( create_ellipsoid_s, "spect_obj create_ellipsoid_s( num radius_x, num radius_y, num radius_z )", create_ellipsoid_s_call )
 
 /**********************************************************************************************************************/
 
@@ -434,11 +477,14 @@ vd_t closures_signal( tp_t target, tp_t signal, vd_t object )
         bcore_flect_define_creator( typeof( "pow_s"              ), pow_s_create_self  );
         bcore_flect_define_creator( typeof( "create_beth_object_s" ), create_beth_object_s_create_self  );
 
-        bcore_flect_define_creator( typeof( "create_plane_s"     ), create_plane_s_create_self    );
-        bcore_flect_define_creator( typeof( "create_sphere_s"    ), create_sphere_s_create_self   );
-        bcore_flect_define_creator( typeof( "create_cylinder_s"  ), create_cylinder_s_create_self );
-        bcore_flect_define_creator( typeof( "create_cone_s"      ), create_cone_s_create_self     );
-        bcore_flect_define_creator( typeof( "create_torus_s"     ), create_torus_s_create_self    );
+        bcore_flect_define_creator( typeof( "create_plane_s"        ), create_plane_s_create_self        );
+        bcore_flect_define_creator( typeof( "create_sphere_s"       ), create_sphere_s_create_self       );
+        bcore_flect_define_creator( typeof( "create_cylinder_s"     ), create_cylinder_s_create_self     );
+        bcore_flect_define_creator( typeof( "create_torus_s"        ), create_torus_s_create_self        );
+        bcore_flect_define_creator( typeof( "create_hyperboloid1_s" ), create_hyperboloid1_s_create_self );
+        bcore_flect_define_creator( typeof( "create_hyperboloid2_s" ), create_hyperboloid2_s_create_self );
+        bcore_flect_define_creator( typeof( "create_ellipsoid_s"    ), create_ellipsoid_s_create_self    );
+        bcore_flect_define_creator( typeof( "create_cone_s"         ), create_cone_s_create_self         );
     }
 
     return NULL;
