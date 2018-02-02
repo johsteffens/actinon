@@ -70,6 +70,42 @@ void compound_s_set_envelope( compound_s* o, const envelope_s* envelope )
     o->envelope = envelope_s_clone( envelope );
 }
 
+void compound_s_set_auto_envelope( compound_s* o )
+{
+    if( o->envelope )
+    {
+        envelope_s_discard( o->envelope );
+        o->envelope = NULL;
+    }
+    for( sz_t i = 0; i < o->size; i++ )
+    {
+        envelope_s env = envelope_create( v3d_s_zero(), 0 );
+        vd_t obj = o->data[ i ];
+        tp_t type = *( aware_t* )obj;
+        if( type == TYPEOF_compound_s )
+        {
+            compound_s* cmp = obj;
+            if( !cmp->envelope ) compound_s_set_auto_envelope( cmp );
+            env = *cmp->envelope;
+        }
+        else if( bcore_trait_is_of( type, TYPEOF_spect_obj ) )
+        {
+            obj_hdr_s* hdr = obj;
+            if( !hdr->prp.envelope ) obj_set_auto_envelope( obj );
+            env = *hdr->prp.envelope;
+        }
+
+        if( o->envelope )
+        {
+            *o->envelope = envelope_of_pair( o->envelope, &env );
+        }
+        else
+        {
+            o->envelope = envelope_s_clone( &env );
+        }
+    }
+}
+
 const aware_t* compound_s_get_object( const compound_s* o, sz_t index )
 {
     return o ? o->data[ index ] : NULL;
@@ -403,6 +439,12 @@ sr_s compound_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
 
         sr_down( v );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == typeof( "set_auto_envelope" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+        compound_s_set_auto_envelope( sr_o->o );
     }
     else
     {

@@ -738,6 +738,16 @@ void obj_squaroid_s_set_param( obj_squaroid_s* o, f3_t a, f3_t b, f3_t c, f3_t r
     o->r = r;
 }
 
+obj_squaroid_s* obj_squaroid_s_create_squaroid( f3_t a, f3_t b, f3_t c, f3_t r )
+{
+    obj_squaroid_s* o = obj_squaroid_s_create();
+    o->a = a;
+    o->b = b;
+    o->c = c;
+    o->r = r;
+    return o;
+}
+
 obj_squaroid_s* obj_squaroid_s_create_ellipsoid( f3_t rx, f3_t ry, f3_t rz )
 {
     obj_squaroid_s* o = obj_squaroid_s_create();
@@ -821,16 +831,19 @@ f3_t obj_squaroid_s_ray_hit( const obj_squaroid_s* o, const ray_s* r, v3d_s* p_n
 
     if( a == f3_inf ) return f3_inf;
 
-    f3_t x = p.x + a * d.x;
-    f3_t y = p.y + a * d.y;
-    f3_t z = p.z + a * d.z;
+    if( p_nor )
+    {
+        f3_t x = p.x + a * d.x;
+        f3_t y = p.y + a * d.y;
+        f3_t z = p.z + a * d.z;
 
-    v3d_s n1;
-    n1.x = 2 * x * o->a;
-    n1.y = 2 * y * o->b;
-    n1.z = 2 * z * o->c;
+        v3d_s n1;
+        n1.x = x * o->a;
+        n1.y = y * o->b;
+        n1.z = z * o->c;
+        *p_nor = v3d_s_of_length( m3d_s_tmlv( &o->prp.rax, n1 ), 1.0 );
+    }
 
-    if( p_nor ) *p_nor = v3d_s_of_length( m3d_s_tmlv( &o->prp.rax, n1 ), 1.0 );
     return a - f3_eps;
 }
 

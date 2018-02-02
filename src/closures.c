@@ -345,6 +345,21 @@ DEFINE_STD_CLOSURE( create_sphere_s, "spect_obj create_sphere_s( num radius )", 
 
 /**********************************************************************************************************************/
 
+static sr_s create_squaroid_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 4 );
+    f3_t a = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
+    f3_t b = sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) );
+    f3_t c = sr_f3_sr( bclos_arguments_s_get( args, 2, frm ) );
+    f3_t r = sr_f3_sr( bclos_arguments_s_get( args, 3, frm ) );
+    sr_s ret = sr_asd( obj_squaroid_s_create_squaroid( a, b, c, r ) );
+    return ret;
+}
+
+DEFINE_STD_CLOSURE( create_squaroid_s, "spect_obj create_squaroid_s( num a, num b, num c, num r )", create_squaroid_s_call )
+
+/**********************************************************************************************************************/
+
 static sr_s create_cylinder_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 2 );
@@ -479,6 +494,7 @@ vd_t closures_signal( tp_t target, tp_t signal, vd_t object )
 
         bcore_flect_define_creator( typeof( "create_plane_s"        ), create_plane_s_create_self        );
         bcore_flect_define_creator( typeof( "create_sphere_s"       ), create_sphere_s_create_self       );
+        bcore_flect_define_creator( typeof( "create_squaroid_s"     ), create_squaroid_s_create_self     );
         bcore_flect_define_creator( typeof( "create_cylinder_s"     ), create_cylinder_s_create_self     );
         bcore_flect_define_creator( typeof( "create_torus_s"        ), create_torus_s_create_self        );
         bcore_flect_define_creator( typeof( "create_hyperboloid1_s" ), create_hyperboloid1_s_create_self );

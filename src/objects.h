@@ -161,6 +161,7 @@ DECLARE_FUNCTIONS_OBJ( obj_squaroid_s )
 
 void obj_squaroid_s_set_param( obj_squaroid_s* o, f3_t a, f3_t b, f3_t c, f3_t r );
 
+obj_squaroid_s* obj_squaroid_s_create_squaroid(     f3_t a,  f3_t b,  f3_t c, f3_t r );
 obj_squaroid_s* obj_squaroid_s_create_ellipsoid(    f3_t rx, f3_t ry, f3_t rz ); // with envelope
 obj_squaroid_s* obj_squaroid_s_create_hyperboloid1( f3_t rx, f3_t ry, f3_t rz ); // 1-sheet (ellipse at z=0)
 obj_squaroid_s* obj_squaroid_s_create_hyperboloid2( f3_t rx, f3_t ry, f3_t rz ); // 2-sheet (ellipse at z/rz=sqrt(2))

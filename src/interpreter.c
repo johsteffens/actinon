@@ -104,11 +104,11 @@ sr_s mtype_s_create_sr( tp_t type )
 typedef struct mcode_s
 {
     aware_t _;
-    st_s              file;
     bcore_arr_sr_s    data;
     bcore_arr_tp_s    code;
     bcore_name_map_s  names;
-    bcore_arr_sz_s    src_map; // map to source code: alternating code and source index
+    bcore_arr_st_s    file_arr;
+    bcore_arr_sz_s    src_map;     // map to source code: repeating triplet: code index, file index and source index
     bclos_frame_s     local_frame; // local frame used by closures of mcode
 } mcode_s;
 
@@ -116,10 +116,10 @@ static sc_t mcode_s_def =
 "mcode_s = bcore_inst"
 "{"
     "aware_t _;"
-    "st_s             file;"
     "bcore_arr_sr_s   data;"
     "bcore_arr_tp_s   code;"
     "bcore_name_map_s names;"
+    "bcore_arr_st_s   file_arr;"
     "bcore_arr_sz_s   src_map;"
     "bclos_frame_s    local_frame;"
 "}";
@@ -127,25 +127,21 @@ static sc_t mcode_s_def =
 DEFINE_FUNCTIONS_OBJ_INST( mcode_s )
 DEFINE_CREATE_SELF( mcode_s, mcode_s_def )
 
-static void mcode_s_reset( mcode_s* o )
+static void mcode_s_err_fv( const mcode_s* o, sz_t index, sc_t format, va_list args )
 {
-    st_s_clear( &o->file );
-    bcore_arr_sr_s_clear( &o->data );
-    bcore_arr_tp_s_clear( &o->code );
-    bcore_name_map_s_clear( &o->names );
-}
-
-static void mcode_s_err_fv( const mcode_s* o, sz_t* index, sc_t format, va_list args )
-{
-    if( o->file.size > 0 )
+    s3_t src_idx = 0;
+    s3_t file_idx = 0;
+    for( sz_t i = 0; i < o->src_map.size; i += 3 )
     {
-        s3_t src_idx = 0;
-        for( sz_t i = 0; i < o->src_map.size; i += 2 )
-        {
-            if( o->src_map.data[ i ] > *index ) break;
-            src_idx = o->src_map.data[ i + 1 ];
-        }
-        bcore_source_chain_s* chain = bcore_source_open_file( o->file.sc );
+        if( o->src_map.data[ i ] > index ) break;
+        file_idx = o->src_map.data[ i + 1 ];
+        src_idx  = o->src_map.data[ i + 2 ];
+    }
+
+    st_s* file = o->file_arr.data[ file_idx ];
+    if( file->size > 0 )
+    {
+        bcore_source_chain_s* chain = bcore_source_open_file( file->sc );
         bcore_source_aware_set_index( chain, src_idx );
         bcore_source_aware_parse_err_fv( chain, format, args );
         bcore_source_chain_s_discard( chain );
@@ -185,8 +181,10 @@ void mcode_s_push_src_index( mcode_s* o, sr_s* src )
 void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
 {
     bcore_life_s* l = bcore_life_s_create();
-    mcode_s_reset( o );
-    st_s_copy_sc( &o->file, bcore_source_q_get_file( src ) );
+
+    bcore_arr_st_s_push_sc( &o->file_arr, bcore_source_q_get_file( src ) );
+    sz_t file_index = o->file_arr.size - 1;
+
     bcore_source_q_parse_fa( src, " " );
 
     const bcore_hmap_tptp_s* hmap_types_l = hmap_types;
@@ -211,7 +209,10 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
 
     while( !bcore_source_q_eos( src ) )
     {
-        mcode_s_push_src_index( o, src );
+        // source information for debugging
+        bcore_arr_sz_s_push( &o->src_map, o->code.size );
+        bcore_arr_sz_s_push( &o->src_map, file_index );
+        bcore_arr_sz_s_push( &o->src_map, bcore_source_q_get_index( src ) );
 
         // number literal
         if( bcore_source_q_parse_bl_fa( src, "#?([0]>='0'&&[0]<='9')" ) )
@@ -410,7 +411,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
         {
             break;
         }
-        else if( bcore_source_q_parse_bl_fa( src, "#?'#include' " ) ) // include file (c-style syntax) (interpreted as block)
+        else if( bcore_source_q_parse_bl_fa( src, "#?'#parse' " ) ) // include file (code is inlined)
         {
             st_s* file = st_s_create();
             bcore_source_q_parse_fa( src, "#string ", file );
@@ -428,20 +429,12 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                 }
                 st_s_discard( cur_file );
             }
-
-            mcode_s* code = mcode_s_create();
-
             sr_s chain = sr_asd( bcore_source_chain_s_create() );
             bcore_source_chain_s_push_d( chain.o, bcore_source_file_s_create_name( file->sc ) );
             bcore_source_chain_s_push_d( chain.o, bcore_inst_typed_create( typeof( "bcore_source_string_s" ) ) );
-            mcode_s_parse( code, hmap_types_l, &chain );
+            mcode_s_parse( o, hmap_types_l, &chain );
             sr_down( chain );
             st_s_discard( file );
-
-            mcode_s_push_code( o, CL_DATA );
-            mcode_s_push_code( o, o->data.size );
-
-            bcore_arr_sr_s_push_sr( &o->data, sr_asd( code ) );
         }
         else if( bcore_source_q_parse_bl_fa( src, "#?'#source_file_name' " ) ) // constant representing the file name of the current script file
         {
@@ -533,7 +526,7 @@ static bcore_flect_self_s* meval_s_create_self( void )
 
 void meval_s_err_fv( meval_s* o, sc_t format, va_list args )
 {
-    mcode_s_err_fv( o->mcode, &o->index, format, args );
+    mcode_s_err_fv( o->mcode, o->index, format, args );
 }
 
 void meval_s_err_fa( meval_s* o, sc_t format, ... )
@@ -1678,6 +1671,7 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     /// object creation functions
     bclos_frame_s_set( frame, typeof( "create_plane"        ), sr_create( typeof( "create_plane_s"        ) ) );
     bclos_frame_s_set( frame, typeof( "create_sphere"       ), sr_create( typeof( "create_sphere_s"       ) ) );
+    bclos_frame_s_set( frame, typeof( "create_squaroid"     ), sr_create( typeof( "create_squaroid_s"     ) ) );
     bclos_frame_s_set( frame, typeof( "create_cylinder"     ), sr_create( typeof( "create_cylinder_s"     ) ) );
     bclos_frame_s_set( frame, typeof( "create_torus"        ), sr_create( typeof( "create_torus_s"        ) ) );
     bclos_frame_s_set( frame, typeof( "create_hyperboloid1" ), sr_create( typeof( "create_hyperboloid1_s" ) ) );
