@@ -8,13 +8,13 @@
 ## What it is
 Actinon is a lightweight ray-tracing renderer and interpreter of a dedicated scripting language. It can render 3D scenes, employing techniques like distributed tracing, path tracing, antialiasing and others. It can visualize transparency, reflection, refraction, media-transition, diffuse-light, indirect-light and more. Realistic surfaces are achieved by mixing fresnel-reflection, chromatic-reflection and diffuse-reflection.
 
-For scene-design a special scripting language has been developed. It supports the composition of complex objects from simpler objects. Geometric operations on objects like translation, scaling and rotations can be applied easily and intuitively. Vectors and matrices are dedicated objects with associated operators supporting arithmetic in a 3D vector space. The language also allows computing image sequences (e.g. for videos).
+For scene-design a special language has been developed. It supports the composition of complex objects from simpler objects. Geometric operations on objects like translation, scaling and rotations can be applied easily and intuitively. Vectors and matrices are dedicated objects with associated operators supporting arithmetic in a 3D vector space. The language also allows computing image sequences (e.g. for videos).
 
 Actinon is based on project [beth](https://github.com/johsteffens/beth).
 
 ## How it works
 
-Actinon is a console-application. It takes a script file as argument and executes its content, which normally comprises of the scene design, virtual camera specifications, render specifications and instructions how to render one or more images.
+Actinon is a console-application. It takes a text-source file as argument and executes its content, which normally comprises of the scene design, virtual camera specifications, render specifications and instructions how to render one or more images.
 
 It will render the image in multiple passes, during which intermediate results can be inspected with an image-viewing tool.
 
@@ -30,7 +30,7 @@ Below is a suggstion for a Posix-like environment (e.g. Linux).
    * Build actinon in that folder: `gcc -std=c11 -O3 *.c -lm -lpthread -o actinon`
 
 ### First Trial
-   * Pick a script file from folder [src_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
+   * Pick a source file from folder [src_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
    * Run in a terminal: `actinon wine_glass.acn`
    * After 1 ... 2 minutes, it will produce the image file `wine_glass.acn.pnm`. The file gets updated at intervals, gradually improving image-quality. After around 20 ... 60 min (depending on CPU speed), rendering should be completed. Interrupt any time with Ctl-C.
    * You may want to convert the image to a more common format with netpbm or similar tool (e.g. `pnmtopng`).
@@ -41,7 +41,7 @@ Below is a suggstion for a Posix-like environment (e.g. Linux).
    * **Tip**: While drafting and testing your scene, switch off path tracing `path_samples = 0` and set `direct_samples` to a low value. E.g.  `direct_samples = 10`. This will yield results in seconds.
 
 ## License
-The source code in this project, including actinon-script, is licensed under the Apache 2.0 License.
+The source code in this project, including actinon source code, is licensed under the Apache 2.0 License.
 
 Images and videos uploaded into this project and depicting results of the raytracer are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
 
