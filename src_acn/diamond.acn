@@ -1,4 +1,4 @@
-// Actinon-script
+// Actinon source code
 
 /* Copyright 2018 Johannes Bernhard Steffens
  *
@@ -65,7 +65,7 @@ def create_plate = <-( num floor_offs, num radius, num height ) *
     def cloth_height = 0.00075;
     def cover = create_plane();
     def cone = create_cone( 1, 1, 1 );
-    def cyl = obj_cylinder_s;
+    def cyl = create_cylinder( 1, 1 );
 
     def plate = cone & ( cover - vecz( radius + cloth_height ) ) & !( cover - vecz( radius + height ) );
     plate.move( vecz( floor_offs + radius + height ) );
