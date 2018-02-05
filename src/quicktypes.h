@@ -61,6 +61,9 @@ void quicktypes_to_stdout( tp_t (*hash)( sc_t name ) );
 #define TYPEOF_if                    959999494
 #define TYPEOF_while                 231090382
 #define TYPEOF_else                 3183434736
+#define TYPEOF_for                  2901640080
+#define TYPEOF_in                   1094220446
+#define TYPEOF_of                   1765031016
 #define TYPEOF_vec                  1932546277
 #define TYPEOF_set_color            3381219579
 #define TYPEOF_set_refractive_index 1131283776

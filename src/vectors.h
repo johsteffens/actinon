@@ -34,7 +34,7 @@
 #define f3_inf INFINITY
 ///1E300 // pseudo-infinity
 #define f3_mag 1E+30 // very large number
-#define f3_eps 1E-5  // epsilon (used to simulate a miniscule shell-thickness of the surface to prevent near-degenerate conditions)
+#define f3_eps 2E-6  // epsilon (used to simulate a miniscule shell-thickness of the surface to prevent near-degenerate conditions)
 
 #ifndef M_PI
 #define M_PI 3.141592654

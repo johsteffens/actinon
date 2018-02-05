@@ -92,7 +92,11 @@ typedef enum
     FL_IF,       //
     FL_WHILE,    //
     FL_ELSE,     //
+    FL_FOR,      // for, in, of
+    FL_OF,       //
+    FL_IN,       //
     CL_FL_END,   // end of flow-controls
+
 } code_s;
 
 sc_t code_symbol( code_s o );

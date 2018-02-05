@@ -139,7 +139,7 @@ void map_s_scale( map_s* o, f3_t fac )
             {
                 compound_s_scale( sr->o, fac );
             }
-            else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
+            else if( bcore_trait_is_of( sr_s_type( sr ), TYPEOF_spect_obj ) )
             {
                 obj_scale( sr->o, fac );
             }

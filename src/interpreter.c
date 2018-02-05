@@ -307,6 +307,26 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                 }
                 break;
 
+                case TYPEOF_for:
+                {
+                    mcode_s_push_code( o, FL_FOR );
+                    bcore_arr_sz_s_push( jmp_buf, o->code.size );
+                    mcode_s_push_code( o, 0 ); // end of while-block
+                }
+                break;
+
+                case TYPEOF_in:
+                {
+                    mcode_s_push_code( o, FL_IN );
+                }
+                break;
+
+//                case TYPEOF_of:
+//                {
+//                    mcode_s_push_code( o, FL_OF );
+//                }
+//                break;
+
                 case TYPEOF_else:
                 {
                     if( jmp_buf->size == 0 ) bcore_source_q_parse_err_fa( src, "'else' without 'if'" );
@@ -1187,7 +1207,8 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
         {
             sr_s ret = sr_fork( meval_s_eval_call( o, &front_obj ) );
             sr_down( front_obj );
-            return meval_s_eval( o, ret );
+            return ret;
+            // note: continuing evaluation thwarts mul-priority after function call
         }
         else if( code == CL_SQUARE_BRACKET_OPEN ) // indexing front object
         {
@@ -1199,7 +1220,7 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
             if( !bcore_trait_is_of( sr_s_type( &sr_index ), TYPEOF_num ) ) meval_s_err_fa( o, "Numeric index expected.\n" );
             s3_t index = sr_s3_sr( sr_index );
             if( index < 0 ) meval_s_err_fa( o, "Index is negative.\n" );
-            if( index > arr->a.size )
+            if( index >= arr->a.size )
             {
                 if( index > 1E9 ) meval_s_err_fa( o, "Attempting to allocate an array of #<s3_t> elements seems unintended.\n", index );
                 arr_s_set_size( arr, index + 1 );
@@ -1213,7 +1234,8 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
                 *ret_p = sr_clone( meval_s_eval( o, sr_null() ) );
             }
             sr_down( front_obj );
-            return meval_s_eval( o, sr_s_fork( ret_p ) );
+            return sr_s_fork( ret_p );
+            // note: continuing evaluation thwarts mul-priority after indexing
         }
         else
         {
@@ -1238,6 +1260,49 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
             bcore_inst_typed_copy_typed( sr_s_type( &front_obj ), front_obj.o, sr_s_type( &obj ), obj.o );
             sr_down( obj );
             return sr_fork( front_obj );
+        }
+        else if( opr == OP_DOT ) // member to front_obj
+        {
+            meval_s_expect_code( o, CL_NAME );
+            tp_t key = meval_s_get_code( o );
+            sr_s ret = sr_null();
+            if( bcore_via_q_nexists( &front_obj, key ) )
+            {
+                if( meval_s_try_code( o, OP_ASSIGN ) )
+                {
+                    bcore_via_q_nset( &front_obj, key, sr_clone( meval_s_eval( o, sr_null() ) ) );
+                    ret = sr_s_fork( &front_obj );
+                }
+                else
+                {
+                    ret = sr_fork( bcore_via_q_nget( &front_obj, key ) );
+                }
+            }
+            else
+            {
+                tp_t type = sr_s_type( &front_obj );
+                switch( type )
+                {
+                    case TYPEOF_scene_s:    ret =    scene_s_meval_key( &front_obj, o, key ); break;
+                    case TYPEOF_map_s:      ret =      map_s_meval_key( &front_obj, o, key ); break;
+                    case TYPEOF_arr_s:      ret =      arr_s_meval_key( &front_obj, o, key ); break;
+                    case TYPEOF_compound_s: ret = compound_s_meval_key( &front_obj, o, key ); break;
+                    default:
+                    {
+                        if( bcore_trait_is_of( type, TYPEOF_spect_obj ) )
+                        {
+                            ret = obj_meval_key( &front_obj, o, key );
+                        }
+                        else
+                        {
+                            meval_s_err_fa( o, "Object '#<sc_t>' has no element named '#<sc_t>'.", ifnameof( sr_s_type( &front_obj ) ), meval_s_get_name( o, key ) );
+                        }
+                    }
+                    break;
+                }
+            }
+            sr_down( front_obj );
+            return ret;
         }
 
     }
@@ -1293,81 +1358,37 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
             obj = sr_tsd( TYPEOF_mclosure_s, mclosure );
         }
     }
-    else if( meval_s_try_code( o, CL_NAME ) ) // name of variable, constant or function
+    else if( meval_s_try_code( o, CL_NAME ) ) // name of variable or constant
     {
         tp_t key = meval_s_get_code( o );
-        if( opr == OP_DOT ) // member to front_obj
+        sr_s* p_obj = meval_s_get_obj( o, key );
+
+        tp_t peek_code = meval_s_peek_code( o );
+        if( peek_code > CL_ASSIGN_OPS_BEGIN && peek_code < CL_ASSIGN_OPS_END ) // assignment (not consumed here)
         {
-            if( bcore_via_q_nexists( &front_obj, key ) )
+            if( !p_obj )
             {
-                if( meval_s_try_code( o, OP_ASSIGN ) )
-                {
-                    bcore_via_q_nset( &front_obj, key, sr_clone( meval_s_eval( o, sr_null() ) ) );
-                }
-                else
-                {
-                    obj = bcore_via_q_nget( &front_obj, key );
-                }
+                sc_t name = meval_s_get_name( o, key );
+                meval_s_err_fa( o, "'#<sc_t>' was not defined. Use 'def #<sc_t>' to define it.", name, name );
+            }
+            else if( !p_obj->p )
+            {
+                meval_s_expect_code( o, OP_ASSIGN );
+                *p_obj = sr_clone( meval_s_eval( o, sr_null() ) );
             }
             else
             {
-                tp_t type = sr_s_type( &front_obj );
-                switch( type )
-                {
-                    case TYPEOF_scene_s:    obj =    scene_s_meval_key( &front_obj, o, key ); break;
-                    case TYPEOF_map_s:      obj =      map_s_meval_key( &front_obj, o, key ); break;
-                    case TYPEOF_arr_s:      obj =      arr_s_meval_key( &front_obj, o, key ); break;
-                    case TYPEOF_compound_s: obj = compound_s_meval_key( &front_obj, o, key ); break;
-                    default:
-                    {
-                        if( bcore_trait_is_of( type, TYPEOF_spect_obj ) )
-                        {
-                            obj = obj_meval_key( &front_obj, o, key );
-                        }
-                        else
-                        {
-                            meval_s_err_fa( o, "Object '#<sc_t>' has no element named '#<sc_t>'.", ifnameof( sr_s_type( &front_obj ) ), meval_s_get_name( o, key ) );
-                        }
-                    }
-                    break;
-                }
+                if( sr_s_is_const( &obj ) ) meval_s_err_fa( o, "'#<sc_t>' is a constant.", meval_s_get_name( o, key ) );
+                obj = meval_s_eval( o, sr_s_fork( p_obj ) ); // consume assignment in nested cycle
             }
-            opr = CL_NULL;
         }
-        else // name is variable
+        else if( !p_obj )
         {
-            sr_s* p_obj = meval_s_get_obj( o, key );
-
-            tp_t peek_code = meval_s_peek_code( o );
-            if( peek_code > CL_ASSIGN_OPS_BEGIN && peek_code < CL_ASSIGN_OPS_END ) // assignment (not consumed here)
-            {
-                if( !p_obj )
-                {
-                    sc_t name = meval_s_get_name( o, key );
-                    meval_s_err_fa( o, "'#<sc_t>' was not defined. Use 'def #<sc_t>' to define it.", name, name );
-
-//                    meval_s_expect_code( o, OP_ASSIGN );
-//                    obj = sr_s_fork( meval_s_set_obj( o, key, sr_clone( meval_s_eval( o, sr_null() ) ) ) );
-                }
-                else if( !p_obj->p )
-                {
-                    meval_s_expect_code( o, OP_ASSIGN );
-                    *p_obj = sr_clone( meval_s_eval( o, sr_null() ) );
-                }
-                else
-                {
-                    if( sr_s_is_const( &obj ) ) meval_s_err_fa( o, "'#<sc_t>' is a constant.", meval_s_get_name( o, key ) );
-                    obj = meval_s_eval( o, sr_s_fork( p_obj ) ); // consume assignment in nested cycle
-                }
-            }
-            else if( !p_obj )
-            {
-                meval_s_err_fa( o, "Unknown name '#<sc_t>'\n", meval_s_get_name( o, key ) );
-            }
-            else
-            {
-                obj = sr_s_fork( p_obj );
-            }
+            meval_s_err_fa( o, "Unknown name '#<sc_t>'\n", meval_s_get_name( o, key ) );
+        }
+        else
+        {
+            obj = sr_s_fork( p_obj );
         }
     }
     else if( meval_s_try_code( o, CL_DYN_ARRAY ) ) // dynamic array
@@ -1427,7 +1448,11 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
     if( obj.p )
     {
         tp_t code = meval_s_peek_code( o );
-        if( code == CL_ROUND_BRACKET_OPEN || code == CL_SQUARE_BRACKET_OPEN ) obj = meval_s_eval( o, obj ); // closure & indexing
+        while( code == CL_ROUND_BRACKET_OPEN || code == CL_SQUARE_BRACKET_OPEN || code == OP_DOT )
+        {
+            obj = meval_s_eval( o, obj );
+            code = meval_s_peek_code( o );
+        }
     }
 
     if( obj.p )
@@ -1443,7 +1468,6 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
         {
             switch( opr )
             {
-
                 case OP_MUL: return meval_s_eval( o, meval_s_mul( o, front_obj, obj ) );
                 case OP_DIV: return meval_s_eval( o, meval_s_mul( o, front_obj, meval_s_inverse( o, obj ) ) );
                 case OP_MOD: return meval_s_eval( o, meval_s_mod( o, front_obj, obj ) );
@@ -1549,6 +1573,41 @@ sr_s meval_s_execute( meval_s* o )
                         break;
                     }
                 }
+            }
+            else if( code == FL_FOR )
+            {
+                sz_t end_for = meval_s_get_code( o );
+
+                bclos_frame_s* for_frame = bclos_frame_s_create();
+                for_frame->external = o->frame;
+                o->frame = for_frame;
+                meval_s_expect_code( o, CL_NAME );
+                tp_t key = meval_s_get_code( o );
+                sr_s* p_var = meval_s_set_obj( o, key, sr_null() );
+
+                meval_s_expect_code( o, CL_ROUND_BRACKET_OPEN );
+
+                meval_s_expect_code( o, FL_IN );
+                sr_s arr_sr = meval_s_eval( o, sr_null() );
+                if( sr_s_type( &arr_sr ) != TYPEOF_arr_s ) meval_s_err_fa( o, "Expected: for '#<sc_t>' in 'list-expression'.", meval_s_get_name( o, key ) );
+                arr_s* arr = arr_sr.o;
+                meval_s_expect_code( o, CL_ROUND_BRACKET_CLOSE );
+                sz_t begin_loop = meval_s_get_index( o );
+                for( sz_t i = 0; i < arr->a.size; i++ )
+                {
+                    sr_s* element = &arr->a.data[ i ];
+                    if( element->p )
+                    {
+                        *p_var = sr_cw( *element );
+                        sr_down( meval_s_eval( o, sr_null() ) );
+                        meval_s_jmp_to( o, begin_loop );
+                    }
+                }
+
+                sr_down( arr_sr );
+                meval_s_jmp_to( o, end_for );
+                o->frame = for_frame->external;
+                bclos_frame_s_discard( for_frame );
             }
         }
         else

@@ -73,6 +73,9 @@ static sr_s typelist()
     bcore_array_q_push_sc( &list, "if" );
     bcore_array_q_push_sc( &list, "while" );
     bcore_array_q_push_sc( &list, "else" );
+    bcore_array_q_push_sc( &list, "for" );
+    bcore_array_q_push_sc( &list, "in" );
+    bcore_array_q_push_sc( &list, "of" );
 
     bcore_array_q_push_sc( &list, "vec" );
     bcore_array_q_push_sc( &list, "set_color" );

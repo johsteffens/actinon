@@ -1507,24 +1507,25 @@ f3_t obj_scale_s_ray_hit( const obj_scale_s* o, const ray_s* r, v3d_s* p_nor )
     ray.d = v3d_s_mlf( ray.d, d_factor );
 
     v3d_s n1;
-    f3_t a1 = obj_ray_hit( o->o1, &ray, &n1 );
+    f3_t a1 = obj_ray_hit( o->o1, &ray, &n1 ) + f3_eps;
     if( a1 < f3_inf )
     {
         n1 = v3d_s_mld( n1, o->inv_scale );
         if( p_nor ) *p_nor = v3d_s_of_length( m3d_s_tmlv( &o->prp.rax, n1 ), 1.0 );
-        return a1 * d_factor;
+        return a1 * d_factor - f3_eps;
     }
     return f3_inf;
 }
 
 s2_t obj_scale_s_side( const obj_scale_s* o, v3d_s pos )
 {
-    return obj_side( o->o1, v3d_s_mld( pos, o->inv_scale ) );
+    v3d_s p = m3d_s_mlv( &o->prp.rax, v3d_s_sub( pos, o->prp.pos ) );
+    return obj_side( o->o1, v3d_s_mld( p, o->inv_scale ) );
 }
 
 void obj_scale_s_move( obj_scale_s* o, const v3d_s* vec )
 {
-    properties_s_move  ( &o->prp, vec );
+    properties_s_move( &o->prp, vec );
 }
 
 void obj_scale_s_rotate( obj_scale_s* o, const m3d_s* mat )
@@ -1532,9 +1533,9 @@ void obj_scale_s_rotate( obj_scale_s* o, const m3d_s* mat )
     properties_s_rotate( &o->prp, mat );
 }
 
-void obj_scale_s_scale(  obj_scale_s* o, f3_t fac )
+void obj_scale_s_scale( obj_scale_s* o, f3_t fac )
 {
-    properties_s_scale ( &o->prp, fac );
+    properties_s_scale( &o->prp, fac );
     o->inv_scale = v3d_s_mlf( o->inv_scale, ( fac != 0 ) ? 1.0 / fac : 1.0 );
 }
 
