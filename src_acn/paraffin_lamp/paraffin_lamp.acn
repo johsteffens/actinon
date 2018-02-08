@@ -1,0 +1,488 @@
+// Actinon source code
+
+/* Copyright 2018 Johannes Bernhard Steffens
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+<mclosure_s></>
+
+def draft = false;
+
+def scene = scene_s;
+scene.threads = 10;
+
+scene.image_width         = 400;
+scene.image_height        = 600;
+scene.gamma               = 0.7;
+
+scene.gradient_cycles     = { if( draft ) 0 else 50; }();
+
+scene.gradient_samples    = 2;
+scene.gradient_threshold  = 0.03;
+
+scene.trace_depth         = 25;
+scene.trace_min_intensity = 0.03;
+scene.direct_samples      = { if( draft ) 10 else 30; }();
+scene.path_samples        = { if( draft )  0 else 30; }();
+scene.max_path_length     = 1;
+
+def camera_position = vec( 0, -10, 1 );
+
+scene.camera_position       = camera_position;
+scene.camera_view_direction = vec( 0, 0, 0 ) - camera_position;
+scene.camera_top_direction  = vec( 0, 0, 1 );
+scene.camera_focal_length   = 4;
+scene.background_color = color( 0.5, 0.5, 0.5 );
+
+def create_light = <-( lamp_radius, radiance ) *
+{
+    def sph = obj_sphere_s;
+    def light = sph * lamp_radius;
+    light.set_radiance( radiance );
+    light;
+};
+
+def create_floor = <-( num zoffs ) *
+{
+    def plane = create_plane();
+    plane.set_material( "diffuse_polished" );
+    plane.set_color( color( 0.6, 0.4, 0.2 ) );
+    plane.set_refractive_index( 1.2 );
+    plane.move( vec( 0, 0, zoffs ) );
+    plane;
+};
+
+
+def Tools = { #parse "tools.acn" }();
+def Lamp = map_s;
+
+Lamp.create_glass_body = <-( num bottom_radius ) *
+{
+    def set_material = map_s;
+    set_material.inner = <- ( object o ) *
+    {
+        o.set_material( "glass" );
+        o.set_surface_roughness( 0 );
+    };
+    set_material.outer = <- ( object o ) *
+    {
+        o.set_material( "glass" );
+        o.set_surface_roughness( 0 );
+    };
+
+    def cov = create_plane();
+    def pos = vec( 0, 0, 0 );
+    
+    def outer_glass_body;
+    def inner_glass_body;
+
+    def outer_mid_radius = bottom_radius * 1.45;
+    def outer_top_radius = bottom_radius * 0.75;
+    def outer_bot_radius = bottom_radius;
+    
+    def outer_case_cyl_height = 1.2;
+    def top_offset            = 1.2;
+    def bot_offset            = 0.7;
+    
+    def zmax = 0.0;
+    def zmin = 0.0;
+
+    {
+        def mid_radius = outer_mid_radius;
+        def top_radius = outer_top_radius;
+        def bot_radius = outer_bot_radius;
+        def case_cyl_height = outer_case_cyl_height;
+
+        def p0 = Tools.spheroid_param( pos, mid_radius, mid_radius, 0.6, -1 );
+        def p1 = Tools.fused_spheroid_param( p0,  top_offset, top_radius, -1 );
+        def p2 = Tools.fused_spheroid_param( p0, -bot_offset, bot_radius, -1 );
+
+        def cyl = create_cylinder( top_radius, top_radius );
+
+        def buf = [];
+        
+        buf.push( Tools.spheroid_obj( p0 ) );
+        buf.push( Tools.spheroid_obj( p1 ) & !( cov + vecz( p1.zm ) ) &  ( cov + p1.pos ) );
+        buf.push( Tools.spheroid_obj( p2 ) &  ( cov + vecz( p2.zm ) ) & !( cov + p2.pos ) );
+        zmin = p2.pos.z;
+        zmax = p1.pos.z + case_cyl_height;
+        buf.push( cyl & !( cov + vecz( p1.zm ) ) & ( cov + vecz( zmax ) ) );
+        outer_glass_body = buf.create_outside_composite();
+        outer_glass_body.set_auto_envelope();
+    }();
+
+    def glass_thickness = 0.02;
+    
+    {
+        def mid_radius = outer_mid_radius - glass_thickness;
+        def top_radius = outer_top_radius - glass_thickness;
+        def bot_radius = outer_bot_radius - glass_thickness;
+        
+        def p0 = Tools.spheroid_param( pos, mid_radius, mid_radius, 0.6, -1 );
+        def p1 = Tools.fused_spheroid_param( p0,  top_offset, top_radius, -1 );
+        def p2 = Tools.fused_spheroid_param( p0, -bot_offset, bot_radius, -1 );
+
+        def cyl = create_cylinder( top_radius, top_radius );
+
+        def buf = [];
+        
+        buf.push( Tools.spheroid_obj( p0 ) );
+        buf.push( Tools.spheroid_obj( p1 ) & !( cov + vecz( p1.zm ) ) &  ( cov + p1.pos ) );
+        buf.push( Tools.spheroid_obj( p2 ) &  ( cov + vecz( p2.zm ) ) );
+        buf.push( cyl & !( cov + vecz( p1.zm ) ) );
+        inner_glass_body = buf.create_outside_composite();
+        inner_glass_body.set_auto_envelope();
+    }();
+    
+    set_material.outer( outer_glass_body );
+    set_material.inner( inner_glass_body );
+    
+    def rim_thickness = glass_thickness * 1.2;
+    def top_rim = create_torus( outer_top_radius - glass_thickness * 0.5, rim_thickness * 0.5 );
+    top_rim.move( vecz( zmax ) );
+    zmax += rim_thickness * 0.5;
+
+    def ret = map_s;
+    ret.obj = ( outer_glass_body & !inner_glass_body ) | top_rim;
+    ret.obj.set_auto_envelope();
+    ret.zmax = zmax;
+    ret.zmin = zmin;
+    
+    ret;
+};
+
+Lamp.create_oil_container = <-( num mid_radius, num top_radius ) *
+{
+    def set_material = map_s;
+    
+    set_material.oil = <- ( object o ) *
+    {
+        o.set_material( "water" );
+        o.set_refractive_index( 1.48 ); // parafin
+        o.set_transparency( color( 0.7, 0.7, 0.3 ) );
+    };
+
+    set_material.inner = <- ( object o ) *
+    {
+        o.set_material( "glass" );
+    };
+
+    set_material.outer = <- ( object o ) *
+    {
+        o.set_material( "glass" );
+        o.set_surface_roughness( 0.002 );
+    };
+
+    def cov = create_plane();
+    def sph = create_sphere( 1.0 );
+    def pos = vec( 0, 0, 0 );
+
+    def outer_glass_body;
+    def inner_glass_body;
+    def bot_radius = mid_radius * 0.8;
+    def glass_thickness = 0.04;
+    def bot_rim_radius = 0.05;
+    
+    def zmax = 0.0;
+    def zfloor = 0.0;
+    def zmin = 0.0;
+
+    {
+        def p0 = Tools.spheroid_param( pos, mid_radius, mid_radius, mid_radius * 0.6, -1 );
+        def p1 = Tools.fused_spheroid_param( p0,  mid_radius * 0.65, top_radius, -1 );
+        def p2 = Tools.fused_spheroid_param( p0, -mid_radius * 0.45, bot_radius, -1 );
+
+        def bot_plate = ( !cov ) + p2.pos;
+        def ripple = ( create_ellipsoid( mid_radius * 1.02, mid_radius * 0.4, mid_radius * 0.62 ) * rotx( 30 ) ) & 
+                     ( cov * roty( 90 ) ) & bot_plate;
+
+        def cyl = create_cylinder( top_radius, top_radius );
+        
+        def bot_rim = create_torus( bot_radius - bot_rim_radius, bot_rim_radius );
+        
+        def buf = [];
+        
+        buf.push( Tools.spheroid_obj( p0 ) & bot_plate );
+        buf.push( Tools.spheroid_obj( p1 ) & !( cov + vecz( p1.zm ) ) &  ( cov + p1.pos ) );
+        buf.push( Tools.spheroid_obj( p2 ) &  ( cov + vecz( p2.zm ) ) & !( cov + p2.pos ) );
+
+        buf.push( cyl & !( cov + p0.pos ) & ( cov + vecz( zmax ) ) );
+        buf.push( bot_rim + p2.pos );
+        
+        zmax = p1.pos.z;
+        zmin = p2.pos.z - bot_rim_radius;
+        
+        def ripples = 34;
+        def i = 0;
+        while( i < ripples )
+        {
+            ripple.rotate( rotz( 360 / ripples ) );
+            buf.push( ripple );
+            i += 1;
+        }();
+        outer_glass_body = buf.create_outside_composite();
+        outer_glass_body.set_auto_envelope();
+    }();
+
+    {
+        def top_inner_radius = top_radius - glass_thickness;
+        def mid_inner_radius = mid_radius - glass_thickness;
+        def bot_inner_radius = bot_radius - glass_thickness;
+    
+        def p0 = Tools.spheroid_param( pos, mid_inner_radius, mid_inner_radius, mid_inner_radius * 0.58, -1 );
+        def p1 = Tools.fused_spheroid_param( p0,  mid_radius * 0.65, top_inner_radius, -1 );
+        def p2 = Tools.fused_spheroid_param( p0, -mid_radius * 0.42, bot_inner_radius, -1 );
+
+        def cyl = create_cylinder( top_inner_radius, top_inner_radius );
+        
+        def buf = [];
+        
+        buf.push( Tools.spheroid_obj( p0 ) & !( cov + p2.pos ) );
+        buf.push( Tools.spheroid_obj( p1 ) & !( cov + vecz( p1.zm ) ) &  ( cov + p1.pos ) );
+        buf.push( Tools.spheroid_obj( p2 ) &  ( cov + vecz( p2.zm ) ) & !( cov + p2.pos ) );
+        
+        zfloor = p2.pos.z;
+
+        buf.push( cyl & !( cov + p0.pos ) );
+        
+        inner_glass_body = buf.create_outside_composite();
+        inner_glass_body.set_auto_envelope();
+    }();
+    
+    set_material.inner( inner_glass_body );
+    set_material.outer( outer_glass_body );
+    
+    def oil = inner_glass_body & ( cov + pos + vecz( mid_radius * 0.2 ) );
+    set_material.oil( oil );
+
+    def ret = map_s;
+    ret.obj = ( outer_glass_body & !inner_glass_body ) : oil;
+
+    ret.zmax = zmax;
+    ret.zfloor = zfloor;
+    ret.zmin = zmin;
+    
+    ret;
+};
+
+Lamp.create = <-() *
+{
+    def cyl = create_cylinder( 1, 1 );
+    def sph = create_sphere( 1 );
+    def cov = create_plane();
+
+    def set_material = map_s;
+    set_material.case = <- ( object o ) *
+    {
+        o.set_material( "mirror" );
+        o.set_color( color( 0.6, 0.5, 0.4 ) );
+        o.set_diffuse_reflectivity( 0 );
+        o.set_chromatic_reflectivity( 1.0 );
+        o.set_surface_roughness( 0.01 );
+    };
+
+    set_material.burner = <- ( object o ) *
+    {
+        o.set_material( "mirror" );
+        o.set_color( color( 0.4, 0.3, 0.2 ) );
+        o.set_diffuse_reflectivity( 0.1 );
+        o.set_chromatic_reflectivity( 1.0 );
+        o.set_surface_roughness( 0.1 );
+    };
+
+    set_material.wheel = <- ( object o ) *
+    {
+        o.set_material( "mirror" );
+        o.set_color( color( 0.5, 0.5, 0.4 ) );
+        o.set_diffuse_reflectivity( 0.05 );
+        o.set_chromatic_reflectivity( 1.0 );
+        o.set_surface_roughness( 0.02 );
+    };
+    
+    set_material.wick = <- ( object o ) *
+    {
+        o.set_material( "diffuse" );
+        o.set_color( color( 0.9, 0.9, 0.9 ) );
+        o.set_sigma( 0.1 );
+    };
+    
+    def zmax = 0.0;
+    def zcase_top = 0.0;
+    def zcase_mid = 0.0;
+    def zcase_bot = 0.0;
+    def zmin = 0.0;
+    
+    def glass_body_radius = 0.45;
+    def glass_body = Lamp.create_glass_body( glass_body_radius );
+    
+    zmax = glass_body.zmax;
+    
+    def case_height = 0.8;
+    zmin -= case_height;
+    
+    def case_radius = 0.5;
+    def case_mid_radius = 0.5;
+    
+    def cylinder = ( cyl * case_radius ) & cov & !( cov - vecz( case_height ) );
+    def impress  = ( cyl * glass_body_radius ) & !cov;
+    impress.move( -vecz( case_radius * 0.1 ) );
+    
+    def slit =  ( ( cov * roty(  90 ) ) + vecx( case_radius * 0.1 ) ) & 
+                ( ( cov * roty( -90 ) ) - vecx( case_radius * 0.1 ) ) &
+               !( cov + vecz( case_radius * 0.2 ) );
+                
+    def burn_case = ( sph * case_radius * 0.6 ) & !slit;
+    burn_case.set_auto_envelope();
+    
+    def rim_r1 = case_radius * 1.03;
+    def rim_r2 = 0.15;
+        
+    def rim = create_ellipsoid( rim_r1, rim_r1, rim_r2 );
+    set_material.case( rim );
+    
+    // wheel
+    def wheel_buf = [];
+    def wradius = 0.25;
+    def woffset = case_radius * 1.6;
+    {
+        def axis_radius = 0.05;
+        def wcyl   = ( cyl * wradius ) & ( cov + vecz( 0.03 ) ) & !( cov - vecz( 0.03 ) );
+        def waxis  = ( cyl * axis_radius ) & !( cov - vecz( woffset ) ) & cov;
+        def wblop  = sph * ( axis_radius * 1.2 );
+        
+        wheel_buf.push( wcyl | waxis | wblop );
+    
+        def wgroove = ( cyl * ( 0.02 ) ) + vecx( wradius );
+        def grooves = 20;
+        def i = 0;
+        while( i < grooves )
+        {
+            wheel_buf.push( !wgroove );
+            wheel_buf.rotate( rotz( 360.0 / grooves ) );
+            i += 1;
+        }();
+    }();
+    def wheel = wheel_buf.create_inside_composite();
+    wheel.set_auto_envelope();
+    wheel.rotate( rotx( 90 ) );
+    wheel.move( vec( 0, -woffset, -case_height * 0.2 ) );
+    
+    set_material.case( cylinder );
+    set_material.burner( burn_case );
+    set_material.wheel( wheel );
+    def rim1 = rim &  ( cov + vecz( rim_r2 * 0.3 ) );
+    def rim2 = rim;
+    def rim3 = rim;
+    def rim4 = rim;
+    rim2.move( vecz( -case_height * 0.4 ) );
+    rim3.move( vecz( -case_height * 0.6 ) );
+    rim4.move( vecz( -case_height ) );
+
+    def air_holes;
+    // air holes
+    {    
+        def buf = [];
+        def hole = ( ( cyl * ( case_height * 0.055 ) ) * rotx( 90 ) );
+        def holes = 10;
+        def i = 0;
+        while( i < holes )
+        {
+            buf.push( hole );
+            buf.rotate( rotz( 180.0 / holes ) );
+            i += 1;
+        }();
+        air_holes = buf.create_outside_composite();
+    }();
+    
+    air_holes.move( vecz( -case_height * 0.5 ) );
+    
+    def metal_case = ( ( ( cylinder | ( rim1 | rim2 ) ) | ( rim3 | rim4 ) ) & !impress & !air_holes ) : burn_case : wheel;
+
+    zcase_top = glass_body.zmin; 
+    zcase_mid = zcase_top - case_height * 0.5; 
+    zcase_bot = zcase_mid - case_height; 
+    
+    metal_case.move( vecz( glass_body.zmin ) );
+    zmin += glass_body.zmin;
+
+    def oil_container = Lamp.create_oil_container( 1.3, rim_r1 - 0.1 );
+    def dz = zmin - oil_container.zmax;
+    oil_container.obj.move( vecz( dz ) );
+    oil_container.zmin += dz;
+    oil_container.zmax += dz;
+    oil_container.zfloor += dz;
+    zmin = oil_container.zmin;
+    
+    // wick
+    def wick_buf = [];
+    {
+        def create_straight_bar = Tools.create_straight_bar;    
+        def create_curved_bar   = Tools.create_curved_bar;
+        def create_edge         = Tools.create_edge;
+        def start = map_s;
+        def end   = map_s;
+        
+        start.pos = vec( -0.5, 0, oil_container.zfloor + 0.01 );
+        start.angle = 0;
+        
+        def thick = case_radius * 0.12;
+        def width = case_radius * 0.5;
+
+        wick_buf.push( create_straight_bar( start, thick, width, 0.5,  end ) ); start = end;
+        wick_buf.push( create_curved_bar(   start, thick, width, 0.5, -135,  end ) ); start = end;
+        wick_buf.push( create_curved_bar(   start, thick, width, 0.5,   45,  end ) ); start = end;        
+        wick_buf.move( vecx( -start.pos.x ) );
+        start.pos.x = 0;
+        wick_buf.push( create_straight_bar( start, thick, width, zcase_top + case_radius * 0.85 - start.pos.z,  end ) ); start = end;
+        wick_buf.push( create_edge( start, thick, width ) ); start = end;
+        for a ( in wick_buf )
+        {
+            a.set_material( "diffuse" );
+            a.set_color( color( 0.9, 0.9, 0.9 ) );
+            a.set_sigma( 0.1 );
+        }();
+    }();
+    
+    def wick = wick_buf.create_compound();
+    
+    def ret = map_s;
+    ret.obj = ( glass_body.obj : metal_case : oil_container.obj : wick );
+    ret.zmax = zmax;
+    ret.zmid = zcase_mid;
+    ret.zmin = zmin;
+    
+    ret;
+};
+
+{
+    scene.clear();
+    scene.push( create_light( 0.5, 80 ) + vec( -3, -3, 3 ) );
+
+    def floor_offset = -2;
+    scene.push( create_floor( floor_offset ) );
+    
+    def lamp = Lamp.create();
+    lamp.obj.move( vecz( -lamp.zmin ) );
+    
+    
+    lamp.obj *= 0.7;
+    lamp.obj += vecz( floor_offset );
+    lamp.obj *= rotz( 60 );
+        
+    scene.push( lamp.obj );
+
+    def file_name = #source_file_name + ".pnm";
+    scene.create_image( file_name );
+}();
+
