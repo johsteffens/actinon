@@ -63,7 +63,14 @@ typedef struct properties_s
     f3_t chromatic_reflectivity; // residual energy taken chromatic (specular) reflection
     f3_t diffuse_reflectivity;   // residual energy taken by diffuse reflection
     f3_t sigma;                  // sigma of Oren-Nayar reflectance model
+
+    /** surface roughness (r) is simulated by adding a random value in the range [-r, r] to the
+     *  each component of the surface normal and then renormalizing it.
+     */
+    f3_t surface_roughness;
+
     cl_s transparency;           // residual energy taken by material transition
+
     // transparency defines the (per color channel) amount of energy absorbed at a transition length of 1 unit
 
     envelope_s* envelope; // optional envelope

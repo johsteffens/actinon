@@ -197,6 +197,28 @@ DEFINE_STD_CLOSURE( log_s, "f3_t log_s( num val )", log_s_call )
 
 /**********************************************************************************************************************/
 
+/// to_deg( v_rad )  (converts radiant -> degree)
+static sr_s to_deg_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) * 180.0 / M_PI );
+}
+
+DEFINE_STD_CLOSURE( to_deg_s, "f3_t to_deg_s( num val )", to_deg_s_call )
+
+/**********************************************************************************************************************/
+
+/// to_rad( v_deg )  (converts degree -> radiant)
+static sr_s to_rad_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) * M_PI / 180.0 );
+}
+
+DEFINE_STD_CLOSURE( to_rad_s, "f3_t to_rad_s( num val )", to_rad_s_call )
+
+/**********************************************************************************************************************/
+
 /// sin( x )
 static sr_s sin_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
@@ -480,6 +502,8 @@ vd_t closures_signal( tp_t target, tp_t signal, vd_t object )
         bcore_flect_define_creator( typeof( "sqr_s"              ), sqr_s_create_self  );
         bcore_flect_define_creator( typeof( "exp_s"              ), exp_s_create_self  );
         bcore_flect_define_creator( typeof( "log_s"              ), log_s_create_self  );
+        bcore_flect_define_creator( typeof( "to_deg_s"           ), to_deg_s_create_self );
+        bcore_flect_define_creator( typeof( "to_rad_s"           ), to_rad_s_create_self );
         bcore_flect_define_creator( typeof( "sin_s"              ), sin_s_create_self  );
         bcore_flect_define_creator( typeof( "cos_s"              ), cos_s_create_self  );
         bcore_flect_define_creator( typeof( "tan_s"              ), tan_s_create_self  );

@@ -81,7 +81,7 @@ void map_s_move( map_s* o, const v3d_s* vec )
             {
                 compound_s_move( sr->o, vec );
             }
-            else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
+            else if( bcore_trait_is_of( type, TYPEOF_spect_obj ) )
             {
                 obj_move( sr->o, vec );
             }
@@ -110,7 +110,7 @@ void map_s_rotate( map_s* o, const m3d_s* mat )
             {
                 compound_s_rotate( sr->o, mat );
             }
-            else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
+            else if( bcore_trait_is_of( type, TYPEOF_spect_obj ) )
             {
                 obj_rotate( sr->o, mat );
             }
@@ -298,7 +298,7 @@ void arr_s_rotate( arr_s* o, const m3d_s* mat )
             {
                 compound_s_rotate( sr->o, mat );
             }
-            else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
+            else if( bcore_trait_is_of( type, TYPEOF_spect_obj ) )
             {
                 obj_rotate( sr->o, mat );
             }
@@ -327,7 +327,7 @@ void arr_s_scale( arr_s* o, f3_t fac )
             {
                 compound_s_scale( sr->o, fac );
             }
-            else if( bcore_trait_is_of( sr_s_type( sr->o ), TYPEOF_spect_obj ) )
+            else if( bcore_trait_is_of( type, TYPEOF_spect_obj ) )
             {
                 obj_scale( sr->o, fac );
             }

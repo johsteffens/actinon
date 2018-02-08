@@ -34,7 +34,7 @@
 #define f3_inf INFINITY
 ///1E300 // pseudo-infinity
 #define f3_mag 1E+30 // very large number
-#define f3_eps 2E-6  // epsilon (used to simulate a miniscule shell-thickness of the surface to prevent near-degenerate conditions)
+#define f3_eps 1E-6  // epsilon (used to simulate a miniscule shell-thickness of the surface to prevent near-degenerate conditions)
 
 #ifndef M_PI
 #define M_PI 3.141592654
@@ -49,11 +49,11 @@ static inline f3_t f3_min( f3_t v1, f3_t v2  ) { return v1 < v2 ? v1 : v2; }
 
 // Note: generators xsg, xsg2 show strong hyper-structures on polar coordinates
 
-/// random generator (range 0, 1)
-static inline f3_t f3_rnd1( u2_t* rv ) { return ( *rv = bcore_xsg1_u2( *rv ) ) * ( 1.0 / 0xFFFFFFFFu ); }
-
 /// random generator (range -1, 1)
 static inline f3_t f3_rnd0( u2_t* rv ) { return ( *rv = bcore_xsg1_u2( *rv ) ) * ( 2.0 / 0xFFFFFFFFu ) - 1.0; }
+
+/// random generator (range 0, 1)
+static inline f3_t f3_rnd1( u2_t* rv ) { return ( *rv = bcore_xsg1_u2( *rv ) ) * ( 1.0 / 0xFFFFFFFFu ); }
 
 /**********************************************************************************************************************/
 
@@ -180,6 +180,12 @@ static inline v3d_s v3d_s_con( v3d_s o )
     v.y = ( ( yy <= xx ) && ( yy <= zz ) ) ? 1 : 0;
     v.z = ( ( zz <= xx ) && ( zz <= yy ) ) ? 1 : 0;
     return v3d_s_von( o, v );
+}
+
+/// computes a seed value from vector
+static inline u2_t v3d_s_random_seed( v3d_s o, u2_t rv )
+{
+    return o.x * bcore_lcg1_u2( rv ) + o.y * bcore_lcg2_u2( rv ) + o.y * bcore_lcg3_u2( rv );
 }
 
 /** Random generators with even distribution over a spherical cap of height h.

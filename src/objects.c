@@ -153,6 +153,7 @@ static sc_t properties_s_def =
     "f3_t chromatic_reflectivity;" // residual energy taken chromatic (specular) reflection
     "f3_t diffuse_reflectivity;"   // residual energy taken by diffuse reflection
     "f3_t sigma;"                  // sigma of Oren-Nayar reflectance model
+    "f3_t surface_roughness;"
 
     "cl_s transparency;"           // residual energy taken by material transition
 
@@ -170,6 +171,7 @@ void properties_s_init( properties_s* o )
     o->color = ( cl_s  ){ 0.7, 0.7, 0.7 };
     o->diffuse_reflectivity = 1.0;
     o->sigma = 0.0;
+    o->surface_roughness = 0.0;
     o->fresnel_reflectivity = 1.0;
 }
 
@@ -276,7 +278,25 @@ f3_t obj_ray_hit( vc_t o, const ray_s* ray, v3d_s* p_nor )
 {
     const obj_hdr_s* hdr = o;
     if( hdr->prp.envelope && !envelope_s_ray_hits( hdr->prp.envelope, ray ) ) return f3_inf;
-    return hdr->p->fp_ray_hit( o, ray, p_nor );
+    f3_t a = hdr->p->fp_ray_hit( o, ray, p_nor );
+    if( a < f3_inf && hdr->prp.surface_roughness > 0 && p_nor )
+    {
+        v3d_s n = *p_nor;
+        u2_t rv = v3d_s_random_seed( ray_s_pos( ray, a ), 1246 );
+        f3_t f;
+
+        f = f3_rnd0( &rv ) * 0.99;
+        n.x += hdr->prp.surface_roughness * log( ( 1.0 - f ) / ( 1.0 + f ) );
+
+        f = f3_rnd0( &rv ) * 0.99;
+        n.y += hdr->prp.surface_roughness * log( ( 1.0 - f ) / ( 1.0 + f ) );
+
+        f = f3_rnd0( &rv ) * 0.99;
+        n.z += hdr->prp.surface_roughness * log( ( 1.0 - f ) / ( 1.0 + f ) );
+
+        *p_nor = v3d_s_of_length( n, 1.0 );
+    }
+    return a;
 }
 
 f3_t obj_ray_exit( vc_t o, const ray_s* ray, v3d_s* p_nor )
@@ -1663,6 +1683,13 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
         meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
         obj_hdr_s* hdr = sr_o->o;
         hdr->prp.sigma = meval_s_eval_f3( ev );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == typeof( "set_surface_roughness" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
+        obj_hdr_s* hdr = sr_o->o;
+        hdr->prp.surface_roughness = meval_s_eval_f3( ev );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
     else if( key == typeof( "set_material" ) )
