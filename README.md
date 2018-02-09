@@ -26,7 +26,7 @@ Below is a suggstion for a Posix-like environment (e.g. Linux).
 
 ### Build
    * Download [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon).
-   * For the moment, copy all *.c and *.h files of both projects into one folder. (Proper makefiles are in  planning.)
+   * For the moment, copy all *.c and *.h files of both projects into one folder.
    * Build actinon in that folder: `gcc -std=c11 -O3 *.c -lm -lpthread -o actinon`
 
 ### First Trial
@@ -36,10 +36,10 @@ Below is a suggstion for a Posix-like environment (e.g. Linux).
    * You may want to convert the image to a more common format with netpbm or similar tool (e.g. `pnmtopng`).
 
 ### Next Steps
-   * Learn a bit about the Actinon Language: A documentation on the syntax is planned. For the time being, you might want to glean some insight by examining [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn), which is inline-commented for that purpose. 
+   * Learn a bit about the Actinon Language: For the time being, you might want to glean some insight by examining [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn), which is inline-commented for that purpose. 
    * Experiment with the provided scenes or design your own scene.
    * **Tip**: While drafting and testing your scene, switch off path tracing `path_samples = 0` and set `direct_samples` to a low value. E.g.  `direct_samples = 10`. This will yield results in seconds.
-
+   
 ## License
 The source code in this project, including actinon source code, is licensed under the Apache 2.0 License.
 
