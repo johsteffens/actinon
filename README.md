@@ -1,5 +1,5 @@
 # Actinon - Raytracer
-[<img align = "left" width = "400" height = "600" src = "https://raw.githubusercontent.com/johsteffens/actinon/master/image/paraffin_lamp.png">](https://raw.githubusercontent.com/johsteffens/actinon/master/image/paraffin_lamp.png "Image created with Actinon" )
+[<img align = "left" width = "400" height = "600" src = "https://raw.githubusercontent.com/johsteffens/actinon/master/image/paraffin_lamp.acn.png">](https://raw.githubusercontent.com/johsteffens/actinon/master/image/paraffin_lamp.acn.png "Image created with Actinon" )
 
 [<img width = "300" height = "300" src = "https://raw.githubusercontent.com/johsteffens/actinon/master/image/wine_glass.acn.png">](https://raw.githubusercontent.com/johsteffens/actinon/master/image/wine_glass.acn.png "Image created with Actinon" )
 
