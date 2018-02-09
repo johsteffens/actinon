@@ -1,0 +1,100 @@
+// Actinon source code
+
+/* Copyright 2018 Johannes Bernhard Steffens
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+<mclosure_s></>
+
+def scene = scene_s;
+scene.threads = 10;
+
+scene.image_width         = 600;
+scene.image_height        = 600;
+scene.gamma               = 0.7;
+
+scene.gradient_cycles     = 20;
+scene.gradient_samples    = 2;
+scene.gradient_threshold  = 0.03;
+
+scene.trace_depth         = 25;
+scene.trace_min_intensity = 0.05;
+scene.direct_samples      = 20;
+scene.path_samples        = 20;
+scene.max_path_length     = 1;
+
+def camera_position = vec( 0, -10, 5 );
+
+scene.camera_position       = camera_position;
+scene.camera_view_direction = vec( 0, 0, 0 ) - camera_position;
+scene.camera_top_direction  = vec( 0, 0, 1 );
+scene.camera_focal_length   = 4;
+scene.background_color = color( 0.4, 0.5, 0.6 );
+
+def create_light = <-( lamp_radius, radiance ) *
+{
+    def sph = obj_sphere_s;
+    def light = sph * lamp_radius;
+    light.set_radiance( radiance );
+    light;
+};
+
+def create_floor = <-( num zoffs ) *
+{
+    def plane = create_plane();
+    plane.set_material( "diffuse_polished" );
+    plane.set_color( color( 0.6, 0.6, 0.5 ) );
+    plane.move( vec( 0, 0, zoffs ) );
+    plane;
+};
+
+def create_matter =  <-( radius, factor, levels ) *
+{
+    def d = radius;
+    def f = factor;
+    def sph = create_sphere( d );
+    sph.set_material( "diffuse_polished" );
+    sph.set_color( color( 0.9, 0.8, 0.6 ) );
+
+    def cmp = ( [] : sph ).create_compound();
+
+    def i = 0;
+    while( i < levels )
+    {
+        cmp -= vec( d, d, d );
+        cmp = ( cmp : ( cmp + vecx( d * 2 ) ) ).create_compound();
+        cmp = ( cmp : ( cmp + vecy( d * 2 ) ) ).create_compound();
+        cmp = ( cmp : ( cmp + vecz( d * 2 ) ) ).create_compound();
+        cmp.set_auto_envelope();
+        d *= f;
+        i += 1;
+    }();
+
+    cmp *= rotz( 20 );
+    cmp;
+};
+
+{
+    scene.clear();
+    scene.push( create_light( 0.5, 30 ) + vec( -4, -4, 4 ) );
+
+    def floor_offset = -2;
+    scene.push( create_floor( floor_offset ) );
+    scene.push( create_matter( 0.025, 2.4, 5 ) );
+
+    def file_name = #source_file_name + ".pnm";
+    scene.create_image( file_name );
+}();
+
+

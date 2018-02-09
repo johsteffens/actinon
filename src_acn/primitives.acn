@@ -1,0 +1,110 @@
+// Actinon source code
+
+/* Copyright 2018 Johannes Bernhard Steffens
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+<mclosure_s></>
+
+def scene = scene_s;
+scene.threads = 10;
+
+scene.image_width         = 400;
+scene.image_height        = 400;
+scene.gamma               = 1.0;
+
+scene.gradient_cycles     = 30;
+scene.gradient_samples    = 2;
+scene.gradient_threshold  = 0.03;
+
+scene.trace_depth         = 25;
+scene.trace_min_intensity = 0.03;
+scene.direct_samples      = 30;
+scene.path_samples        = 30;
+scene.max_path_length     = 1;
+
+def camera_position = vec( 0, -10, 0 );
+
+scene.camera_position       = camera_position;
+scene.camera_view_direction = vec( 0, 0, 0 ) - camera_position;
+scene.camera_top_direction  = vec( 0, 0, 1 );
+scene.camera_focal_length   = 4;
+scene.background_color = color( 0.4, 0.4, 0.4 );
+
+def create_light = <-( lamp_radius, radiance ) *
+{
+    def sph = obj_sphere_s;
+    def light = sph * lamp_radius;
+    light.set_radiance( radiance );
+    light;
+};
+
+def create_floor = <-( num zoffs ) *
+{
+    def plane = create_plane();
+    plane.set_material( "diffuse_polished" );
+    plane.set_color( color( 0.6, 0.4, 0.2 ) );
+    plane.set_refractive_index( 1.2 );
+    plane.move( vec( 0, 0, zoffs ) );
+    plane;
+};
+
+def create_matter = 
+{
+    def sph = create_sphere( 0.5 );
+    def el1 = create_ellipsoid( 0.3, 0.3, 0.5 );
+    def el2 = create_ellipsoid( 0.5, 0.5, 0.3 );
+    def tor = create_torus( 0.35, 0.15 ) * rotx( 90 );
+    def cyl = create_cylinder( 0.4, 0.4 );
+    def cne = create_cone( 0.2, 0.2, 2 );
+    def hyp = create_hyperboloid1( 0.2, 0.2, 1 );
+
+    def set_material = <-( obj ) *
+    {
+        obj.set_material( "diffuse_polished" );
+        obj.set_color( color( 0.6, 0.7, 0.8 ) );
+    };
+
+    def set = [];
+    set.push( sph );
+    set.push( el1 + vecz( 1.1 ) );
+    set.move( vecx( -1.1 ) );
+    set.push( tor );
+    set.push( el2 + vecz( 1 ) );
+    set.move( vecx( -1 ) );
+    set.push( hyp );
+    set.move( vecx( -0.9 ) );
+    set.push( cne );
+    set.move( vecx( -1 ) );
+    set.push( cyl );
+
+    for a ( in set ) set_material( a );
+
+    set.move( vecx( 2 ) );
+    set;
+};
+
+{
+    scene.clear();
+    scene.push( create_light( 0.5, 30 ) + vec( 0, -4, 4 ) );
+
+    def floor_offset = -1;
+    scene.push( create_floor( floor_offset ) );
+    scene.push( create_matter() );
+
+    def file_name = #source_file_name + ".pnm";
+    scene.create_image( file_name );
+}();
+
+
