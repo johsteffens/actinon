@@ -7,7 +7,7 @@
 
 [<img width = "200" height = "200" src = "https://raw.githubusercontent.com/johsteffens/actinon/master/image/diamond.acn.png">](https://raw.githubusercontent.com/johsteffens/actinon/master/image/diamond.acn.png "Image created with Actinon" )
 
-### [Find more images here ...](https://github.com/johsteffens/actinon/wiki/Images)
+### [Find more examples here ...](https://github.com/johsteffens/actinon/wiki/Images)
 
 ## What it is
 Actinon is a lightweight ray-tracing renderer and interpreter of a dedicated scripting language. It can render 3D scenes, employing techniques like distributed tracing, path tracing, antialiasing and others. It can visualize transparency, reflection, refraction, media-transition, diffuse-light, indirect-light and more. Various realistic surfaces are achieved by mixing fresnel-reflection, chromatic-reflection, (Oren-Nayar) diffuse-reflection and by simulating surface roughness.
