@@ -1,0 +1,267 @@
+// Actinon source code
+
+/* Copyright 2018 Johannes Bernhard Steffens
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+def tools = { #parse "tools.acn" }();
+def parts = { #parse "parts.acn" }();
+
+def stand = map_s;
+
+def create_arm = <-() *
+{
+    def create_straight_bar = tools.create_straight_bar;    
+    def create_curved_bar   = tools.create_curved_bar;
+    def create_edge         = tools.create_edge;
+    
+    def cov = create_plane();
+    
+    def start = map_s;
+    def end = map_s;
+    
+    start.pos = vec( 0, 0, 0 );
+    start.angle = 0;
+    
+    def thick = 0.025;
+    def width = 0.12;
+    
+    def ring_radius = width * 1.0;
+    
+    def buf = [];
+    
+    def screw_point1 = vec( 0.12, 0, thick * 0.5 );
+    buf.push( create_straight_bar( start, thick, width, 0.2,       end ) ); start = end;
+    buf.push( create_curved_bar(   start, thick, width, 0.2, -40,  end ) ); start = end;
+    buf.push( create_straight_bar( start, thick, width, 0.3,       end ) ); start = end;
+    def curve_radius = 0.1;
+    buf.push( create_curved_bar(   start, thick, width, curve_radius, 40,  end ) ); start = end;
+    
+    def ring_point = vecz( curve_radius - ring_radius + sqrt( sqr( ring_radius ) - sqr( width * 0.5 ) ) - thick * 0.5 );
+    ring_point = roty( -18 ) * ring_point;
+    ring_point += start.pos - vecz( curve_radius );
+    
+    buf.push( create_curved_bar(   start, thick, width, 0.10, 70,  end ) ); start = end;
+    buf.push( create_curved_bar(   start, thick, width, 0.09, 110, end ) ); start = end;
+    buf.push( create_curved_bar(   start, thick, width, 0.08, 110, end ) ); start = end;
+    buf.push( create_edge( start, thick, width ) );
+    
+    start.pos = vec( 0, 0, 0 );
+    start.angle = 180;
+
+    buf.push( create_curved_bar(   start, thick, width, 0.10, -60,  end ) ); start = end;
+    buf.push( create_curved_bar(   start, thick, width, 0.40,  30,  end ) ); start = end;
+    buf.push( create_curved_bar(   start, thick, width, 0.10, -60,  end ) ); start = end;
+
+    def screw_point2 = start.pos + vec( -thick * 0.5, 0, -0.05 );
+    buf.push( create_straight_bar( start, thick, width, 0.10,       end  ) ); start = end;
+    buf.push( create_curved_bar(   start, thick, width, 0.10, -30 , end ) ); start = end;
+    buf.push( create_straight_bar( start, thick, width, 0.20,       end  ) ); start = end;
+    buf.push( create_curved_bar(   start, thick, width, 0.12, -80 , end ) ); start = end;
+    buf.push( create_curved_bar(   start, thick, width, 0.10, -80 , end ) ); start = end;
+    buf.push( create_curved_bar(   start, thick, width, 0.08, -80 , end ) ); start = end;
+    buf.push( create_curved_bar(   start, thick, width, 0.06, -160, end ) ); start = end;
+    buf.push( create_edge( start, thick, width ) );
+    
+    for e ( in buf )
+    {
+        e.set_material( "mirror" ); // basis for metal
+        e.set_color( color( 0.7, 0.6, 0.5 ) );
+        e.set_chromatic_reflectivity( 1.0 );
+        e.set_surface_roughness( 0.02 );
+    }();
+    
+    def ret = map_s;
+    ret.obj = buf.create_compound();
+    ret.obj.set_auto_envelope();
+    ret.screw_point1 = screw_point1;
+    ret.screw_point2 = screw_point2;
+    ret.nut_point1   = screw_point1 - vecz( thick );
+    ret.nut_point2   = screw_point2 + vecx( thick );
+    ret.ring_point   = ring_point;
+    ret.ring_radius  = ring_radius;
+    
+    ret;
+};
+
+def create_plate = <-( num thickness, num radius ) *
+{
+    def cov = create_plane();
+    def cyl = create_cylinder( radius, radius );
+    def vz = vecz( thickness * 0.5 );
+    def plate = cyl & ( cov + vz )& !( cov - vz );
+    plate.set_material( "diffuse" );
+    plate.set_color( color( 0.3, 0.2, 0.1 ) );
+    plate;
+};
+
+def create_top_mount = <-( num radius, num thickness, func set_material ) *
+{
+    def top_ring = create_torus( radius, thickness * 0.5 );
+    
+    def sph = create_sphere( 1 );
+    def cyl = create_cylinder( 1, 1 );
+    def cov = create_plane();
+    
+    def hbar = ( ( cyl * thickness * 0.4 ) & ( cov + vecz( radius * 0.5 ) ) & ( !cov - vecz( radius * 0.5 ) ) ) * rotx( 90 );
+    def vbar = ( ( cyl * thickness * 0.6 ) & ( cov + vecz( radius ) ) & ( !cov - vecz( radius ) ) ) + vecz( radius );
+    
+    def buf = top_ring : hbar : vbar : ( sph * thickness * 0.7 );
+    
+    def pos = vec( 0, 0, radius * 1.5 );
+    
+    def top_radius = radius * 2.5;
+    def bot_radius = radius * 1.2;
+    
+    def p0 = tools.spheroid_param( pos, bot_radius, bot_radius, bot_radius * 0.7, -1 );
+    def p1 = tools.fused_spheroid_param( p0, -bot_radius * 0.14, bot_radius * 0.99, -1 );    
+    def p2 = tools.fused_spheroid_param( p1, bot_radius * 1.5, top_radius, -1 );
+    
+    buf.push( tools.spheroid_obj( p0 ) & !cov );
+    buf.push( tools.spheroid_obj( p1 ) & !( cov + vecz( p1.zm ) ) & ( cov + vecz( p2.zm ) ) );
+    buf.push( tools.spheroid_obj( p2 ) & ( cov + p2.pos ) );
+    
+    for a ( in buf ) set_material( a ); 
+    
+    def ret = map_s;
+    ret.obj = buf.create_compound();
+    ret.obj.set_auto_envelope();
+    ret.zmax = p2.pos.z;
+    
+    ret;
+};
+
+stand.create = <-() *
+{
+    def set_chain_material = <- ( object o ) *
+    {
+        o.set_material( "mirror" );
+        o.set_color( color( 0.5, 0.45, 0.4 ) );
+        o.set_diffuse_reflectivity( 0 );
+        o.set_chromatic_reflectivity( 1.0 );
+        o.set_surface_roughness( 0.02 );
+    };
+
+    def set_holder_material = <- ( object o ) *
+    {
+        o.set_material( "mirror" );
+        o.set_color( color( 0.5, 0.5, 0.4 ) );
+        o.set_chromatic_reflectivity( 1.0 );
+        o.set_surface_roughness( 0.01 );
+    };
+
+
+    def cyl = create_cylinder( 1, 1 );
+    def cov = create_plane();
+    
+    def buf = [];
+    
+    def arm = create_arm();
+    
+    def dev = -arm.screw_point2 + vecx( 0.2 );
+    arm.obj.move( dev );
+    arm.screw_point2 += dev;
+    arm.screw_point1 += dev;
+    arm.nut_point2 += dev;
+    arm.nut_point1 += dev;
+    arm.ring_point += dev;
+    
+
+    def lamp_holder = ( tools.create_cyl( 0.04, arm.screw_point2.x ) * roty( -90 ) );
+    lamp_holder.move( vecx( arm.screw_point2.x * 0.5 ) );
+    def lamp_holder_nut = ( parts.create_acorn_nut( 0.025 ) * roty( 90 ) ) + arm.nut_point2;
+    set_holder_material( lamp_holder );
+    set_holder_material( lamp_holder_nut );
+    
+    def shade_holder_nut = ( parts.create_acorn_nut( 0.025 ) * roty( 180 ) ) + arm.nut_point1;
+    set_holder_material( shade_holder_nut );
+    
+    def screw_radius = sqrt( sqr( arm.screw_point1.x ) + sqr( arm.screw_point1.y ) );
+    def plateau = arm.screw_point1.z;
+    
+    def chain_thick = 0.025;
+    def ring_width = ( arm.ring_radius + chain_thick ) * 2;
+    def ring = parts.create_ring( ring_width, chain_thick ) * rotz( 90 );
+    
+    def link_length = ring_width;
+    def link_width  = ring_width * 0.5;
+    
+    def links = 12;
+
+    def coffs = vecz( arm.ring_radius + links * ( link_length * 0.5 - chain_thick ) );
+    
+    def twist = 90 * links / ( links + 1 );
+    def chains = 
+    (
+        parts.create_ringed_chain( link_length, link_width, chain_thick, links,  twist, set_chain_material ) :
+        parts.create_ringed_chain( link_length, link_width, chain_thick, links, -twist, set_chain_material ) :
+        parts.create_ringed_chain( link_length, link_width, chain_thick, links,  twist, set_chain_material )
+    );
+    
+    def chain_merge_height;
+    def top_ring_radius;
+    def top_ring_thick = chain_thick * 1.4;
+    def top_radius = 0.14;
+    
+    for a ( in chains )
+    {
+        def l = tools.v3d_length( a.end_point - a.start_point );
+        def r = tools.v3d_length( vec( arm.ring_point.x, arm.ring_point.y, 0 ) ) - top_radius;
+        def sina = r / l;
+        a.obj.rotate( rotz( 90 ) );
+        a.obj.move( -a.start_point );
+        def angle = to_deg( asin( sina ) );
+        
+        top_ring_radius = top_radius + ( top_ring_thick * 0.5 ) * sina;
+        
+        a.obj.rotate( roty( -angle ) );
+        chain_merge_height = sqrt( l * l - r * r );
+        a.obj.move( arm.ring_point );
+        buf.push( arm.obj );
+        buf.push( a.obj );
+        buf.push( lamp_holder );
+        buf.push( lamp_holder_nut );
+        buf.push( shade_holder_nut );        
+        buf.rotate( rotz( 120 ) );
+    }();
+    
+    def set_top_material = <- ( object o ) *
+    {
+        o.set_material( "mirror" );
+        o.set_color( color( 0.7, 0.7, 0.7 ) );
+        o.set_diffuse_reflectivity( 0 );
+        o.set_chromatic_reflectivity( 1.0 );
+        o.set_surface_roughness( 0.01 );
+    };
+
+    def top_mount = create_top_mount( top_ring_radius, top_ring_thick, set_top_material );
+    def top_move = vecz( arm.ring_point.z + chain_merge_height - top_ring_thick * 0.5 );
+    top_mount.obj.move( top_move );
+    top_mount.zmax += top_move.z;
+    buf.push( top_mount.obj );
+
+    buf.rotate( rotz( -30 ) );
+
+    buf;
+
+    def ret = map_s;
+    ret.obj = buf.create_compound();
+    ret.plateau = plateau;
+    ret.screw_radius = screw_radius;
+    ret.lamp_mount_point = vec( 0, 0, 0 );
+    ret.zmax = top_mount.zmax;
+    ret;
+};
+
+stand;
