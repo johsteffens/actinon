@@ -85,6 +85,12 @@ typedef enum
     // other operators
     OP_CAT,  // ':' - catenation
 
+    // composition, wrapping, enveloping (prefixed unary operators)
+    OP_INSIDE_CPS,  // '(&)', inside composite of r-expression
+    OP_OUTSIDE_CPS, // '(|)', outside composite of r-expression
+    OP_COMPOUND,    // '(:)', compound of r-expression
+    OP_ENVELOPE,    // '(@)', auto-envelope of r-expression
+
     CL_OP_END, // end of operators
 
     /// flow controls

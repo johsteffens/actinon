@@ -66,6 +66,10 @@ void arr_s_move(   arr_s* o, const v3d_s* vec );
 void arr_s_rotate( arr_s* o, const m3d_s* mat );
 void arr_s_scale(  arr_s* o, f3_t fac );
 
+sr_s arr_s_create_inside_composite( arr_s* o, sz_t start, sz_t size );
+sr_s arr_s_create_outside_composite( arr_s* o, sz_t start, sz_t size );
+sr_s arr_s_create_compound( arr_s* o, sz_t start, sz_t size );
+
 sr_s arr_s_meval_key( sr_s* o, meval_s* ev, tp_t key );
 
 /**********************************************************************************************************************/

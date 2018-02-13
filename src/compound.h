@@ -45,6 +45,10 @@ DECLARE_FUNCTIONS_OBJ( compound_s )
 sz_t           compound_s_get_size(   const compound_s* o );
 const aware_t* compound_s_get_object( const compound_s* o, sz_t index );
 
+/// envelopes
+void compound_s_set_envelope( compound_s* o, const envelope_s* envelope );
+void compound_s_set_auto_envelope( compound_s* o );
+
 /// empties compound
 void compound_s_clear( compound_s* o );
 

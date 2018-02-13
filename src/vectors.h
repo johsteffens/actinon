@@ -185,7 +185,7 @@ static inline v3d_s v3d_s_con( v3d_s o )
 /// computes a seed value from vector
 static inline u2_t v3d_s_random_seed( v3d_s o, u2_t rv )
 {
-    return o.x * bcore_lcg1_u2( rv ) + o.y * bcore_lcg2_u2( rv ) + o.y * bcore_lcg3_u2( rv );
+    return o.x * bcore_lcg1_u2( rv ) + o.y * bcore_lcg2_u2( rv ) + o.z * bcore_lcg3_u2( rv );
 }
 
 /** Random generators with even distribution over a spherical cap of height h.

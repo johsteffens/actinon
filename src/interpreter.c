@@ -77,6 +77,11 @@ sc_t code_symbol( code_s o )
         case OP_OR:            return "OR";
         case OP_XOR:           return "XOR";
         case OP_CAT:           return "CAT";
+        case OP_INSIDE_CPS:    return "(&)";
+        case OP_OUTSIDE_CPS:   return "(|)";
+        case OP_COMPOUND:      return "(:)";
+        case OP_ENVELOPE:      return "(@)";
+
         default:               return "";
     }
     return "";
@@ -393,7 +398,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
             }
         }
         // controls
-        else if( bcore_source_q_parse_bl_fa( src, "#?([0]==';'||[0]==','||[0]=='('||[0]==')'||[0]=='['||[0]==']')" ) ) // controls
+        else if( bcore_source_q_parse_bl_fa( src, "#?([0]==';'||[0]==','||[0]=='('||[0]==')'||[0]=='['||[0]==']')" ) ) // controls and operators
         {
             char c = bcore_source_q_get_u0( src );
             switch( c )
@@ -411,7 +416,18 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                 break;
 
                 case ',': mcode_s_push_code( o, CL_COMMA                ); break;
-                case '(': mcode_s_push_code( o, CL_ROUND_BRACKET_OPEN   ); break;
+                case '(':
+                {
+
+                    if     ( bcore_source_q_parse_bl_fa( src, "#?'&)'" ) ) mcode_s_push_code( o, OP_INSIDE_CPS );
+                    else if( bcore_source_q_parse_bl_fa( src, "#?'|)'" ) ) mcode_s_push_code( o, OP_OUTSIDE_CPS );
+                    else if( bcore_source_q_parse_bl_fa( src, "#?':)'" ) ) mcode_s_push_code( o, OP_COMPOUND );
+                    else if( bcore_source_q_parse_bl_fa( src, "#?'@)'" ) ) mcode_s_push_code( o, OP_ENVELOPE );
+                    else                                                   mcode_s_push_code( o, CL_ROUND_BRACKET_OPEN );
+
+                }
+                break;
+
                 case ')': mcode_s_push_code( o, CL_ROUND_BRACKET_CLOSE  ); break;
                 case '[':
                 {
@@ -1019,6 +1035,93 @@ static sr_s meval_s_logic_not( meval_s* o, sr_s v1 )
     return r;
 }
 
+static sr_s meval_s_create_inside_composite( meval_s* o, sr_s v1 )
+{
+    sr_s r = sr_null();
+
+    tp_t t1 = sr_s_type( &v1 );
+    if( t1 == TYPEOF_arr_s )
+    {
+        r = arr_s_create_inside_composite( v1.o, 0, -1 );
+    }
+    else
+    {
+        meval_s_err_fa( o, "Cannot create inside-composite of '#<sc_t>'\n", ifnameof( sr_s_type( &v1 ) ) );
+    }
+
+    sr_down( v1 );
+
+    return r;
+}
+
+static sr_s meval_s_create_outside_composite( meval_s* o, sr_s v1 )
+{
+    sr_s r = sr_null();
+
+    tp_t t1 = sr_s_type( &v1 );
+    if( t1 == TYPEOF_arr_s )
+    {
+        r = arr_s_create_outside_composite( v1.o, 0, -1 );
+    }
+    else
+    {
+        meval_s_err_fa( o, "Cannot create outside-composite of '#<sc_t>'\n", ifnameof( sr_s_type( &v1 ) ) );
+    }
+
+    sr_down( v1 );
+
+    return r;
+}
+
+static sr_s meval_s_create_compound( meval_s* o, sr_s v1 )
+{
+    sr_s r = sr_null();
+
+    tp_t t1 = sr_s_type( &v1 );
+    if( t1 == TYPEOF_arr_s )
+    {
+        r = arr_s_create_compound( v1.o, 0, -1 );
+    }
+    else
+    {
+        meval_s_err_fa( o, "Cannot create compound of '#<sc_t>'\n", ifnameof( sr_s_type( &v1 ) ) );
+    }
+
+    sr_down( v1 );
+
+    return r;
+}
+
+static sr_s meval_s_set_auto_envelope( meval_s* o, sr_s v1 )
+{
+    sr_s r = sr_null();
+
+    tp_t t1 = sr_s_type( &v1 );
+    if( t1 == TYPEOF_arr_s )
+    {
+        r = arr_s_create_compound( v1.o, 0, -1 );
+        compound_s_set_auto_envelope( r.o );
+    }
+    else if( t1 == TYPEOF_compound_s )
+    {
+        r = sr_clone( v1 ); v1 = sr_null();
+        compound_s_set_auto_envelope( r.o );
+    }
+    else if( bcore_trait_is_of( t1, TYPEOF_spect_obj ) )
+    {
+        r = sr_clone( v1 ); v1 = sr_null();
+        obj_set_auto_envelope( r.o );
+    }
+    else
+    {
+        meval_s_err_fa( o, "Cannot compute envelope for of '#<sc_t>'\n", ifnameof( sr_s_type( &v1 ) ) );
+    }
+
+    sr_down( v1 );
+
+    return r;
+}
+
 static sr_s meval_s_cat( meval_s* o, sr_s v1, sr_s v2 )
 {
     tp_t t1 = sr_s_type( &v1 );
@@ -1340,6 +1443,10 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
         case OP_ADD:
         case OP_SUB:
         case OP_NOT:
+        case OP_INSIDE_CPS:
+        case OP_OUTSIDE_CPS:
+        case OP_COMPOUND:
+        case OP_ENVELOPE:
             unary_op = meval_s_get_code( o );
             break;
 
@@ -1462,8 +1569,12 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
     {
         switch( unary_op )
         {
-            case OP_SUB: obj = meval_s_mul( o, sr_s3( -1 ), obj ); break;
-            case OP_NOT: obj = meval_s_logic_not( o, obj ); break;
+            case OP_SUB:         obj = meval_s_mul( o, sr_s3( -1 ), obj ); break;
+            case OP_NOT:         obj = meval_s_logic_not( o, obj ); break;
+            case OP_INSIDE_CPS:  obj = meval_s_create_inside_composite( o, obj ); break;
+            case OP_OUTSIDE_CPS: obj = meval_s_create_outside_composite( o, obj ); break;
+            case OP_COMPOUND:    obj = meval_s_create_compound( o, obj ); break;
+            case OP_ENVELOPE:    obj = meval_s_set_auto_envelope( o, obj ); break;
             default: break;
         }
 

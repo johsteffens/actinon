@@ -337,6 +337,7 @@ void arr_s_scale( arr_s* o, f3_t fac )
 
 sr_s arr_s_create_inside_composite( arr_s* o, sz_t start, sz_t size )
 {
+    size = size > o->a.size ? o->a.size : size;
     if( size == 1 )
     {
         return sr_cw( o->a.data[ start ] );
@@ -352,18 +353,9 @@ sr_s arr_s_create_inside_composite( arr_s* o, sz_t start, sz_t size )
     return sr_null();
 }
 
-sr_s arr_s_create_compound( arr_s* o, sz_t start, sz_t size )
-{
-    sr_s sr = sr_create( TYPEOF_compound_s );
-    for( sz_t i = start; i < size; i++ )
-    {
-        compound_s_push_q( sr.o, arr_s_get( o, i ) );
-    }
-    return sr;
-}
-
 sr_s arr_s_create_outside_composite( arr_s* o, sz_t start, sz_t size )
 {
+    size = size > o->a.size ? o->a.size : size;
     if( size == 1 )
     {
         return sr_cw( o->a.data[ start ] );
@@ -377,6 +369,17 @@ sr_s arr_s_create_outside_composite( arr_s* o, sz_t start, sz_t size )
         );
     }
     return sr_null();
+}
+
+sr_s arr_s_create_compound( arr_s* o, sz_t start, sz_t size )
+{
+    size = size > o->a.size ? o->a.size : size;
+    sr_s sr = sr_create( TYPEOF_compound_s );
+    for( sz_t i = start; i < size; i++ )
+    {
+        compound_s_push_q( sr.o, arr_s_get( o, i ) );
+    }
+    return sr;
 }
 
 sr_s arr_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
