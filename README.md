@@ -25,7 +25,7 @@ It will render the image in multiple passes, during which intermediate results c
 ## How to use it
 **Linux:** Just follow sugestions below.
 
-**Other OS:** Try to set up a Linux-like environement first.
+**Other OS:** Try to set up a Linux-like environment first.
 
 ### Requirements/Dependencies
    * Project [beth](https://github.com/johsteffens/beth).
