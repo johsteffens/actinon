@@ -45,7 +45,7 @@ Below is a suggstion for a Posix-like environment (e.g. Linux).
 ## License
 The source code in this project, including actinon source code, is licensed under the [Apache 2.0 License](https://github.com/johsteffens/actinon/blob/master/LICENSE).
 
-Images and videos uploaded into this project and depicting results of the raytracer are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
+Images in this project, depicting results of the raytracer, are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
 
 Images or videos you created with actinon from your own script sources are yours.
 
