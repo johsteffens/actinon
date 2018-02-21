@@ -23,17 +23,20 @@ Actinon is a console-application. It takes a text-source file as argument and ex
 It will render the image in multiple passes, during which intermediate results can be inspected with an image-viewing tool.
 
 ## How to use it
+**Linux:** Just follow sugestions below.
+
+**Other OS:** Try to set up a Linux-like environement first.
 
 ### Requirements/Dependencies
-   * [Beth](https://github.com/johsteffens/beth)
+   * Project [beth](https://github.com/johsteffens/beth).
    * gcc (or compatible compiler) supporting C11 standard.
-   * Libraries: m, pthread
+   * Library `pthread`. (Normally part of the developer package)
 
 ### Build
    * Download [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon). 
    * Unpack both in the same folder. (This should create respective sub-folders `beth-master` and `actinon-master`)
    * In a terminal ...
-      * enter actinon-master/build: `cd actinon-master/build`.
+      * enter build-folder: `cd actinon-master/build`.
       * run `make`. This produces the binary file `actinon`.
 
 ### First Trial
