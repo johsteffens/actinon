@@ -24,12 +24,17 @@ It will render the image in multiple passes, during which intermediate results c
 
 ## How to use it
 
-Below is a suggstion for a Posix-like environment (e.g. Linux).
+### Requirements/Dependencies
+   * [Beth](https://github.com/johsteffens/beth)
+   * gcc (or compatible compiler) supporting C11 standard.
+   * Libraries: m, pthread
 
 ### Build
-   * Download [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon).
-   * For the moment, copy all *.c and *.h files of both projects into one folder.
-   * Build actinon in that folder: `gcc -std=c11 -O3 *.c -lm -lpthread -o actinon`
+   * Download [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon). 
+   * Unpack both in the same folder. (This should create respective sub-folders `beth-master` and `actinon-master`)
+   * In a terminal ...
+      * enter actinon-master/build: `cd actinon-master/build`.
+      * run `make`. This produces the binary file `actinon`.
 
 ### First Trial
    * Pick a source file from folder [src_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
