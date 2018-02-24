@@ -23,7 +23,7 @@ Actinon is a console-application. It takes a text-source file as argument and ex
 It will render the image in multiple passes, during which intermediate results can be inspected with an image-viewing tool.
 
 ## How to use it
-**Linux:** Just follow sugestions below.
+**Linux:** Just follow suggestions below.
 
 **Other OS:** Try to set up a Linux-like environment first.
 
