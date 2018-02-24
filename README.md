@@ -29,8 +29,8 @@ It will render the image in multiple passes, during which intermediate results c
 
 ### Requirements/Dependencies
    * Project [beth](https://github.com/johsteffens/beth).
-   * gcc (or compatible compiler) supporting C11 standard.
-   * Library `pthread`. (Normally part of the developer package)
+   * gcc (or similar compiler suite) supporting the C11 standard.
+   * Library `pthread` of the POSIX.1c standard.
 
 ### Build
    * Download [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon). 
