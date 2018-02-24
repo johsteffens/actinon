@@ -20,7 +20,7 @@ Actinon is based on project [beth](https://github.com/johsteffens/beth).
 
 Actinon is a console-application. It takes a text-source file as argument and executes its content, which normally comprises of the scene design, virtual camera specifications, render specifications and instructions how to render one or more images.
 
-It will render the image in multiple passes, during which intermediate results can be inspected with an image-viewing tool.
+It will render the image in multiple passes, gradually improving quality. After each pass, the image file is updated such that progress can be monitored with an external image-viewing tool.
 
 ## How to use it
 **Linux:** Just follow suggestions below.
