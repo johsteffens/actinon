@@ -25,7 +25,7 @@ It will render the image in multiple passes, gradually improving quality. After 
 ## How to use it
 **Linux (or operating systems supporting POSIX):** Just follow suggestions below.
 
-**Other operating systems:** Set up a POSIX-environment first. 
+**Windows:** [Set up a POSIX-environment first](https://github.com/johsteffens/beth/wiki#how-to-setup-a-posix-environment-for-beth-on-windows). 
 
 ### Requirements/Dependencies
    * Project [beth](https://github.com/johsteffens/beth).
