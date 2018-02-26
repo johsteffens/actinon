@@ -10,9 +10,9 @@
 ### [Find more examples here ...](https://github.com/johsteffens/actinon/wiki/Images)
 
 ## What it is
-Actinon is a lightweight ray-tracing renderer and interpreter of a dedicated scripting language. It can render 3D scenes, employing techniques like distributed tracing, path tracing, antialiasing and others. It can visualize transparency, reflection, refraction, media-transition, diffuse-light, indirect-light and more. Various realistic surfaces are achieved by mixing fresnel-reflection, chromatic-reflection, (Oren-Nayar) diffuse-reflection and by simulating surface roughness.
+Actinon is a lightweight ray-tracing renderer and interpreter of a dedicated scripting language. It can render 3D scenes, employing techniques like distributed tracing, path tracing, antialiasing and others. It can visualize transparency, reflection, refraction, media-transition, diffuse-light, indirect-light and more. Various realistic surfaces are achieved by mixing fresnel-reflection, chromatic-reflection, (Oren-Nayar) diffuse-reflection and by simulating surface roughness. The rendering-engine is multi-threaded.
 
-For scene-design a special language has been developed. It supports the composition of complex objects from simpler objects. Geometric operations on objects like translation, scaling and rotations can be applied easily and intuitively. Vectors and matrices are dedicated objects with associated operators supporting arithmetic in a 3D vector space. The language also allows computing image sequences (e.g. for videos).
+For scene-design a special language has been developed. It supports the composition of complex objects from simpler objects. Geometric operations on objects like translation, scaling and rotations can be applied easily and intuitively. Vectors and matrices have dedicated types with associated operators supporting arithmetic in a 3D vector space. The language also allows computing image sequences (e.g. for videos).
 
 Actinon is based on project [beth](https://github.com/johsteffens/beth).
 
@@ -20,16 +20,24 @@ Actinon is based on project [beth](https://github.com/johsteffens/beth).
 
 Actinon is a console-application. It takes a text-source file as argument and executes its content, which normally comprises of the scene design, virtual camera specifications, render specifications and instructions how to render one or more images.
 
-It will render the image in multiple passes, during which intermediate results can be inspected with an image-viewing tool.
+It will render the image in multiple passes, gradually improving quality. After each pass, the image file is updated such that progress can be monitored with an external image-viewing tool.
 
 ## How to use it
+**Linux (or operating systems supporting POSIX):** Just follow suggestions below.
 
-Below is a suggstion for a Posix-like environment (e.g. Linux).
+**Other operating systems:** Set up a POSIX-environment first. 
+
+### Requirements/Dependencies
+   * Project [beth](https://github.com/johsteffens/beth).
+   * gcc (or similar compiler suite) supporting the C11 standard.
+   * Library `pthread` of the POSIX.1c standard.
 
 ### Build
-   * Download [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon).
-   * For the moment, copy all *.c and *.h files of both projects into one folder.
-   * Build actinon in that folder: `gcc -std=c11 -O3 *.c -lm -lpthread -o actinon`
+   * Download [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon). 
+   * Unpack both in the same folder. (This should create respective sub-folders `beth-master` and `actinon-master`)
+   * In a terminal ...
+      * enter folder: `cd actinon-master/build`.
+      * run: `make`. This produces the binary file `actinon`.
 
 ### First Trial
    * Pick a source file from folder [src_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
