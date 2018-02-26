@@ -26,6 +26,7 @@
 #include "bcore_txt_ml.h"
 #include "bcore_spect_via.h"
 #include "bcore_trait.h"
+#include "bcore_bin_ml.h"
 
 #include "vectors.h"
 #include "objects.h"
@@ -46,6 +47,11 @@ DEFINE_FUNCTIONS_OBJ_INST( map_s )
 DEFINE_CREATE_SELF( map_s, map_s_def )
 
 bl_t map_s_exists( const map_s* o, tp_t key )
+{
+    return bcore_hmap_tp_sr_s_exists( &o->m, key );
+}
+
+bl_t  map_s_has( const map_s* o, tp_t key )
 {
     return bcore_hmap_tp_sr_s_exists( &o->m, key );
 }
@@ -180,8 +186,40 @@ sr_s map_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
     }
     else if( key == TYPEOF_scale )
     {
-        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN );
         map_s_scale( o, meval_s_eval_f3( ev ) );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == typeof( "has" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN );
+        meval_s_expect_code( ev, CL_NAME );
+        tp_t key = meval_s_get_code( ev );
+        obj = sr_bl( map_s_has( o, key ) );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == typeof( "write_to_file" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN );
+        sr_s st = meval_s_eval( ev, sr_null() );
+        if( sr_s_type( &st ) != TYPEOF_st_s ) meval_s_err_fa( ev, "String expected." );
+        bcore_bin_ml_to_file( sr_cw( *sr_o ), ( ( st_s* )st.o )->sc );
+        sr_down( st );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == typeof( "read_from_file" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN );
+        sr_s st = meval_s_eval( ev, sr_null() );
+        if( sr_s_type( &st ) != TYPEOF_st_s ) meval_s_err_fa( ev, "String expected." );
+        sc_t file_name = ( ( st_s* )st.o )->sc;
+        sr_s sr = bcore_bin_ml_from_file( file_name );
+        sr_down( st );
+        if( sr_s_type( &sr ) != TYPEOF_map_s )
+        {
+            meval_s_err_fa( ev, "File #<sc_t> yielded #<sc_t> but map_s was expected.", file_name, ifnameof( sr_s_type( &sr ) ) );
+        }
+        map_s_copy( o, sr.o );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
     else
@@ -445,6 +483,30 @@ sr_s arr_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
     {
         meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN  );
         obj = arr_s_create_compound( o, 0, o->a.size );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == typeof( "write_to_file" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN );
+        sr_s st = meval_s_eval( ev, sr_null() );
+        if( sr_s_type( &st ) != TYPEOF_st_s ) meval_s_err_fa( ev, "String expected." );
+        bcore_bin_ml_to_file( sr_cw( *sr_o ), ( ( st_s* )st.o )->sc );
+        sr_down( st );
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
+    }
+    else if( key == typeof( "read_from_file" ) )
+    {
+        meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN );
+        sr_s st = meval_s_eval( ev, sr_null() );
+        if( sr_s_type( &st ) != TYPEOF_st_s ) meval_s_err_fa( ev, "String expected." );
+        sc_t file_name = ( ( st_s* )st.o )->sc;
+        sr_s sr = bcore_bin_ml_from_file( file_name );
+        sr_down( st );
+        if( sr_s_type( &sr ) != TYPEOF_arr_s )
+        {
+            meval_s_err_fa( ev, "File #<sc_t> yielded #<sc_t> but arr_s was expected.", file_name, ifnameof( sr_s_type( &sr ) ) );
+        }
+        arr_s_copy( o, sr.o );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
     else

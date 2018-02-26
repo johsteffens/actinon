@@ -15,6 +15,8 @@
  *  limitations under the License.
  */
 
+#include "bcore_sources.h"
+
 #include "closures.h"
 #include "vectors.h"
 #include "objects.h"
@@ -329,6 +331,55 @@ DEFINE_STD_CLOSURE( pow_s, "f3_t pow_s( num base, num exp )", pow_s_call )
 
 /**********************************************************************************************************************/
 
+/// ceiling( x )
+static sr_s ceiling_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( ceil( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+}
+
+DEFINE_STD_CLOSURE( ceiling_s, "f3_t ceiling_s( num val )", ceiling_s_call )
+
+/**********************************************************************************************************************/
+
+/// floor( x )
+static sr_s floor_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    return sr_f3( floor( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+}
+
+DEFINE_STD_CLOSURE( floor_s, "f3_t floor_s( num val )", floor_s_call )
+
+/**********************************************************************************************************************/
+
+/// file_exists( f )
+static bl_t file_exists_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    sr_s arg0 = bclos_arguments_s_get( args, 0, frm );
+    bl_t ret = bcore_source_file_s_exists( ( ( st_s* )arg0.o )->sc );
+    sr_down( arg0 );
+    return ret;
+}
+
+DEFINE_STD_CLOSURE( file_exists_s, "bl_t file_exists_s( st_s file )", file_exists_s_call )
+
+/**********************************************************************************************************************/
+
+/// file_delete( f )
+static void file_delete_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    sr_s arg0 = bclos_arguments_s_get( args, 0, frm );
+    bcore_source_file_s_delete( ( ( st_s* )arg0.o )->sc );
+    sr_down( arg0 );
+}
+
+DEFINE_STD_CLOSURE( file_delete_s, "file_delete_s( st_s file )", file_delete_s_call )
+
+/**********************************************************************************************************************/
+
 /// beth_object( name-string ): creates a beth-object example: beth_object( "distance_torus_s" );
 static sr_s create_beth_object_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
@@ -486,6 +537,7 @@ vd_t closures_signal( tp_t target, tp_t signal, vd_t object )
 
     if( signal == typeof( "init1" ) )
     {
+        // vectors, tensors
         bcore_flect_define_creator( typeof( "create_vec_s"       ), create_vec_s_create_self );
         bcore_flect_define_creator( typeof( "vecx_s"             ), vecx_s_create_self );
         bcore_flect_define_creator( typeof( "vecy_s"             ), vecy_s_create_self );
@@ -497,7 +549,11 @@ vd_t closures_signal( tp_t target, tp_t signal, vd_t object )
         bcore_flect_define_creator( typeof( "rotx_s"             ), rotx_s_create_self );
         bcore_flect_define_creator( typeof( "roty_s"             ), roty_s_create_self );
         bcore_flect_define_creator( typeof( "rotz_s"             ), rotz_s_create_self );
+
+        // string
         bcore_flect_define_creator( typeof( "create_string_fa_s" ), create_string_fa_s_create_self );
+
+        // math
         bcore_flect_define_creator( typeof( "sqrt_s"             ), sqrt_s_create_self );
         bcore_flect_define_creator( typeof( "sqr_s"              ), sqr_s_create_self  );
         bcore_flect_define_creator( typeof( "exp_s"              ), exp_s_create_self  );
@@ -514,8 +570,15 @@ vd_t closures_signal( tp_t target, tp_t signal, vd_t object )
         bcore_flect_define_creator( typeof( "acos_s"             ), acos_s_create_self );
         bcore_flect_define_creator( typeof( "atan_s"             ), atan_s_create_self );
         bcore_flect_define_creator( typeof( "pow_s"              ), pow_s_create_self  );
-        bcore_flect_define_creator( typeof( "create_beth_object_s" ), create_beth_object_s_create_self  );
+        bcore_flect_define_creator( typeof( "ceiling_s"          ), ceiling_s_create_self  );
+        bcore_flect_define_creator( typeof( "floor_s"            ), floor_s_create_self  );
 
+        // files
+        bcore_flect_define_creator( typeof( "file_exists_s"      ), file_exists_s_create_self );
+        bcore_flect_define_creator( typeof( "file_delete_s"      ), file_delete_s_create_self );
+
+        // objects
+        bcore_flect_define_creator( typeof( "create_beth_object_s" ), create_beth_object_s_create_self  );
         bcore_flect_define_creator( typeof( "create_plane_s"        ), create_plane_s_create_self        );
         bcore_flect_define_creator( typeof( "create_sphere_s"       ), create_sphere_s_create_self       );
         bcore_flect_define_creator( typeof( "create_squaroid_s"     ), create_squaroid_s_create_self     );

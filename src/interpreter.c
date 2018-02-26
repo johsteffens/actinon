@@ -1814,6 +1814,7 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     bclos_frame_s* frame = bcore_life_s_push_aware( l, bclos_frame_s_create() );
 
     /// Built-in functions
+    // vectors, tensors
     bclos_frame_s_set( frame, typeof( "vec"   ), sr_cc( sr_create( typeof( "create_vec_s"   ) ) ) );
     bclos_frame_s_set( frame, typeof( "vecx"  ), sr_cc( sr_create( typeof( "vecx_s"         ) ) ) );
     bclos_frame_s_set( frame, typeof( "vecy"  ), sr_cc( sr_create( typeof( "vecy_s"         ) ) ) );
@@ -1826,22 +1827,29 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     bclos_frame_s_set( frame, typeof( "colg"  ), sr_cc( sr_create( typeof( "colg_s"         ) ) ) );
     bclos_frame_s_set( frame, typeof( "colb"  ), sr_cc( sr_create( typeof( "colb_s"         ) ) ) );
 
-    bclos_frame_s_set( frame, typeof( "sqrt"   ), sr_cc( sr_create( typeof( "sqrt_s"        ) ) ) );
-    bclos_frame_s_set( frame, typeof( "sqr"    ), sr_cc( sr_create( typeof( "sqr_s"         ) ) ) );
-    bclos_frame_s_set( frame, typeof( "exp"    ), sr_cc( sr_create( typeof( "exp_s"         ) ) ) );
-    bclos_frame_s_set( frame, typeof( "log"    ), sr_cc( sr_create( typeof( "log_s"         ) ) ) );
-    bclos_frame_s_set( frame, typeof( "to_deg" ), sr_cc( sr_create( typeof( "to_deg_s"      ) ) ) );
-    bclos_frame_s_set( frame, typeof( "to_rad" ), sr_cc( sr_create( typeof( "to_rad_s"      ) ) ) );
-    bclos_frame_s_set( frame, typeof( "sin"    ), sr_cc( sr_create( typeof( "sin_s"         ) ) ) );
-    bclos_frame_s_set( frame, typeof( "cos"    ), sr_cc( sr_create( typeof( "cos_s"         ) ) ) );
-    bclos_frame_s_set( frame, typeof( "tan"    ), sr_cc( sr_create( typeof( "tan_s"         ) ) ) );
-    bclos_frame_s_set( frame, typeof( "sin_d"  ), sr_cc( sr_create( typeof( "sin_d_s"       ) ) ) );
-    bclos_frame_s_set( frame, typeof( "cos_d"  ), sr_cc( sr_create( typeof( "cos_d_s"       ) ) ) );
-    bclos_frame_s_set( frame, typeof( "tan_d"  ), sr_cc( sr_create( typeof( "tan_d_s"       ) ) ) );
-    bclos_frame_s_set( frame, typeof( "asin"   ), sr_cc( sr_create( typeof( "asin_s"        ) ) ) );
-    bclos_frame_s_set( frame, typeof( "acos"   ), sr_cc( sr_create( typeof( "acos_s"        ) ) ) );
-    bclos_frame_s_set( frame, typeof( "atan"   ), sr_cc( sr_create( typeof( "atan_s"        ) ) ) );
-    bclos_frame_s_set( frame, typeof( "pow"    ), sr_cc( sr_create( typeof( "pow_s"         ) ) ) );
+    // math
+    bclos_frame_s_set( frame, typeof( "sqrt"    ), sr_cc( sr_create( typeof( "sqrt_s"       ) ) ) );
+    bclos_frame_s_set( frame, typeof( "sqr"     ), sr_cc( sr_create( typeof( "sqr_s"        ) ) ) );
+    bclos_frame_s_set( frame, typeof( "exp"     ), sr_cc( sr_create( typeof( "exp_s"        ) ) ) );
+    bclos_frame_s_set( frame, typeof( "log"     ), sr_cc( sr_create( typeof( "log_s"        ) ) ) );
+    bclos_frame_s_set( frame, typeof( "to_deg"  ), sr_cc( sr_create( typeof( "to_deg_s"     ) ) ) );
+    bclos_frame_s_set( frame, typeof( "to_rad"  ), sr_cc( sr_create( typeof( "to_rad_s"     ) ) ) );
+    bclos_frame_s_set( frame, typeof( "sin"     ), sr_cc( sr_create( typeof( "sin_s"        ) ) ) );
+    bclos_frame_s_set( frame, typeof( "cos"     ), sr_cc( sr_create( typeof( "cos_s"        ) ) ) );
+    bclos_frame_s_set( frame, typeof( "tan"     ), sr_cc( sr_create( typeof( "tan_s"        ) ) ) );
+    bclos_frame_s_set( frame, typeof( "sin_d"   ), sr_cc( sr_create( typeof( "sin_d_s"      ) ) ) );
+    bclos_frame_s_set( frame, typeof( "cos_d"   ), sr_cc( sr_create( typeof( "cos_d_s"      ) ) ) );
+    bclos_frame_s_set( frame, typeof( "tan_d"   ), sr_cc( sr_create( typeof( "tan_d_s"      ) ) ) );
+    bclos_frame_s_set( frame, typeof( "asin"    ), sr_cc( sr_create( typeof( "asin_s"       ) ) ) );
+    bclos_frame_s_set( frame, typeof( "acos"    ), sr_cc( sr_create( typeof( "acos_s"       ) ) ) );
+    bclos_frame_s_set( frame, typeof( "atan"    ), sr_cc( sr_create( typeof( "atan_s"       ) ) ) );
+    bclos_frame_s_set( frame, typeof( "pow"     ), sr_cc( sr_create( typeof( "pow_s"        ) ) ) );
+    bclos_frame_s_set( frame, typeof( "floor"   ), sr_cc( sr_create( typeof( "floor_s"      ) ) ) );
+    bclos_frame_s_set( frame, typeof( "ceiling" ), sr_cc( sr_create( typeof( "ceiling_s"    ) ) ) );
+
+    // file
+    bclos_frame_s_set( frame, typeof( "file_exists" ), sr_cc( sr_create( typeof( "file_exists_s"  ) ) ) );
+    bclos_frame_s_set( frame, typeof( "file_delete" ), sr_cc( sr_create( typeof( "file_delete_s"  ) ) ) );
 
     /// object creation functions
     bclos_frame_s_set( frame, typeof( "create_plane"        ), sr_create( typeof( "create_plane_s"        ) ) );
@@ -1859,11 +1867,11 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     bclos_frame_s_set( frame, typeof( "beth_object" ), sr_create( typeof( "create_beth_object_s" ) ) );
 
     /// Built-in constants
-    bclos_frame_s_set( frame, typeof( "scene_s"        ), sr_create( typeof( "scene_s"        ) ) );
-    bclos_frame_s_set( frame, typeof( "obj_sphere_s"   ), sr_create( typeof( "obj_sphere_s"   ) ) );
-    bclos_frame_s_set( frame, typeof( "obj_plane_s"    ), sr_create( typeof( "obj_plane_s"    ) ) );
-    bclos_frame_s_set( frame, typeof( "arr_s"          ), sr_create( typeof( "arr_s"          ) ) );
-    bclos_frame_s_set( frame, typeof( "map_s"          ), sr_create( typeof( "map_s"          ) ) );
+    bclos_frame_s_set( frame, typeof( "scene_s"      ), sr_create( typeof( "scene_s"        ) ) );
+    bclos_frame_s_set( frame, typeof( "obj_sphere_s" ), sr_create( typeof( "obj_sphere_s"   ) ) );
+    bclos_frame_s_set( frame, typeof( "obj_plane_s"  ), sr_create( typeof( "obj_plane_s"    ) ) );
+    bclos_frame_s_set( frame, typeof( "arr_s"        ), sr_create( typeof( "arr_s"          ) ) );
+    bclos_frame_s_set( frame, typeof( "map_s"        ), sr_create( typeof( "map_s"          ) ) );
 
     mclosure_s_define( o, frame, NULL, mcode );
     sr_s return_obj = mclosure_s_call( o, NULL, NULL );

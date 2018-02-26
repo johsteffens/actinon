@@ -36,6 +36,7 @@ typedef struct map_s
 DECLARE_FUNCTIONS_OBJ( map_s )
 
 bl_t  map_s_exists( const map_s* o, tp_t key );
+bl_t  map_s_has(    const map_s* o, tp_t key );
 sr_s* map_s_get(          map_s* o, tp_t key );
 void  map_s_set(          map_s* o, tp_t key, sr_s obj );
 
