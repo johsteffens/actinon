@@ -41,7 +41,7 @@ void selftest( const char* name )
     st_s_print_d( log );
 }
 
-vd_t signal( tp_t target, tp_t signal, vd_t object )
+vd_t main_signal( tp_t target, tp_t signal, vd_t object )
 {
     vd_t ret = NULL;
     if( ( ret = vectors_signal(     target, signal, object ) ) ) return ret;
@@ -59,15 +59,15 @@ vd_t signal( tp_t target, tp_t signal, vd_t object )
 
 void run_selftest()
 {
-    bcore_library_init( signal );
-    st_s_print_d( signal( typeof( "all" ), typeof( "selftest" ), NULL ) );
+    bcore_library_init( main_signal );
+    st_s_print_d( main_signal( typeof( "all" ), typeof( "selftest" ), NULL ) );
     bcore_library_down( false );
     exit( 0 );
 }
 
 void run_quicktypes()
 {
-    bcore_library_init( signal );
+    bcore_library_init( main_signal );
     quicktypes_to_stdout( NULL );
     bcore_library_down( false );
     exit( 0 );
@@ -77,7 +77,7 @@ int main( int argc, const char** argv )
 {
 //    run_selftest();
 //    run_quicktypes();
-    bcore_library_init( signal );
+    bcore_library_init( main_signal );
 
     bcore_msg( "ACTINON: Ray-tracer.\n" );
     bcore_msg( "Copyright (C) 2017 Johannes B. Steffens.\n\n" );
