@@ -53,7 +53,7 @@ It will render the image in multiple passes, gradually improving quality. After 
 ## License
 The source code in this repository, including actinon source code, is licensed under the [Apache 2.0 License](https://github.com/johsteffens/actinon/blob/master/LICENSE).
 
-Images in this project, depicting results of the raytracer, are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
+Images in this repository, depicting results of the raytracer, are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
 
 Images or videos you created with actinon from your own script sources are yours.
 
