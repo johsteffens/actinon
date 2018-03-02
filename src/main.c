@@ -22,6 +22,7 @@
 #include "bcore_life.h"
 #include "bcore_txt_ml.h"
 #include "bcore_spect_interpreter.h"
+#include "bclos_signal.h"
 
 #include "vectors.h"
 #include "objects.h"
@@ -59,17 +60,19 @@ vd_t main_signal( tp_t target, tp_t signal, vd_t object )
 
 void run_selftest()
 {
-    bcore_library_init( main_signal );
+    bcore_init_library( bclos_signal );
+    bcore_init_library( main_signal );
     st_s_print_d( main_signal( typeof( "all" ), typeof( "selftest" ), NULL ) );
-    bcore_library_down( false );
+    bcore_down( false );
     exit( 0 );
 }
 
 void run_quicktypes()
 {
-    bcore_library_init( main_signal );
+    bcore_init_library( bclos_signal );
+    bcore_init_library( main_signal );
     quicktypes_to_stdout( NULL );
-    bcore_library_down( false );
+    bcore_down( false );
     exit( 0 );
 }
 
@@ -77,7 +80,9 @@ int main( int argc, const char** argv )
 {
 //    run_selftest();
 //    run_quicktypes();
-    bcore_library_init( main_signal );
+
+    bcore_init_library( bclos_signal );
+    bcore_init_library( main_signal );
 
     bcore_msg( "ACTINON: Ray-tracer.\n" );
     bcore_msg( "Copyright (C) 2017 Johannes B. Steffens.\n\n" );
@@ -109,6 +114,6 @@ int main( int argc, const char** argv )
     bcore_life_s_push_sr( l, bcore_interpret_auto_file( in_file->sc ) );
     bcore_life_s_discard( l );
 
-    bcore_library_down( false );
+    bcore_down( false );
     return 0;
 }
