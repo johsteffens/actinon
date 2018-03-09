@@ -33,14 +33,14 @@ typedef struct trans_data_s
     obj_hdr_s* enter_obj;
 } trans_data_s;
 
-DECLARE_FUNCTIONS_OBJ( trans_data_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( trans_data_s )
 
 /**********************************************************************************************************************/
 /// compound_s (array of objects)
 
 typedef struct compound_s compound_s;
 
-DECLARE_FUNCTIONS_OBJ( compound_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( compound_s )
 
 sz_t           compound_s_get_size(   const compound_s* o );
 const aware_t* compound_s_get_object( const compound_s* o, sz_t index );

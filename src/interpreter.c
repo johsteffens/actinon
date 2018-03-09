@@ -92,8 +92,8 @@ sc_t code_symbol( code_s o )
 
 #define TYPEOF_mtype_s typeof( "mtype_s" )
 typedef struct mtype_s { tp_t type; } mtype_s;
-DEFINE_FUNCTIONS_OBJ_FLAT( mtype_s )
-DEFINE_CREATE_SELF( mtype_s, "mtype_s = bcore_inst { tp_t type; }" )
+BCORE_DEFINE_FUNCTIONS_OBJ_FLAT( mtype_s )
+BCORE_DEFINE_CREATE_SELF( mtype_s, "mtype_s = bcore_inst { tp_t type; }" )
 
 sr_s mtype_s_create_sr( tp_t type )
 {
@@ -129,8 +129,8 @@ static sc_t mcode_s_def =
     "bclos_frame_s    local_frame;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( mcode_s )
-DEFINE_CREATE_SELF( mcode_s, mcode_s_def )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( mcode_s )
+BCORE_DEFINE_CREATE_SELF( mcode_s, mcode_s_def )
 
 static void mcode_s_err_fv( const mcode_s* o, sz_t index, sc_t format, va_list args )
 {
@@ -555,7 +555,7 @@ static sc_t meval_s_def =
     "sz_t                   index;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( meval_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( meval_s )
 
 static bcore_flect_self_s* meval_s_create_self( void )
 {
@@ -1747,7 +1747,7 @@ static sc_t mclosure_s_def =
     "private bclos_frame_s -> lexical_frame;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( mclosure_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( mclosure_s )
 
 static void mclosure_s_copy_a( vd_t nc )
 {
@@ -1906,10 +1906,10 @@ vd_t interpreter_signal( tp_t target, tp_t signal, vd_t object )
 
     if( signal == typeof( "init1" ) )
     {
-        bcore_flect_define_creator( typeof( "mtype_s"    ), mtype_s_create_self );
-        bcore_flect_define_creator( typeof( "mcode_s"    ), mcode_s_create_self );
-        bcore_flect_define_creator( typeof( "meval_s"    ), meval_s_create_self );
-        bcore_flect_define_creator( typeof( "mclosure_s" ), mclosure_s_create_self );
+        BCORE_REGISTER_FLECT( mtype_s );
+        BCORE_REGISTER_FLECT( mcode_s );
+        BCORE_REGISTER_FLECT( meval_s );
+        BCORE_REGISTER_FLECT( mclosure_s );
     }
     else if( signal == typeof( "selftest" ) )
     {

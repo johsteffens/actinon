@@ -110,12 +110,12 @@ sc_t code_symbol( code_s o );
 /**********************************************************************************************************************/
 
 typedef struct mcode_s mcode_s;
-DECLARE_FUNCTIONS_OBJ( mcode_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( mcode_s )
 
 /**********************************************************************************************************************/
 
 typedef struct meval_s meval_s;
-DECLARE_FUNCTIONS_OBJ( meval_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( meval_s )
 
 void  meval_s_err_fv(          meval_s* o, sc_t format, va_list args );
 void  meval_s_err_fa(          meval_s* o, sc_t format, ... );
@@ -145,7 +145,7 @@ typedef struct mclosure_s
     bclos_frame_s*     lexical_frame;  // private
 } mclosure_s;
 
-DECLARE_FUNCTIONS_OBJ( mclosure_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( mclosure_s )
 void mclosure_s_define( mclosure_s* o, bclos_frame_s* frame, bclos_signature_s* signature, mcode_s* mcode );
 
 /**********************************************************************************************************************/

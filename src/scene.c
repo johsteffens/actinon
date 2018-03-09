@@ -61,10 +61,10 @@ typedef struct image_cps_s
     };
 } image_cps_s;
 
-DECLARE_FUNCTIONS_OBJ( image_cps_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( image_cps_s )
 
-DEFINE_FUNCTIONS_OBJ_INST( image_cps_s )
-DEFINE_CREATE_SELF( image_cps_s, "image_cps_s = bcore_inst { aware_t _; sz_t w; sz_t h; u2_t [] data; }" )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( image_cps_s )
+BCORE_DEFINE_CREATE_SELF( image_cps_s, "image_cps_s = bcore_inst { aware_t _; sz_t w; sz_t h; u2_t [] data; }" )
 
 u2_t cps_from_rgb( u0_t r, u0_t g, u0_t b ) { return ( u2_t )r | ( ( u2_t )g ) << 8 | ( ( u2_t )b ) << 16; }
 u0_t r_from_cps( u2_t v ) { return v;       }
@@ -193,7 +193,7 @@ static sc_t scene_s_def =
     "s3_t experimental_level = 0;" // (default: 0 ) > 0 for experimental code; < 0 for deprecated code
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( scene_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( scene_s )
 
 void scene_s_init_a( vd_t nc )
 {
@@ -650,8 +650,8 @@ typedef struct lum_s
     f3_t  weight;
 } lum_s;
 
-DEFINE_FUNCTIONS_OBJ_INST( lum_s )
-DEFINE_CREATE_SELF( lum_s,  "lum_s = bcore_inst { v2d_s pos; cl_s clr; f3_t weight = 1.0; }" )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( lum_s )
+BCORE_DEFINE_CREATE_SELF( lum_s,  "lum_s = bcore_inst { v2d_s pos; cl_s clr; f3_t weight = 1.0; }" )
 
 tp_t lum_s_key( const lum_s* o )
 {
@@ -686,8 +686,8 @@ typedef struct lum_arr_s
     };
 } lum_arr_s;
 
-DEFINE_FUNCTIONS_OBJ_INST( lum_arr_s )
-DEFINE_CREATE_SELF( lum_arr_s,  "lum_arr_s = bcore_inst { aware_t _; lum_s [] arr; }" )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( lum_arr_s )
+BCORE_DEFINE_CREATE_SELF( lum_arr_s,  "lum_arr_s = bcore_inst { aware_t _; lum_s [] arr; }" )
 
 void lum_arr_s_clear( lum_arr_s* o )
 {
@@ -721,8 +721,8 @@ typedef struct lum_image_s
     lum_arr_s arr;
 } lum_image_s;
 
-DEFINE_FUNCTIONS_OBJ_INST( lum_image_s )
-DEFINE_CREATE_SELF( lum_image_s,  "lum_image_s = bcore_inst { aware_t _; sz_t width; sz_t height; lum_arr_s arr; }" )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( lum_image_s )
+BCORE_DEFINE_CREATE_SELF( lum_image_s,  "lum_image_s = bcore_inst { aware_t _; sz_t width; sz_t height; lum_arr_s arr; }" )
 
 void lum_image_s_reset( lum_image_s* o, sz_t width, sz_t height )
 {
@@ -831,8 +831,8 @@ void lum_machine_s_down( lum_machine_s* o )
     bcore_mutex_down( &o->mutex );
 }
 
-DEFINE_FUNCTION_CREATE( lum_machine_s )
-DEFINE_FUNCTION_DISCARD( lum_machine_s )
+BCORE_DEFINE_FUNCTION_CREATE( lum_machine_s )
+BCORE_DEFINE_FUNCTION_DISCARD( lum_machine_s )
 
 lum_machine_s* lum_machine_s_plant( const scene_s* scene, lum_arr_s* lum_arr )
 {
@@ -994,11 +994,11 @@ vd_t scene_signal( tp_t target, tp_t signal, vd_t object )
 
     if( signal == typeof( "init1" ) )
     {
-        bcore_flect_define_creator( typeof( "scene_s"     ), scene_s_create_self );
-        bcore_flect_define_creator( typeof( "image_cps_s" ), image_cps_s_create_self );
-        bcore_flect_define_creator( typeof( "lum_s"       ), lum_s_create_self     );
-        bcore_flect_define_creator( typeof( "lum_arr_s"   ), lum_arr_s_create_self );
-        bcore_flect_define_creator( typeof( "lum_image_s" ), lum_image_s_create_self );
+        BCORE_REGISTER_FLECT( scene_s );
+        BCORE_REGISTER_FLECT( image_cps_s );
+        BCORE_REGISTER_FLECT( lum_s );
+        BCORE_REGISTER_FLECT( lum_arr_s );
+        BCORE_REGISTER_FLECT( lum_image_s );
     }
 
     return NULL;

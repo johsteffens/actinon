@@ -22,10 +22,10 @@
 #include "quicktypes.h"
 
 typedef struct txm_plain_s txm_plain_s;
-DECLARE_FUNCTIONS_OBJ( txm_plain_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( txm_plain_s )
 
 typedef struct txm_chess_s txm_chess_s;
-DECLARE_FUNCTIONS_OBJ( txm_chess_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( txm_chess_s )
 
 /**********************************************************************************************************************/
 

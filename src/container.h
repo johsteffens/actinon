@@ -33,7 +33,7 @@ typedef struct map_s
     bcore_hmap_tp_sr_s m;
 } map_s;
 
-DECLARE_FUNCTIONS_OBJ( map_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( map_s )
 
 bl_t  map_s_exists( const map_s* o, tp_t key );
 bl_t  map_s_has(    const map_s* o, tp_t key );
@@ -54,7 +54,7 @@ typedef struct arr_s
     bcore_arr_sr_s a;
 } arr_s;
 
-DECLARE_FUNCTIONS_OBJ( arr_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( arr_s )
 
 sz_t arr_s_get_size( const arr_s* o );
 void arr_s_set_size( arr_s* o, sz_t size ); // resize keeping existing data

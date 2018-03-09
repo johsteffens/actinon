@@ -26,33 +26,11 @@
 
 /**********************************************************************************************************************/
 
-/// v2d_s
-DEFINE_FUNCTIONS_OBJ_FLAT( v2d_s )
-DEFINE_CREATE_SELF( v2d_s, "v2d_s = bcore_inst { f3_t x; f3_t y; }" )
-
-/**********************************************************************************************************************/
-
-/// v3d_s
-DEFINE_FUNCTIONS_OBJ_FLAT( v3d_s )
-DEFINE_CREATE_SELF( v3d_s, "v3d_s = bcore_inst { f3_t x; f3_t y; f3_t z; }" )
-
-/**********************************************************************************************************************/
-
-/// m3d_s  (3x3 matrix)
-DEFINE_FUNCTIONS_OBJ_FLAT( m3d_s )
-DEFINE_CREATE_SELF( m3d_s, "m3d_s = bcore_inst { v3d_s x; v3d_s y; v3d_s z; }" )
-
-/**********************************************************************************************************************/
-/// ray_s
-
-DEFINE_FUNCTIONS_OBJ_FLAT( ray_s )
-DEFINE_CREATE_SELF( ray_s, "ray_s = bcore_inst { v3d_s p; v3d_s d; }" )
-
-/**********************************************************************************************************************/
-/// ray_cone_s
-
-DEFINE_FUNCTIONS_OBJ_FLAT( ray_cone_s )
-DEFINE_CREATE_SELF( ray_cone_s, "ray_cone_s = bcore_inst { ray_s ray; f3_t cos_rs; }" )
+BCORE_DEFINE_OBJECT_FLAT( v2d_s,      "v2d_s = bcore_inst { f3_t x; f3_t y; }" )
+BCORE_DEFINE_OBJECT_FLAT( v3d_s,      "v3d_s = bcore_inst { f3_t x; f3_t y; f3_t z; }" )
+BCORE_DEFINE_OBJECT_FLAT( m3d_s,      "m3d_s = bcore_inst { v3d_s x; v3d_s y; v3d_s z; }" )
+BCORE_DEFINE_OBJECT_FLAT( ray_s,      "ray_s = bcore_inst { v3d_s p; v3d_s d; }" )
+BCORE_DEFINE_OBJECT_FLAT( ray_cone_s, "ray_cone_s = bcore_inst { ray_s ray; f3_t cos_rs; }" )
 
 /**********************************************************************************************************************/
 /// cl_s
@@ -74,7 +52,7 @@ void cl_s_copy_typed( cl_s* o, tp_t type, vc_t src )
     }
 }
 
-DEFINE_FUNCTIONS_OBJ_FLAT( cl_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_FLAT( cl_s )
 static bcore_flect_self_s* cl_s_create_self( void )
 {
     bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( "cl_s = v3d_s", sizeof( cl_s ) );
@@ -85,8 +63,7 @@ static bcore_flect_self_s* cl_s_create_self( void )
 /**********************************************************************************************************************/
 /// row_cl_s
 
-DEFINE_FUNCTIONS_OBJ_INST( row_cl_s )
-DEFINE_CREATE_SELF( row_cl_s, "row_cl_s = bcore_inst { aware_t _; cl_s [] arr; }" )
+BCORE_DEFINE_OBJECT_INST( row_cl_s, "row_cl_s = bcore_inst { aware_t _; cl_s [] arr; }" )
 
 
 void row_cl_s_set_size( row_cl_s* o, sz_t size, cl_s color )
@@ -98,8 +75,7 @@ void row_cl_s_set_size( row_cl_s* o, sz_t size, cl_s color )
 /**********************************************************************************************************************/
 /// image_cl_s
 
-DEFINE_FUNCTIONS_OBJ_INST( image_cl_s )
-DEFINE_CREATE_SELF( image_cl_s, "image_cl_s = bcore_inst { aware_t _; sz_t w; sz_t h; cl_s [] arr; }" )
+BCORE_DEFINE_OBJECT_INST( image_cl_s, "image_cl_s = bcore_inst { aware_t _; sz_t w; sz_t h; cl_s [] arr; }" )
 
 void image_cl_s_set_size( image_cl_s* o, sz_t w, sz_t h, cl_s color )
 {
@@ -122,14 +98,14 @@ vd_t vectors_signal( tp_t target, tp_t signal, vd_t object )
 
     if( signal == typeof( "init1" ) )
     {
-        bcore_flect_define_creator( typeof( "v2d_s"       ), v2d_s_create_self );
-        bcore_flect_define_creator( typeof( "v3d_s"       ), v3d_s_create_self );
-        bcore_flect_define_creator( typeof( "m3d_s"       ), m3d_s_create_self );
-        bcore_flect_define_creator( typeof( "ray_s"       ), ray_s_create_self );
-        bcore_flect_define_creator( typeof( "ray_cone_s"  ), ray_cone_s_create_self );
-        bcore_flect_define_creator( typeof( "cl_s"        ), cl_s_create_self  );
-        bcore_flect_define_creator( typeof( "row_cl_s"    ), row_cl_s_create_self   );
-        bcore_flect_define_creator( typeof( "image_cl_s"  ), image_cl_s_create_self );
+        BCORE_REGISTER_FLECT( v2d_s );
+        BCORE_REGISTER_FLECT( v3d_s );
+        BCORE_REGISTER_FLECT( m3d_s );
+        BCORE_REGISTER_FLECT( ray_s );
+        BCORE_REGISTER_FLECT( ray_cone_s );
+        BCORE_REGISTER_FLECT( cl_s );
+        BCORE_REGISTER_FLECT( row_cl_s );
+        BCORE_REGISTER_FLECT( image_cl_s );
     }
 
     return NULL;

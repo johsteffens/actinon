@@ -40,7 +40,7 @@ static inline f3_t distance( vc_t o, v3d_s pos )
 /// distance_torus_s
 
 typedef struct distance_torus_s distance_torus_s;
-DECLARE_FUNCTIONS_OBJ( distance_torus_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( distance_torus_s )
 
 void distance_torus_s_set_ex_radius( distance_torus_s* o, f3_t radius );
 

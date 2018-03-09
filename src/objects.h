@@ -33,7 +33,7 @@ typedef struct envelope_s
     f3_t radius;
 } envelope_s;
 
-DECLARE_FUNCTIONS_OBJ( envelope_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( envelope_s )
 
 void envelope_s_move(           envelope_s* o, const v3d_s* vec );
 void envelope_s_rotate(         envelope_s* o, const m3d_s* mat );
@@ -147,14 +147,14 @@ void obj_set_auto_envelope   ( vd_t obj ); // estimates envelope for object (ove
 
 #define TYPEOF_obj_plane_s typeof( "obj_plane_s" )
 typedef struct obj_plane_s obj_plane_s;
-DECLARE_FUNCTIONS_OBJ( obj_plane_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( obj_plane_s )
 
 /**********************************************************************************************************************/
 /// obj_sphere_s
 
 #define TYPEOF_obj_sphere_s typeof( "obj_sphere_s" )
 typedef struct obj_sphere_s obj_sphere_s;
-DECLARE_FUNCTIONS_OBJ( obj_sphere_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( obj_sphere_s )
 
 void obj_sphere_s_set_radius( obj_sphere_s* o, f3_t radius );
 f3_t obj_sphere_s_get_radius( const obj_sphere_s* o );
@@ -164,7 +164,7 @@ f3_t obj_sphere_s_get_radius( const obj_sphere_s* o );
 
 #define TYPEOF_obj_squaroid_s typeof( "obj_squaroid_s" )
 typedef struct obj_squaroid_s obj_squaroid_s;
-DECLARE_FUNCTIONS_OBJ( obj_squaroid_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( obj_squaroid_s )
 
 void obj_squaroid_s_set_param( obj_squaroid_s* o, f3_t a, f3_t b, f3_t c, f3_t r );
 
@@ -180,7 +180,7 @@ obj_squaroid_s* obj_squaroid_s_create_cylinder(     f3_t rx, f3_t ry          );
 
 #define TYPEOF_obj_distance_s typeof( "obj_distance_s" )
 typedef struct obj_distance_s obj_distance_s;
-DECLARE_FUNCTIONS_OBJ( obj_distance_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( obj_distance_s )
 
 void obj_distance_s_set_distance( obj_distance_s* o, vc_t distance );
 void obj_distance_s_set_cycles( obj_distance_s* o, sz_t cycles );
@@ -190,7 +190,7 @@ void obj_distance_s_set_cycles( obj_distance_s* o, sz_t cycles );
 
 #define TYPEOF_obj_pair_inside_s typeof( "obj_pair_inside_s" )
 typedef struct obj_pair_inside_s obj_pair_inside_s;
-DECLARE_FUNCTIONS_OBJ( obj_pair_inside_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( obj_pair_inside_s )
 
 obj_pair_inside_s* obj_pair_inside_s_create_pair( vc_t o1, vc_t o2 );
 sr_s obj_pair_inside_s_create_pair_sr( sr_s o1, sr_s o2 );
@@ -200,7 +200,7 @@ sr_s obj_pair_inside_s_create_pair_sr( sr_s o1, sr_s o2 );
 
 #define TYPEOF_obj_pair_outside_s typeof( "obj_pair_outside_s" )
 typedef struct obj_pair_outside_s obj_pair_outside_s;
-DECLARE_FUNCTIONS_OBJ( obj_pair_outside_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( obj_pair_outside_s )
 
 obj_pair_outside_s* obj_pair_outside_s_create_pair( vc_t o1, vc_t o2 );
 sr_s obj_pair_outside_s_create_pair_sr( sr_s o1, sr_s o2 );
@@ -210,7 +210,7 @@ sr_s obj_pair_outside_s_create_pair_sr( sr_s o1, sr_s o2 );
 
 #define TYPEOF_obj_neg_s typeof( "obj_neg_s" )
 typedef struct obj_neg_s obj_neg_s;
-DECLARE_FUNCTIONS_OBJ( obj_neg_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( obj_neg_s )
 
 obj_neg_s* obj_neg_s_create_neg( vc_t o1 );
 
@@ -219,7 +219,7 @@ obj_neg_s* obj_neg_s_create_neg( vc_t o1 );
 
 #define TYPEOF_obj_scale_s typeof( "obj_scale_s" )
 typedef struct obj_scale_s obj_scale_s;
-DECLARE_FUNCTIONS_OBJ( obj_scale_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( obj_scale_s )
 
 obj_scale_s* obj_scale_s_create_scale( vc_t o1, v3d_s scale );
 

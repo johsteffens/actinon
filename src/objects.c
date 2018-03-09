@@ -38,8 +38,8 @@ static sc_t envelope_s_def =
     "f3_t radius;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_FLAT( envelope_s )
-DEFINE_CREATE_SELF( envelope_s, envelope_s_def )
+BCORE_DEFINE_OBJECT_FLAT( envelope_s, envelope_s_def )
+
 
 void envelope_s_move( envelope_s* o, const v3d_s* vec )
 {
@@ -175,9 +175,9 @@ void properties_s_init( properties_s* o )
     o->fresnel_reflectivity = 1.0;
 }
 
-DEFINE_FUNCTION_COPY_INST( properties_s )
-DEFINE_FUNCTION_DOWN_INST( properties_s )
-DEFINE_FUNCTIONS_CDC( properties_s )
+BCORE_DEFINE_FUNCTION_COPY_INST( properties_s )
+BCORE_DEFINE_FUNCTION_DOWN_INST( properties_s )
+BCORE_DEFINE_FUNCTIONS_CDC( properties_s )
 
 void properties_s_move( properties_s* o, const v3d_s* vec )
 {
@@ -237,7 +237,7 @@ typedef struct spect_obj_s
     is_reachable_fp fp_is_reachable;
 } spect_obj_s;
 
-DEFINE_FUNCTIONS_OBJ_INST( spect_obj_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( spect_obj_s )
 
 const spect_obj_s* obj_get_spect( vc_t o ) { return ( ( obj_hdr_s* )o )->p; }
 
@@ -524,7 +524,7 @@ static sc_t obj_plane_s_def =
     "properties_s prp;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( obj_plane_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( obj_plane_s )
 
 static void obj_plane_s_init_a( vd_t nc )
 {
@@ -613,7 +613,7 @@ static sc_t obj_sphere_s_def =
     "f3_t radius = 1.0;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( obj_sphere_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( obj_sphere_s )
 
 static void obj_sphere_s_init_a( vd_t nc )
 {
@@ -742,7 +742,7 @@ static sc_t obj_squaroid_s_def =
     "f3_t r = -1.0;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( obj_squaroid_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( obj_squaroid_s )
 
 static void obj_squaroid_s_init_a( vd_t nc )
 {
@@ -921,7 +921,7 @@ static sc_t obj_distance_s_def =
     "aware* distance;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( obj_distance_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( obj_distance_s )
 
 void obj_distance_s_set_distance( obj_distance_s* o, vc_t distance )
 {
@@ -1070,7 +1070,7 @@ static sc_t obj_pair_inside_s_def =
     "aware* o2;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( obj_pair_inside_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( obj_pair_inside_s )
 
 obj_pair_inside_s* obj_pair_inside_s_create_pair( vc_t o1, vc_t o2 )
 {
@@ -1232,7 +1232,7 @@ static sc_t obj_pair_outside_s_def =
     "aware* o2;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( obj_pair_outside_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( obj_pair_outside_s )
 
 obj_pair_outside_s* obj_pair_outside_s_create_pair( vc_t o1, vc_t o2 )
 {
@@ -1399,7 +1399,7 @@ static sc_t obj_neg_s_def =
     "aware* o1;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( obj_neg_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( obj_neg_s )
 
 obj_neg_s* obj_neg_s_create_neg( vc_t o1 )
 {
@@ -1484,7 +1484,7 @@ static sc_t obj_scale_s_def =
     "aware* o1;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( obj_scale_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( obj_scale_s )
 
 obj_scale_s* obj_scale_s_create_scale( vc_t o1, v3d_s scale )
 {
@@ -1838,17 +1838,17 @@ vd_t objects_signal( tp_t target, tp_t signal, vd_t object )
     {
         bcore_trait_set( entypeof( "spect_obj" ), entypeof( "bcore_inst" ) );
 
-        bcore_flect_define_creator( typeof( "envelope_s"         ), envelope_s_create_self );
-        bcore_flect_define_creator( typeof( "properties_s"       ), properties_s_create_self );
-        bcore_flect_define_creator( typeof( "spect_obj_s"        ), spect_obj_s_create_self  );
-        bcore_flect_define_creator( typeof( "obj_plane_s"        ), obj_plane_s_create_self  );
-        bcore_flect_define_creator( typeof( "obj_sphere_s"       ), obj_sphere_s_create_self );
-        bcore_flect_define_creator( typeof( "obj_squaroid_s"     ), obj_squaroid_s_create_self );
-        bcore_flect_define_creator( typeof( "obj_pair_inside_s"  ), obj_pair_inside_s_create_self  );
-        bcore_flect_define_creator( typeof( "obj_pair_outside_s" ), obj_pair_outside_s_create_self );
-        bcore_flect_define_creator( typeof( "obj_neg_s"          ), obj_neg_s_create_self  );
-        bcore_flect_define_creator( typeof( "obj_scale_s"        ), obj_scale_s_create_self  );
-        bcore_flect_define_creator( typeof( "obj_distance_s"     ), obj_distance_s_create_self  );
+        BCORE_REGISTER_FLECT( envelope_s );
+        BCORE_REGISTER_FLECT( properties_s );
+        BCORE_REGISTER_FLECT( spect_obj_s );
+        BCORE_REGISTER_FLECT( obj_plane_s );
+        BCORE_REGISTER_FLECT( obj_sphere_s );
+        BCORE_REGISTER_FLECT( obj_squaroid_s );
+        BCORE_REGISTER_FLECT( obj_pair_inside_s );
+        BCORE_REGISTER_FLECT( obj_pair_outside_s );
+        BCORE_REGISTER_FLECT( obj_neg_s );
+        BCORE_REGISTER_FLECT( obj_scale_s );
+        BCORE_REGISTER_FLECT( obj_distance_s );
     }
 
     return NULL;

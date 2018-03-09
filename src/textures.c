@@ -36,7 +36,7 @@ typedef struct spect_txm_s
     tp_t    o_type;
     clr_fp  fp_clr;
 } spect_txm_s;
-DEFINE_FUNCTIONS_OBJ_INST( spect_txm_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( spect_txm_s )
 
 /// common txm header
 typedef struct txm_hdr_s
@@ -87,7 +87,7 @@ static sc_t txm_plain_s_def =
     "cl_s color;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( txm_plain_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( txm_plain_s )
 
 static void txm_plain_s_init_a( vd_t nc )
 {
@@ -137,7 +137,7 @@ static sc_t txm_chess_s_def =
     "f3_t scale = 1.0;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( txm_chess_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( txm_chess_s )
 
 static cl_s txm_chess_s_clr( const txm_chess_s* o, vc_t obj, v3d_s pos )
 {
@@ -164,9 +164,9 @@ vd_t textures_signal( tp_t target, tp_t signal, vd_t object )
     {
         bcore_trait_set( entypeof( "spect_txm" ), entypeof( "bcore_inst" ) );
 
-        bcore_flect_define_creator( typeof( "spect_txm_s" ), spect_txm_s_create_self );
-        bcore_flect_define_creator( typeof( "txm_plain_s" ), txm_plain_s_create_self );
-        bcore_flect_define_creator( typeof( "txm_chess_s" ), txm_chess_s_create_self );
+        BCORE_REGISTER_FLECT( spect_txm_s );
+        BCORE_REGISTER_FLECT( txm_plain_s );
+        BCORE_REGISTER_FLECT( txm_chess_s );
     }
 
     return NULL;

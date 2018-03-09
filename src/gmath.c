@@ -120,7 +120,6 @@ vd_t gmath_signal( tp_t target, tp_t signal, vd_t object )
 
     if( signal == typeof( "init1" ) )
     {
-//        bcore_flect_define_creator( typeof( "image_cl_s"  ), image_cl_s_create_self );
     }
 
     return NULL;

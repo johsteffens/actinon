@@ -34,7 +34,7 @@ static sc_t distance_sphere_s_def =
     "fp_t fp_distance;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( distance_sphere_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( distance_sphere_s )
 
 f3_t distance_sphere_s_call( const distance_sphere_s* o, const v3d_s* pos )
 {
@@ -73,7 +73,7 @@ static sc_t distance_torus_s_def =
     "f3_t ex_radius = 0.5;" // ex-planar radius
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( distance_torus_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( distance_torus_s )
 
 void distance_torus_s_set_ex_radius( distance_torus_s* o, f3_t radius )
 {
@@ -114,8 +114,8 @@ vd_t distance_signal( tp_t target, tp_t signal, vd_t object )
     if( signal == typeof( "init1" ) )
     {
         bcore_trait_set( entypeof( "distance" ), entypeof( "bcore_inst" ) );
-        bcore_flect_define_creator( typeof( "distance_sphere_s" ), distance_sphere_s_create_self );
-        bcore_flect_define_creator( typeof( "distance_torus_s" ), distance_torus_s_create_self );
+        BCORE_REGISTER_FLECT( distance_sphere_s );
+        BCORE_REGISTER_FLECT( distance_torus_s );
     }
 
     return NULL;

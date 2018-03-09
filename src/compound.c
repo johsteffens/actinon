@@ -27,8 +27,8 @@
 /**********************************************************************************************************************/
 /// trans_data_s // ray transition data
 
-DEFINE_FUNCTIONS_OBJ_FLAT( trans_data_s )
-DEFINE_CREATE_SELF( trans_data_s, "trans_data_s = bcore_inst { v3d_s exit_nor; private vc_t exit_obj; private vc_t enter_obj; }" )
+BCORE_DEFINE_FUNCTIONS_OBJ_FLAT( trans_data_s )
+BCORE_DEFINE_CREATE_SELF( trans_data_s, "trans_data_s = bcore_inst { v3d_s exit_nor; private vc_t exit_obj; private vc_t enter_obj; }" )
 
 /**********************************************************************************************************************/
 /// compound_s
@@ -57,7 +57,7 @@ static sc_t compound_s_def =
     "aware * [] object_arr;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( compound_s )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( compound_s )
 
 sz_t compound_s_get_size( const compound_s* o )
 {
@@ -462,8 +462,8 @@ vd_t compound_signal( tp_t target, tp_t signal, vd_t object )
 
     if( signal == typeof( "init1" ) )
     {
-        bcore_flect_define_creator( typeof( "trans_data_s" ), trans_data_s_create_self );
-        bcore_flect_define_creator( typeof( "compound_s"   ), compound_s_create_self );
+        BCORE_REGISTER_FLECT( trans_data_s );
+        BCORE_REGISTER_FLECT( compound_s );
     }
 
     return NULL;

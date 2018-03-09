@@ -59,7 +59,7 @@ static inline f3_t f3_rnd1( u2_t* rv ) { return ( *rv = bcore_xsg1_u2( *rv ) ) *
 
 /// v2d_s (2D Vector)
 typedef struct v2d_s { f3_t x; f3_t y; } v2d_s;
-DECLARE_FUNCTIONS_OBJ( v2d_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( v2d_s )
 
 /// zero
 static inline v2d_s v2d_s_zero() { return ( v2d_s ) { .x = 0, .y = 0 }; }
@@ -112,7 +112,7 @@ static inline v2d_s v2d_s_con( v2d_s o )
 
 /// v3d_s (3D Vector)
 typedef struct v3d_s { f3_t x; f3_t y; f3_t z; } v3d_s;
-DECLARE_FUNCTIONS_OBJ( v3d_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( v3d_s )
 
 /// zero
 static inline v3d_s v3d_s_zero() { return ( v3d_s ) { .x = 0, .y = 0, .z = 0 }; }
@@ -243,7 +243,7 @@ static inline v3d_s v3d_s_reflection( v3d_s dir, v3d_s nor )
 
 /// m3d_s  (3x3 matrix)
 typedef struct m3d_s { v3d_s x, y, z; } m3d_s;
-DECLARE_FUNCTIONS_OBJ( m3d_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( m3d_s )
 
 // returns identity
 static inline m3d_s m3d_s_ident()
@@ -337,7 +337,7 @@ static inline m3d_s m3d_s_con_y( v3d_s v )
  */
 
 typedef struct ray_s { v3d_s p; v3d_s d; } ray_s;
-DECLARE_FUNCTIONS_OBJ( ray_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( ray_s )
 
 static inline ray_s ray_from_to( v3d_s src, v3d_s dst )
 {
@@ -355,7 +355,7 @@ static inline v3d_s ray_s_pos( const ray_s* o, f3_t offs )
 // cos_rs: cosine of angle between ray and surface
 
 typedef struct ray_cone_s { ray_s ray; f3_t cos_rs; } ray_cone_s;
-DECLARE_FUNCTIONS_OBJ( ray_cone_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( ray_cone_s )
 
 /// areal coverage (range 0...1: == height of unit-sphere-section)
 static inline f3_t areal_coverage( f3_t cos_rs ) { return 1 - cos_rs; }
@@ -365,7 +365,7 @@ static inline f3_t areal_coverage( f3_t cos_rs ) { return 1 - cos_rs; }
 
 #define TYPEOF_cl_s typeof( "cl_s" )
 typedef v3d_s cl_s;
-DECLARE_FUNCTIONS_OBJ( cl_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( cl_s )
 
 /// saturated
 static inline cl_s cl_s_sat( cl_s o, f3_t gamma )
@@ -402,7 +402,7 @@ typedef struct row_cl_s
     };
 } row_cl_s;
 
-DECLARE_FUNCTIONS_OBJ( row_cl_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( row_cl_s )
 
 void row_cl_s_set_size( row_cl_s* o, sz_t size, cl_s color );
 
@@ -430,7 +430,7 @@ typedef struct image_cl_s
     };
 } image_cl_s;
 
-DECLARE_FUNCTIONS_OBJ( image_cl_s )
+BCORE_DECLARE_FUNCTIONS_OBJ( image_cl_s )
 
 void image_cl_s_set_size( image_cl_s* o, sz_t w, sz_t h, cl_s color );
 

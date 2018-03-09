@@ -43,8 +43,8 @@ static sc_t map_s_def =
     "bcore_hmap_tp_sr_s m;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( map_s )
-DEFINE_CREATE_SELF( map_s, map_s_def )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( map_s )
+BCORE_DEFINE_CREATE_SELF( map_s, map_s_def )
 
 bl_t map_s_exists( const map_s* o, tp_t key )
 {
@@ -240,8 +240,8 @@ static sc_t arr_s_def =
     "bcore_arr_sr_s a;"
 "}";
 
-DEFINE_FUNCTIONS_OBJ_INST( arr_s )
-DEFINE_CREATE_SELF( arr_s, arr_s_def )
+BCORE_DEFINE_FUNCTIONS_OBJ_INST( arr_s )
+BCORE_DEFINE_CREATE_SELF( arr_s, arr_s_def )
 
 sz_t arr_s_get_size( const arr_s* o )
 {
@@ -525,8 +525,8 @@ vd_t container_signal( tp_t target, tp_t signal, vd_t object )
 
     if( signal == typeof( "init1" ) )
     {
-        bcore_flect_define_creator( typeof( "map_s" ), map_s_create_self );
-        bcore_flect_define_creator( typeof( "arr_s" ), arr_s_create_self );
+        BCORE_REGISTER_FLECT( map_s );
+        BCORE_REGISTER_FLECT( arr_s );
     }
 
     return NULL;
