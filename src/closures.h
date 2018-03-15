@@ -19,14 +19,13 @@
 #ifndef CLOSURES_H
 #define CLOSURES_H
 
-#include "bclos_spect_closure.h"
-#include "bclos_quicktypes.h"
-#include "bcore_quicktypes.h"
+#include "bcore_std.h"
+#include "bclos_std.h"
 
 #include "quicktypes.h"
 
 /**********************************************************************************************************************/
 
-vd_t closures_signal( tp_t target, tp_t signal, vd_t object );
+vd_t closures_signal_handler( const bcore_signal_s* o );
 
 #endif // CLOSURES_H

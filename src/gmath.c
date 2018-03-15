@@ -114,14 +114,17 @@ void fresnel_refraction( v3d_s dir_i, v3d_s exit_nor, f3_t trix, v3d_s* dir )
 
 /**********************************************************************************************************************/
 
-vd_t gmath_signal( tp_t target, tp_t signal, vd_t object )
+vd_t gmath_signal_handler( const bcore_signal_s* o )
 {
-    if( target != typeof( "all" ) && target != typeof( "gmath" ) ) return NULL;
-
-    if( signal == typeof( "init1" ) )
+    switch( bcore_signal_s_switch_type( o, typeof( "gmath" ) ) )
     {
-    }
+        case TYPEOF_init1:
+        {
+        }
+        break;
 
+        default: break;
+    }
     return NULL;
 }
 

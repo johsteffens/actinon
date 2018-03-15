@@ -456,16 +456,19 @@ sr_s compound_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
 
 /**********************************************************************************************************************/
 
-vd_t compound_signal( tp_t target, tp_t signal, vd_t object )
+vd_t compound_signal_handler( const bcore_signal_s* o )
 {
-    if( target != typeof( "all" ) && target != typeof( "compound" ) ) return NULL;
-
-    if( signal == typeof( "init1" ) )
+    switch( bcore_signal_s_switch_type( o, typeof( "compound" ) ) )
     {
-        BCORE_REGISTER_FLECT( trans_data_s );
-        BCORE_REGISTER_FLECT( compound_s );
-    }
+        case TYPEOF_init1:
+        {
+            BCORE_REGISTER_FLECT( trans_data_s );
+            BCORE_REGISTER_FLECT( compound_s );
+        }
+        break;
 
+        default: break;
+    }
     return NULL;
 }
 

@@ -15,14 +15,7 @@
 
 #include <time.h>
 
-#include "bcore.h"
-#include "bcore_signal.h"
-#include "bcore_st.h"
-#include "bcore_name_manager.h"
-#include "bcore_life.h"
-#include "bcore_txt_ml.h"
-#include "bcore_spect_interpreter.h"
-#include "bclos_signal.h"
+#include "bcore_std.h"
 
 #include "vectors.h"
 #include "objects.h"
@@ -36,41 +29,37 @@
 #include "quicktypes.h"
 #include "distance.h"
 
-void selftest( const char* name )
+vd_t main_signal_handler( const bcore_signal_s* o )
 {
-    st_s* log = bcore_signal( typeof( name ), typeof( "selftest" ), NULL );
-    st_s_print_d( log );
-}
-
-vd_t main_signal( tp_t target, tp_t signal, vd_t object )
-{
-    vd_t ret = NULL;
-    if( ( ret = vectors_signal(     target, signal, object ) ) ) return ret;
-    if( ( ret = textures_signal(    target, signal, object ) ) ) return ret;
-    if( ( ret = objects_signal(     target, signal, object ) ) ) return ret;
-    if( ( ret = compound_signal(    target, signal, object ) ) ) return ret;
-    if( ( ret = scene_signal(       target, signal, object ) ) ) return ret;
-    if( ( ret = interpreter_signal( target, signal, object ) ) ) return ret;
-    if( ( ret = container_signal(   target, signal, object ) ) ) return ret;
-    if( ( ret = closures_signal(    target, signal, object ) ) ) return ret;
-    if( ( ret = gmath_signal(       target, signal, object ) ) ) return ret;
-    if( ( ret = distance_signal(    target, signal, object ) ) ) return ret;
-    return ret;
+    bcore_fp_signal_handler arr[] =
+    {
+        vectors_signal_handler,
+        textures_signal_handler,
+        objects_signal_handler,
+        compound_signal_handler,
+        scene_signal_handler,
+        interpreter_signal_handler,
+        container_signal_handler,
+        closures_signal_handler,
+        gmath_signal_handler,
+        distance_signal_handler,
+    };
+    return bcore_signal_s_broadcast( o, arr, sizeof( arr ) / sizeof( bcore_fp_signal_handler ) );
 }
 
 void run_selftest()
 {
-    bcore_init_library( bclos_signal );
-    bcore_init_library( main_signal );
-    st_s_print_d( main_signal( typeof( "all" ), typeof( "selftest" ), NULL ) );
+    bcore_register_signal_handler( bclos_signal_handler );
+    bcore_register_signal_handler( main_signal_handler );
+    st_s_print_d( bcore_run_signal_selftest( typeof( "interpreter" ), NULL ) );
     bcore_down( false );
     exit( 0 );
 }
 
 void run_quicktypes()
 {
-    bcore_init_library( bclos_signal );
-    bcore_init_library( main_signal );
+    bcore_register_signal_handler( bclos_signal_handler );
+    bcore_register_signal_handler( main_signal_handler );
     quicktypes_to_stdout( NULL );
     bcore_down( false );
     exit( 0 );
@@ -81,8 +70,8 @@ int main( int argc, const char** argv )
 //    run_selftest();
 //    run_quicktypes();
 
-    bcore_init_library( bclos_signal );
-    bcore_init_library( main_signal );
+    bcore_register_signal_handler( bclos_signal_handler );
+    bcore_register_signal_handler( main_signal_handler );
 
     bcore_msg( "ACTINON: Ray-tracer.\n" );
     bcore_msg( "Copyright (C) 2017 Johannes B. Steffens.\n\n" );

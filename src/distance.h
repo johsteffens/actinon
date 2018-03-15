@@ -18,6 +18,8 @@
 #ifndef DISTANCE_H
 #define DISTANCE_H
 
+#include "bcore_std.h"
+
 #include "quicktypes.h"
 #include "vectors.h"
 
@@ -46,7 +48,7 @@ void distance_torus_s_set_ex_radius( distance_torus_s* o, f3_t radius );
 
 /**********************************************************************************************************************/
 
-vd_t distance_signal( tp_t target, tp_t signal, vd_t object );
+vd_t distance_signal_handler( const bcore_signal_s* o );
 
 #endif // DISTANCE_H
 

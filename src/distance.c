@@ -107,17 +107,20 @@ static bcore_flect_self_s* distance_torus_s_create_self( void )
 
 /**********************************************************************************************************************/
 
-vd_t distance_signal( tp_t target, tp_t signal, vd_t object )
+vd_t distance_signal_handler( const bcore_signal_s* o )
 {
-    if( target != typeof( "all" ) && target != typeof( "distance" ) ) return NULL;
-
-    if( signal == typeof( "init1" ) )
+    switch( bcore_signal_s_switch_type( o, typeof( "distance" ) ) )
     {
-        bcore_trait_set( entypeof( "distance" ), entypeof( "bcore_inst" ) );
-        BCORE_REGISTER_FLECT( distance_sphere_s );
-        BCORE_REGISTER_FLECT( distance_torus_s );
-    }
+        case TYPEOF_init1:
+        {
+            bcore_trait_set( entypeof( "distance" ), entypeof( "bcore_inst" ) );
+            BCORE_REGISTER_FLECT( distance_sphere_s );
+            BCORE_REGISTER_FLECT( distance_torus_s );
+        }
+        break;
 
+        default: break;
+    }
     return NULL;
 }
 

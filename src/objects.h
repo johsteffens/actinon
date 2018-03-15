@@ -18,7 +18,7 @@
 #ifndef OBJECTS_H
 #define OBJECTS_H
 
-#include "bcore_arr.h"
+#include "bcore_std.h"
 
 #include "vectors.h"
 #include "interpreter.h"
@@ -225,6 +225,6 @@ obj_scale_s* obj_scale_s_create_scale( vc_t o1, v3d_s scale );
 
 /**********************************************************************************************************************/
 
-vd_t objects_signal( tp_t target, tp_t signal, vd_t object );
+vd_t objects_signal_handler( const bcore_signal_s* o );
 
 #endif // OBJECTS_H

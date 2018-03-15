@@ -1830,27 +1830,30 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
 
 /**********************************************************************************************************************/
 
-vd_t objects_signal( tp_t target, tp_t signal, vd_t object )
+vd_t objects_signal_handler( const bcore_signal_s* o )
 {
-    if( target != typeof( "all" ) && target != typeof( "objects" ) ) return NULL;
-
-    if( signal == typeof( "init1" ) )
+    switch( bcore_signal_s_switch_type( o, typeof( "objects" ) ) )
     {
-        bcore_trait_set( entypeof( "spect_obj" ), entypeof( "bcore_inst" ) );
+        case TYPEOF_init1:
+        {
+            bcore_trait_set( entypeof( "spect_obj" ), entypeof( "bcore_inst" ) );
 
-        BCORE_REGISTER_FLECT( envelope_s );
-        BCORE_REGISTER_FLECT( properties_s );
-        BCORE_REGISTER_FLECT( spect_obj_s );
-        BCORE_REGISTER_FLECT( obj_plane_s );
-        BCORE_REGISTER_FLECT( obj_sphere_s );
-        BCORE_REGISTER_FLECT( obj_squaroid_s );
-        BCORE_REGISTER_FLECT( obj_pair_inside_s );
-        BCORE_REGISTER_FLECT( obj_pair_outside_s );
-        BCORE_REGISTER_FLECT( obj_neg_s );
-        BCORE_REGISTER_FLECT( obj_scale_s );
-        BCORE_REGISTER_FLECT( obj_distance_s );
+            BCORE_REGISTER_FLECT( envelope_s );
+            BCORE_REGISTER_FLECT( properties_s );
+            BCORE_REGISTER_FLECT( spect_obj_s );
+            BCORE_REGISTER_FLECT( obj_plane_s );
+            BCORE_REGISTER_FLECT( obj_sphere_s );
+            BCORE_REGISTER_FLECT( obj_squaroid_s );
+            BCORE_REGISTER_FLECT( obj_pair_inside_s );
+            BCORE_REGISTER_FLECT( obj_pair_outside_s );
+            BCORE_REGISTER_FLECT( obj_neg_s );
+            BCORE_REGISTER_FLECT( obj_scale_s );
+            BCORE_REGISTER_FLECT( obj_distance_s );
+        }
+        break;
+
+        default: break;
     }
-
     return NULL;
 }
 

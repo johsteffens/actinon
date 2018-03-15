@@ -18,6 +18,8 @@
 #ifndef GMATH_H
 #define GMATH_H
 
+#include "bcore_std.h"
+
 #include "quicktypes.h"
 #include "vectors.h"
 
@@ -135,7 +137,7 @@ static inline bl_t sphere_intersects_half_sphere( v3d_s pos, f3_t r, const ray_s
 
 /**********************************************************************************************************************/
 
-vd_t gmath_signal( tp_t target, tp_t signal, vd_t object );
+vd_t gmath_signal_handler( const bcore_signal_s* o );
 
 #endif // GMATH_H
 

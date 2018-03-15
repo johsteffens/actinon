@@ -18,10 +18,8 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
-#include "bcore_features.h"
-#include "bcore_hmap.h"
-#include "bcore_hmap_tp_sr.h"
-#include "bclos_spect_closure.h"
+#include "bcore_std.h"
+#include "bclos_std.h"
 
 #include "quicktypes.h"
 
@@ -150,7 +148,7 @@ void mclosure_s_define( mclosure_s* o, bclos_frame_s* frame, bclos_signature_s* 
 
 /**********************************************************************************************************************/
 
-vd_t interpreter_signal( tp_t target, tp_t signal, vd_t object );
+vd_t interpreter_signal_handler( const bcore_signal_s* o );
 
 #endif // INTERPRETER_H
 

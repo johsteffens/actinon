@@ -18,6 +18,8 @@
 #ifndef SCENE_H
 #define SCENE_H
 
+#include "bcore_std.h"
+
 #include "vectors.h"
 #include "interpreter.h"
 #include "quicktypes.h"
@@ -49,6 +51,6 @@ void scene_s_create_image_file( scene_s* o, sc_t file );
 
 /**********************************************************************************************************************/
 
-vd_t scene_signal( tp_t target, tp_t signal, vd_t object );
+vd_t scene_signal_handler( const bcore_signal_s* o );
 
 #endif // SCENE_H

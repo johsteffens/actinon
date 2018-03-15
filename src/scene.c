@@ -988,19 +988,22 @@ void scene_s_create_image_file( scene_s* o, sc_t file )
 
 /**********************************************************************************************************************/
 
-vd_t scene_signal( tp_t target, tp_t signal, vd_t object )
+vd_t scene_signal_handler( const bcore_signal_s* o )
 {
-    if( target != typeof( "all" ) && target != typeof( "scene" ) ) return NULL;
-
-    if( signal == typeof( "init1" ) )
+    switch( bcore_signal_s_switch_type( o, typeof( "scene" ) ) )
     {
-        BCORE_REGISTER_FLECT( scene_s );
-        BCORE_REGISTER_FLECT( image_cps_s );
-        BCORE_REGISTER_FLECT( lum_s );
-        BCORE_REGISTER_FLECT( lum_arr_s );
-        BCORE_REGISTER_FLECT( lum_image_s );
-    }
+        case TYPEOF_init1:
+        {
+            BCORE_REGISTER_FLECT( scene_s );
+            BCORE_REGISTER_FLECT( image_cps_s );
+            BCORE_REGISTER_FLECT( lum_s );
+            BCORE_REGISTER_FLECT( lum_arr_s );
+            BCORE_REGISTER_FLECT( lum_image_s );
+        }
+        break;
 
+        default: break;
+    }
     return NULL;
 }
 

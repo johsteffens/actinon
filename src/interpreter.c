@@ -1900,22 +1900,27 @@ st_s* mclosure_selftest()
 
 /**********************************************************************************************************************/
 
-vd_t interpreter_signal( tp_t target, tp_t signal, vd_t object )
+vd_t interpreter_signal_handler( const bcore_signal_s* o )
 {
-    if( target != typeof( "all" ) && target != typeof( "interpreter" ) ) return NULL;
-
-    if( signal == typeof( "init1" ) )
+    switch( bcore_signal_s_switch_type( o, typeof( "interpreter" ) ) )
     {
-        BCORE_REGISTER_FLECT( mtype_s );
-        BCORE_REGISTER_FLECT( mcode_s );
-        BCORE_REGISTER_FLECT( meval_s );
-        BCORE_REGISTER_FLECT( mclosure_s );
-    }
-    else if( signal == typeof( "selftest" ) )
-    {
-        return mclosure_selftest();
-    }
+        case TYPEOF_init1:
+        {
+            BCORE_REGISTER_FLECT( mtype_s );
+            BCORE_REGISTER_FLECT( mcode_s );
+            BCORE_REGISTER_FLECT( meval_s );
+            BCORE_REGISTER_FLECT( mclosure_s );
+        }
+        break;
 
+        case TYPEOF_selftest:
+        {
+            return mclosure_selftest();
+        }
+        break;
+
+        default: break;
+    }
     return NULL;
 }
 

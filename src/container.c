@@ -519,16 +519,19 @@ sr_s arr_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
 
 /**********************************************************************************************************************/
 
-vd_t container_signal( tp_t target, tp_t signal, vd_t object )
+vd_t container_signal_handler( const bcore_signal_s* o )
 {
-    if( target != typeof( "all" ) && target != typeof( "container" ) ) return NULL;
-
-    if( signal == typeof( "init1" ) )
+    switch( bcore_signal_s_switch_type( o, typeof( "container" ) ) )
     {
-        BCORE_REGISTER_FLECT( map_s );
-        BCORE_REGISTER_FLECT( arr_s );
-    }
+        case TYPEOF_init1:
+        {
+            BCORE_REGISTER_FLECT( map_s );
+            BCORE_REGISTER_FLECT( arr_s );
+        }
+        break;
 
+        default: break;
+    }
     return NULL;
 }
 

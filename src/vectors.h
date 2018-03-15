@@ -19,11 +19,7 @@
 #define VECTORS_H
 
 #include <math.h>
-#include "bcore_features.h"
-#include "bcore_types.h"
-#include "bcore_spect.h"
-#include "bcore_name_manager.h"
-#include "bcore_spect_inst.h"
+#include "bcore_std.h"
 
 #include "quicktypes.h"
 
@@ -463,6 +459,6 @@ void image_cl_s_saturate( image_cl_s* o, f3_t gamma );
 
 /**********************************************************************************************************************/
 
-vd_t vectors_signal( tp_t target, tp_t signal, vd_t object );
+vd_t vectors_signal_handler( const bcore_signal_s* o );
 
 #endif // VECTORS_H

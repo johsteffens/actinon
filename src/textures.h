@@ -18,6 +18,7 @@
 #ifndef TEXTURES_H
 #define TEXTURES_H
 
+#include "bcore_std.h"
 #include "vectors.h"
 #include "quicktypes.h"
 
@@ -37,6 +38,6 @@ cl_s txm_plain_clr( vc_t o );
 
 /**********************************************************************************************************************/
 
-vd_t textures_signal( tp_t target, tp_t signal, vd_t object );
+vd_t textures_signal_handler( const bcore_signal_s* o );
 
 #endif // TEXTURES_H

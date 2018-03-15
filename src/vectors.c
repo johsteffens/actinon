@@ -92,22 +92,25 @@ void image_cl_s_saturate( image_cl_s* o, f3_t gamma )
 
 /**********************************************************************************************************************/
 
-vd_t vectors_signal( tp_t target, tp_t signal, vd_t object )
+vd_t vectors_signal_handler( const bcore_signal_s* o )
 {
-    if( target != typeof( "all" ) && target != typeof( "vectors" ) ) return NULL;
-
-    if( signal == typeof( "init1" ) )
+    switch( bcore_signal_s_switch_type( o, typeof( "vectors" ) ) )
     {
-        BCORE_REGISTER_FLECT( v2d_s );
-        BCORE_REGISTER_FLECT( v3d_s );
-        BCORE_REGISTER_FLECT( m3d_s );
-        BCORE_REGISTER_FLECT( ray_s );
-        BCORE_REGISTER_FLECT( ray_cone_s );
-        BCORE_REGISTER_FLECT( cl_s );
-        BCORE_REGISTER_FLECT( row_cl_s );
-        BCORE_REGISTER_FLECT( image_cl_s );
-    }
+        case TYPEOF_init1:
+        {
+            BCORE_REGISTER_FLECT( v2d_s );
+            BCORE_REGISTER_FLECT( v3d_s );
+            BCORE_REGISTER_FLECT( m3d_s );
+            BCORE_REGISTER_FLECT( ray_s );
+            BCORE_REGISTER_FLECT( ray_cone_s );
+            BCORE_REGISTER_FLECT( cl_s );
+            BCORE_REGISTER_FLECT( row_cl_s );
+            BCORE_REGISTER_FLECT( image_cl_s );
+        }
+        break;
 
+        default: break;
+    }
     return NULL;
 }
 

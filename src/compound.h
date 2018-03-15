@@ -18,6 +18,8 @@
 #ifndef COMPOUND_H
 #define COMPOUND_H
 
+#include "bcore_std.h"
+
 #include "quicktypes.h"
 #include "bcore_arr.h"
 #include "vectors.h"
@@ -72,6 +74,6 @@ sr_s compound_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key );
 
 /**********************************************************************************************************************/
 
-vd_t compound_signal( tp_t target, tp_t signal, vd_t object );
+vd_t compound_signal_handler( const bcore_signal_s* o );
 
 #endif // COMPOUND_H

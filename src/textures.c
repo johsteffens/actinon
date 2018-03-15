@@ -156,19 +156,22 @@ static bcore_flect_self_s* txm_chess_s_create_self( void )
 
 /**********************************************************************************************************************/
 
-vd_t textures_signal( tp_t target, tp_t signal, vd_t object )
+vd_t textures_signal_handler( const bcore_signal_s* o )
 {
-    if( target != typeof( "all" ) && target != typeof( "textures" ) ) return NULL;
-
-    if( signal == typeof( "init1" ) )
+    switch( bcore_signal_s_switch_type( o, typeof( "textures" ) ) )
     {
-        bcore_trait_set( entypeof( "spect_txm" ), entypeof( "bcore_inst" ) );
+        case TYPEOF_init1:
+        {
+            bcore_trait_set( entypeof( "spect_txm" ), entypeof( "bcore_inst" ) );
 
-        BCORE_REGISTER_FLECT( spect_txm_s );
-        BCORE_REGISTER_FLECT( txm_plain_s );
-        BCORE_REGISTER_FLECT( txm_chess_s );
+            BCORE_REGISTER_FLECT( spect_txm_s );
+            BCORE_REGISTER_FLECT( txm_plain_s );
+            BCORE_REGISTER_FLECT( txm_chess_s );
+        }
+        break;
+
+        default: break;
     }
-
     return NULL;
 }
 

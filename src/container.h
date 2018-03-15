@@ -18,9 +18,7 @@
 #ifndef CONTAINER_H
 #define CONTAINER_H
 
-#include "bcore_features.h"
-#include "bcore_hmap_tp_sr.h"
-#include "bcore_arr.h"
+#include "bcore_std.h"
 
 #include "interpreter.h"
 #include "quicktypes.h"
@@ -75,7 +73,7 @@ sr_s arr_s_meval_key( sr_s* o, meval_s* ev, tp_t key );
 
 /**********************************************************************************************************************/
 
-vd_t container_signal( tp_t target, tp_t signal, vd_t object );
+vd_t container_signal_handler( const bcore_signal_s* o );
 
 #endif // CONTAINER_H
 

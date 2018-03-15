@@ -18,8 +18,7 @@
 #ifndef QUICKTYPES_H
 #define QUICKTYPES_H
 
-#include "bcore_name_manager.h"
-#include "bcore_quicktypes.h"
+#include "bcore_std.h"
 
 /// This function computes and formats defines below to stdout
 void quicktypes_to_stdout( tp_t (*hash)( sc_t name ) );
