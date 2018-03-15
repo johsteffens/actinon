@@ -109,7 +109,7 @@ static bcore_flect_self_s* distance_torus_s_create_self( void )
 
 vd_t distance_signal_handler( const bcore_signal_s* o )
 {
-    switch( bcore_signal_s_switch_type( o, typeof( "distance" ) ) )
+    switch( bcore_signal_s_handle_type( o, typeof( "distance" ) ) )
     {
         case TYPEOF_init1:
         {

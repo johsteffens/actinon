@@ -1902,7 +1902,7 @@ st_s* mclosure_selftest()
 
 vd_t interpreter_signal_handler( const bcore_signal_s* o )
 {
-    switch( bcore_signal_s_switch_type( o, typeof( "interpreter" ) ) )
+    switch( bcore_signal_s_handle_type( o, typeof( "interpreter" ) ) )
     {
         case TYPEOF_init1:
         {

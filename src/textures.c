@@ -158,7 +158,7 @@ static bcore_flect_self_s* txm_chess_s_create_self( void )
 
 vd_t textures_signal_handler( const bcore_signal_s* o )
 {
-    switch( bcore_signal_s_switch_type( o, typeof( "textures" ) ) )
+    switch( bcore_signal_s_handle_type( o, typeof( "textures" ) ) )
     {
         case TYPEOF_init1:
         {

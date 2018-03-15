@@ -990,7 +990,7 @@ void scene_s_create_image_file( scene_s* o, sc_t file )
 
 vd_t scene_signal_handler( const bcore_signal_s* o )
 {
-    switch( bcore_signal_s_switch_type( o, typeof( "scene" ) ) )
+    switch( bcore_signal_s_handle_type( o, typeof( "scene" ) ) )
     {
         case TYPEOF_init1:
         {

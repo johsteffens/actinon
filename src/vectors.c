@@ -94,7 +94,7 @@ void image_cl_s_saturate( image_cl_s* o, f3_t gamma )
 
 vd_t vectors_signal_handler( const bcore_signal_s* o )
 {
-    switch( bcore_signal_s_switch_type( o, typeof( "vectors" ) ) )
+    switch( bcore_signal_s_handle_type( o, typeof( "vectors" ) ) )
     {
         case TYPEOF_init1:
         {

@@ -533,7 +533,7 @@ BCLOS_DEFINE_STD_CLOSURE( create_torus_s, "spect_obj create_torus_s( num radius1
 
 vd_t closures_signal_handler( const bcore_signal_s* o )
 {
-    switch( bcore_signal_s_switch_type( o, typeof( "closures" ) ) )
+    switch( bcore_signal_s_handle_type( o, typeof( "closures" ) ) )
     {
         case TYPEOF_init1:
         {

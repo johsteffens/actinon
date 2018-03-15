@@ -521,7 +521,7 @@ sr_s arr_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
 
 vd_t container_signal_handler( const bcore_signal_s* o )
 {
-    switch( bcore_signal_s_switch_type( o, typeof( "container" ) ) )
+    switch( bcore_signal_s_handle_type( o, typeof( "container" ) ) )
     {
         case TYPEOF_init1:
         {

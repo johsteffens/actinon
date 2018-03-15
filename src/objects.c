@@ -1832,7 +1832,7 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
 
 vd_t objects_signal_handler( const bcore_signal_s* o )
 {
-    switch( bcore_signal_s_switch_type( o, typeof( "objects" ) ) )
+    switch( bcore_signal_s_handle_type( o, typeof( "objects" ) ) )
     {
         case TYPEOF_init1:
         {

@@ -458,7 +458,7 @@ sr_s compound_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
 
 vd_t compound_signal_handler( const bcore_signal_s* o )
 {
-    switch( bcore_signal_s_switch_type( o, typeof( "compound" ) ) )
+    switch( bcore_signal_s_handle_type( o, typeof( "compound" ) ) )
     {
         case TYPEOF_init1:
         {
