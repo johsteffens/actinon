@@ -817,18 +817,18 @@ typedef struct lum_machine_s
     const scene_s* scene;
     lum_arr_s* lum_arr;
     sz_t index;
-    bcore_mutex_t mutex;
+    bcore_mutex_s mutex;
 } lum_machine_s;
 
 void lum_machine_s_init( lum_machine_s* o )
 {
     bcore_memzero( o, sizeof( *o ) );
-    bcore_mutex_init( &o->mutex );
+    bcore_mutex_s_init( &o->mutex );
 }
 
 void lum_machine_s_down( lum_machine_s* o )
 {
-    bcore_mutex_down( &o->mutex );
+    bcore_mutex_s_down( &o->mutex );
 }
 
 BCORE_DEFINE_FUNCTION_CREATE( lum_machine_s )
@@ -844,11 +844,11 @@ lum_machine_s* lum_machine_s_plant( const scene_s* scene, lum_arr_s* lum_arr )
 
 sz_t lum_machine_s_get_index( lum_machine_s* o )
 {
-    bcore_mutex_lock( &o->mutex );
+    bcore_mutex_s_lock( &o->mutex );
     sz_t index = o->index++;
     if( ( ( index + 1 ) %  5000 ) == 0 ) bcore_msg( "." );
     if( ( ( index + 1 ) % 50000 ) == 0 ) bcore_msg( "%5.1f%% ", ( 100.0 * index ) / o->lum_arr->size );
-    bcore_mutex_unlock( &o->mutex );
+    bcore_mutex_s_unlock( &o->mutex );
     return index;
 }
 
@@ -913,9 +913,15 @@ void lum_machine_s_run( const scene_s* scene, lum_arr_s* lum_arr )
 {
     lum_machine_s* machine = lum_machine_s_plant( scene, lum_arr );
     sz_t threads = scene->threads > 0 ? scene->threads : 1;
-    pthread_t* thread_arr = bcore_u_alloc( sizeof( pthread_t ), NULL, threads, NULL );
-    for( sz_t i = 0; i < threads; i++ ) pthread_create( &thread_arr[ i ], NULL, ( vd_t(*)(vd_t) )lum_machine_s_func, machine );
-    for( sz_t i = 0; i < threads; i++ ) pthread_join( thread_arr[ i ], NULL );
+
+//    pthread_t* thread_arr = bcore_u_alloc( sizeof( pthread_t ), NULL, threads, NULL );
+//    for( sz_t i = 0; i < threads; i++ ) pthread_create( &thread_arr[ i ], NULL, ( vd_t(*)(vd_t) )lum_machine_s_func, machine );
+//    for( sz_t i = 0; i < threads; i++ ) pthread_join( thread_arr[ i ], NULL );
+
+    bcore_thread_s* thread_arr = bcore_u_alloc( sizeof( bcore_thread_s ), NULL, threads, NULL );
+    for( sz_t i = 0; i < threads; i++ ) thread_arr[ i ] = bcore_thread_call( ( vd_t(*)(vd_t) )lum_machine_s_func, machine );
+    for( sz_t i = 0; i < threads; i++ ) bcore_thread_join( thread_arr[ i ] );
+
     bcore_free( thread_arr );
     lum_machine_s_discard( machine );
 }
