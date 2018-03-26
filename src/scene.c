@@ -52,7 +52,7 @@ typedef struct image_cps_s
     sz_t w, h; // width, height,
     union
     {
-        bcore_static_array_s arr;
+        bcore_array_dyn_solid_static_s arr;
         struct
         {
             u2_t* data;
@@ -677,7 +677,7 @@ typedef struct lum_arr_s
     aware_t _;
     union
     {
-        bcore_static_array_s arr;
+        bcore_array_dyn_solid_static_s arr;
         struct
         {
             lum_s* data;

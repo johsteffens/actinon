@@ -389,7 +389,7 @@ typedef struct row_cl_s
     aware_t _;
     union
     {
-        bcore_static_array_s arr;
+        bcore_array_dyn_solid_static_s arr;
         struct
         {
             cl_s* data;
@@ -417,7 +417,7 @@ typedef struct image_cl_s
     sz_t w, h; // width, height,
     union
     {
-        bcore_static_array_s arr;
+        bcore_array_dyn_solid_static_s arr;
         struct
         {
             cl_s* data;

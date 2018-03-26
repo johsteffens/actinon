@@ -39,7 +39,7 @@ typedef struct compound_s
     envelope_s* envelope;
     union
     {
-        bcore_aware_link_array_s arr;
+        bcore_array_dyn_link_aware_s arr;
         struct
         {
             vd_t* data;
