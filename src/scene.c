@@ -203,10 +203,10 @@ void scene_s_init_a( vd_t nc )
     nc_l->o->matter = compound_s_create();
 }
 
-static bcore_flect_self_s* scene_s_create_self( void )
+static bcore_self_s* scene_s_create_self( void )
 {
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( scene_s_def, sizeof( scene_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )scene_s_init_a, "ap_t", "init" );
+    bcore_self_s* self = bcore_self_s_build_parse_sc( scene_s_def, sizeof( scene_s ) );
+    bcore_self_s_push_ns_func( self, ( fp_t )scene_s_init_a, "ap_t", "init" );
     return self;
 }
 

@@ -557,9 +557,9 @@ static sc_t meval_s_def =
 
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( meval_s )
 
-static bcore_flect_self_s* meval_s_create_self( void )
+static bcore_self_s* meval_s_create_self( void )
 {
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( meval_s_def, sizeof( meval_s ) );
+    bcore_self_s* self = bcore_self_s_build_parse_sc( meval_s_def, sizeof( meval_s ) );
     return self;
 }
 
@@ -1879,13 +1879,13 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     return return_obj;
 }
 
-static bcore_flect_self_s* mclosure_s_create_self( void )
+static bcore_self_s* mclosure_s_create_self( void )
 {
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( mclosure_s_def, sizeof( mclosure_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )mclosure_s_copy_a,    "ap_t", "copy" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )mclosure_s_call,      "bclos_closure_fp_call", "call" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )mclosure_s_signature, "bclos_closure_fp_sig",  "sig"  );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )mclosure_s_interpret, "bcore_fp_interpret", "interpret" );
+    bcore_self_s* self = bcore_self_s_build_parse_sc( mclosure_s_def, sizeof( mclosure_s ) );
+    bcore_self_s_push_ns_func( self, ( fp_t )mclosure_s_copy_a,    "ap_t", "copy" );
+    bcore_self_s_push_ns_func( self, ( fp_t )mclosure_s_call,      "bclos_closure_fp_call", "call" );
+    bcore_self_s_push_ns_func( self, ( fp_t )mclosure_s_signature, "bclos_closure_fp_sig",  "sig"  );
+    bcore_self_s_push_ns_func( self, ( fp_t )mclosure_s_interpret, "bcore_fp_interpret", "interpret" );
 
     return self;
 }

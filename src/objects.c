@@ -198,10 +198,10 @@ void properties_s_scale( properties_s* o, f3_t fac )
     if( o->envelope ) envelope_s_scale( o->envelope, fac );
 }
 
-static bcore_flect_self_s* properties_s_create_self( void )
+static bcore_self_s* properties_s_create_self( void )
 {
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( properties_s_def, sizeof( properties_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )properties_s_init, "bcore_fp_init", "init" );
+    bcore_self_s* self = bcore_self_s_build_parse_sc( properties_s_def, sizeof( properties_s ) );
+    bcore_self_s_push_ns_func( self, ( fp_t )properties_s_init, "bcore_fp_init", "init" );
     return self;
 }
 
@@ -241,20 +241,20 @@ BCORE_DEFINE_FUNCTIONS_OBJ_INST( spect_obj_s )
 
 const spect_obj_s* obj_get_spect( vc_t o ) { return ( ( obj_hdr_s* )o )->p; }
 
-static spect_obj_s* spect_obj_s_create_from_self( const bcore_flect_self_s* self )
+static spect_obj_s* spect_obj_s_create_from_self( const bcore_self_s* self )
 {
     assert( self != NULL );
     spect_obj_s* o = spect_obj_s_create();
     o->o_type = self->type;
-    o->fp_projection   = ( projection_fp   )bcore_flect_self_s_try_external_fp( self, entypeof( "projection_fp"   ), 0 );
-    o->fp_fov          = ( fov_fp          )bcore_flect_self_s_try_external_fp( self, entypeof( "fov_fp"          ), 0 );
-    o->fp_ray_hit      = ( ray_hit_fp      )bcore_flect_self_s_get_external_fp( self, entypeof( "ray_hit_fp"      ), 0 );
-    o->fp_side         = ( side_fp         )bcore_flect_self_s_get_external_fp( self, entypeof( "side_fp"         ), 0 );
-    o->fp_is_in_fov    = ( is_in_fov_fp    )bcore_flect_self_s_try_external_fp( self, entypeof( "is_in_fov_fp"    ), 0 );
-    o->fp_is_reachable = ( is_reachable_fp )bcore_flect_self_s_try_external_fp( self, entypeof( "is_reachable_fp" ), 0 );
-    o->fp_move         = ( move_fp         )bcore_flect_self_s_get_external_fp( self, entypeof( "move_fp"         ), 0 );
-    o->fp_rotate       = ( rotate_fp       )bcore_flect_self_s_get_external_fp( self, entypeof( "rotate_fp"       ), 0 );
-    o->fp_scale        = ( scale_fp        )bcore_flect_self_s_get_external_fp( self, entypeof( "scale_fp"        ), 0 );
+    o->fp_projection   = ( projection_fp   )bcore_self_s_try_external_fp( self, entypeof( "projection_fp"   ), 0 );
+    o->fp_fov          = ( fov_fp          )bcore_self_s_try_external_fp( self, entypeof( "fov_fp"          ), 0 );
+    o->fp_ray_hit      = ( ray_hit_fp      )bcore_self_s_get_external_fp( self, entypeof( "ray_hit_fp"      ), 0 );
+    o->fp_side         = ( side_fp         )bcore_self_s_get_external_fp( self, entypeof( "side_fp"         ), 0 );
+    o->fp_is_in_fov    = ( is_in_fov_fp    )bcore_self_s_try_external_fp( self, entypeof( "is_in_fov_fp"    ), 0 );
+    o->fp_is_reachable = ( is_reachable_fp )bcore_self_s_try_external_fp( self, entypeof( "is_reachable_fp" ), 0 );
+    o->fp_move         = ( move_fp         )bcore_self_s_get_external_fp( self, entypeof( "move_fp"         ), 0 );
+    o->fp_rotate       = ( rotate_fp       )bcore_self_s_get_external_fp( self, entypeof( "rotate_fp"       ), 0 );
+    o->fp_scale        = ( scale_fp        )bcore_self_s_get_external_fp( self, entypeof( "scale_fp"        ), 0 );
     return o;
 }
 
@@ -491,11 +491,11 @@ void obj_set_auto_envelope( vd_t obj )
     o->prp.envelope = envelope_s_clone( &env );
 }
 
-static bcore_flect_self_s* spect_obj_s_create_self( void )
+static bcore_self_s* spect_obj_s_create_self( void )
 {
     sc_t def = "spect_obj_s = spect { aware_t p_type; tp_t o_type; ... }";
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( def, sizeof( spect_obj_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )spect_obj_s_create_from_self, "bcore_spect_fp_create_from_self", "create_from_self" );
+    bcore_self_s* self = bcore_self_s_build_parse_sc( def, sizeof( spect_obj_s ) );
+    bcore_self_s_push_ns_func( self, ( fp_t )spect_obj_s_create_from_self, "bcore_spect_fp_create_from_self", "create_from_self" );
     return self;
 }
 
@@ -571,18 +571,18 @@ void obj_plane_s_move(   obj_plane_s* o, const v3d_s* vec ) { properties_s_move 
 void obj_plane_s_rotate( obj_plane_s* o, const m3d_s* mat ) { properties_s_rotate( &o->prp, mat ); }
 void obj_plane_s_scale(  obj_plane_s* o, f3_t fac         ) { properties_s_scale ( &o->prp, fac ); }
 
-static bcore_flect_self_s* obj_plane_s_create_self( void )
+static bcore_self_s* obj_plane_s_create_self( void )
 {
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_plane_s_def, sizeof( obj_plane_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_init_a,     "ap_t",          "init" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_projection, "projection_fp", "projection" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_fov,        "fov_fp",        "fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_ray_hit,    "ray_hit_fp",    "ray_hit" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_side,       "side_fp",       "side" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_is_in_fov,  "is_in_fov_fp",  "is_in_fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_move,       "move_fp",       "move" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_rotate,     "rotate_fp",     "rotate" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_plane_s_scale,      "scale_fp",      "scale" );
+    bcore_self_s* self = bcore_self_s_build_parse_sc( obj_plane_s_def, sizeof( obj_plane_s ) );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_plane_s_init_a,     "ap_t",          "init" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_plane_s_projection, "projection_fp", "projection" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_plane_s_fov,        "fov_fp",        "fov" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_plane_s_ray_hit,    "ray_hit_fp",    "ray_hit" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_plane_s_side,       "side_fp",       "side" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_plane_s_is_in_fov,  "is_in_fov_fp",  "is_in_fov" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_plane_s_move,       "move_fp",       "move" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_plane_s_rotate,     "rotate_fp",     "rotate" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_plane_s_scale,      "scale_fp",      "scale" );
     return self;
 }
 
@@ -692,19 +692,19 @@ void obj_sphere_s_move(   obj_sphere_s* o, const v3d_s* vec ) { properties_s_mov
 void obj_sphere_s_rotate( obj_sphere_s* o, const m3d_s* mat ) { properties_s_rotate( &o->prp, mat ); }
 void obj_sphere_s_scale(  obj_sphere_s* o, f3_t fac         ) { properties_s_scale ( &o->prp, fac ); o->radius *= fac; }
 
-static bcore_flect_self_s* obj_sphere_s_create_self( void )
+static bcore_self_s* obj_sphere_s_create_self( void )
 {
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_sphere_s_def, sizeof( obj_sphere_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_init_a,       "ap_t",          "init" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_projection,   "projection_fp", "projection" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_fov,          "fov_fp",        "fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_ray_hit,      "ray_hit_fp",    "ray_hit" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_side,         "side_fp",       "side" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_is_in_fov,    "is_in_fov_fp",  "is_in_fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_is_reachable, "is_reachable_fp", "is_reachable" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_move,         "move_fp",       "move" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_rotate,       "rotate_fp",     "rotate" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_scale,        "scale_fp",      "scale" );
+    bcore_self_s* self = bcore_self_s_build_parse_sc( obj_sphere_s_def, sizeof( obj_sphere_s ) );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_init_a,       "ap_t",          "init" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_projection,   "projection_fp", "projection" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_fov,          "fov_fp",        "fov" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_ray_hit,      "ray_hit_fp",    "ray_hit" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_side,         "side_fp",       "side" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_is_in_fov,    "is_in_fov_fp",  "is_in_fov" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_is_reachable, "is_reachable_fp", "is_reachable" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_move,         "move_fp",       "move" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_rotate,       "rotate_fp",     "rotate" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_sphere_s_scale,        "scale_fp",      "scale" );
     return self;
 }
 
@@ -878,15 +878,15 @@ void obj_squaroid_s_rotate( obj_squaroid_s* o, const m3d_s* mat ) { properties_s
 
 void obj_squaroid_s_scale(  obj_squaroid_s* o, f3_t fac         ) { properties_s_scale ( &o->prp, fac ); o->r *= f3_sqr( fac ); }
 
-static bcore_flect_self_s* obj_squaroid_s_create_self( void )
+static bcore_self_s* obj_squaroid_s_create_self( void )
 {
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_squaroid_s_def, sizeof( obj_squaroid_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_init_a,     "ap_t",          "init" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_ray_hit,    "ray_hit_fp",    "ray_hit" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_side,       "side_fp",       "side" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_move,       "move_fp",       "move" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_rotate,     "rotate_fp",     "rotate" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_scale,      "scale_fp",      "scale" );
+    bcore_self_s* self = bcore_self_s_build_parse_sc( obj_squaroid_s_def, sizeof( obj_squaroid_s ) );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_init_a,     "ap_t",          "init" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_ray_hit,    "ray_hit_fp",    "ray_hit" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_side,       "side_fp",       "side" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_move,       "move_fp",       "move" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_rotate,     "rotate_fp",     "rotate" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_squaroid_s_scale,      "scale_fp",      "scale" );
     return self;
 }
 
@@ -1027,17 +1027,17 @@ void obj_distance_s_move(   obj_distance_s* o, const v3d_s* vec ) { properties_s
 void obj_distance_s_rotate( obj_distance_s* o, const m3d_s* mat ) { properties_s_rotate( &o->prp, mat ); }
 void obj_distance_s_scale(  obj_distance_s* o, f3_t fac         ) { properties_s_scale ( &o->prp, fac ); o->inv_scale *= 1.0 / fac; }
 
-static bcore_flect_self_s* obj_distance_s_create_self( void )
+static bcore_self_s* obj_distance_s_create_self( void )
 {
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_distance_s_def, sizeof( obj_distance_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_distance_s_init_a,       "ap_t",          "init" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_distance_s_projection,   "projection_fp", "projection" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_distance_s_ray_hit,      "ray_hit_fp",    "ray_hit" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_distance_s_side,         "side_fp",       "side" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_distance_s_is_in_fov,    "is_in_fov_fp",  "is_in_fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_distance_s_move,         "move_fp",       "move" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_distance_s_rotate,       "rotate_fp",     "rotate" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_distance_s_scale,        "scale_fp",      "scale" );
+    bcore_self_s* self = bcore_self_s_build_parse_sc( obj_distance_s_def, sizeof( obj_distance_s ) );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_distance_s_init_a,       "ap_t",          "init" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_distance_s_projection,   "projection_fp", "projection" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_distance_s_ray_hit,      "ray_hit_fp",    "ray_hit" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_distance_s_side,         "side_fp",       "side" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_distance_s_is_in_fov,    "is_in_fov_fp",  "is_in_fov" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_distance_s_move,         "move_fp",       "move" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_distance_s_rotate,       "rotate_fp",     "rotate" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_distance_s_scale,        "scale_fp",      "scale" );
     return self;
 }
 
@@ -1189,17 +1189,17 @@ void obj_pair_inside_s_scale( obj_pair_inside_s* o, f3_t fac )
     obj_scale( o->o2, fac );
 }
 
-static bcore_flect_self_s* obj_pair_inside_s_create_self( void )
+static bcore_self_s* obj_pair_inside_s_create_self( void )
 {
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_pair_inside_s_def, sizeof( obj_pair_inside_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_init_a,       "ap_t",            "init" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_fov,          "fov_fp",          "fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_ray_hit,      "ray_hit_fp",      "ray_hit" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_side,         "side_fp",         "side" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_is_in_fov,    "is_in_fov_fp",    "is_in_fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_move,         "move_fp",         "move" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_rotate,       "rotate_fp",       "rotate" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_scale,        "scale_fp",        "scale" );
+    bcore_self_s* self = bcore_self_s_build_parse_sc( obj_pair_inside_s_def, sizeof( obj_pair_inside_s ) );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_init_a,       "ap_t",            "init" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_fov,          "fov_fp",          "fov" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_ray_hit,      "ray_hit_fp",      "ray_hit" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_side,         "side_fp",         "side" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_is_in_fov,    "is_in_fov_fp",    "is_in_fov" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_move,         "move_fp",         "move" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_rotate,       "rotate_fp",       "rotate" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_inside_s_scale,        "scale_fp",        "scale" );
     return self;
 }
 
@@ -1358,17 +1358,17 @@ void obj_pair_outside_s_scale(  obj_pair_outside_s* o, f3_t fac )
     obj_scale( o->o2, fac );
 }
 
-static bcore_flect_self_s* obj_pair_outside_s_create_self( void )
+static bcore_self_s* obj_pair_outside_s_create_self( void )
 {
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_pair_outside_s_def, sizeof( obj_pair_outside_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_init_a,       "ap_t",            "init" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_fov,          "fov_fp",          "fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_ray_hit,      "ray_hit_fp",      "ray_hit" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_side,         "side_fp",         "side" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_is_in_fov,    "is_in_fov_fp",    "is_in_fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_move,         "move_fp",         "move" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_rotate,       "rotate_fp",       "rotate" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_scale,        "scale_fp",        "scale" );
+    bcore_self_s* self = bcore_self_s_build_parse_sc( obj_pair_outside_s_def, sizeof( obj_pair_outside_s ) );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_init_a,       "ap_t",            "init" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_fov,          "fov_fp",          "fov" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_ray_hit,      "ray_hit_fp",      "ray_hit" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_side,         "side_fp",         "side" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_is_in_fov,    "is_in_fov_fp",    "is_in_fov" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_move,         "move_fp",         "move" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_rotate,       "rotate_fp",       "rotate" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_pair_outside_s_scale,        "scale_fp",        "scale" );
     return self;
 }
 
@@ -1442,16 +1442,16 @@ void obj_neg_s_move(   obj_neg_s* o, const v3d_s* vec ) { properties_s_move  ( &
 void obj_neg_s_rotate( obj_neg_s* o, const m3d_s* mat ) { properties_s_rotate( &o->prp, mat ); obj_rotate( o->o1, mat ); }
 void obj_neg_s_scale(  obj_neg_s* o, f3_t fac         ) { properties_s_scale ( &o->prp, fac ); obj_scale(  o->o1, fac ); }
 
-static bcore_flect_self_s* obj_neg_s_create_self( void )
+static bcore_self_s* obj_neg_s_create_self( void )
 {
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_neg_s_def, sizeof( obj_neg_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_neg_s_init_a,     "ap_t",          "init" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_neg_s_ray_hit,    "ray_hit_fp",    "ray_hit" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_neg_s_side,       "side_fp",       "side" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_neg_s_is_in_fov,  "is_in_fov_fp",  "is_in_fov" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_neg_s_move,       "move_fp",       "move" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_neg_s_rotate,     "rotate_fp",     "rotate" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_neg_s_scale,      "scale_fp",      "scale" );
+    bcore_self_s* self = bcore_self_s_build_parse_sc( obj_neg_s_def, sizeof( obj_neg_s ) );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_neg_s_init_a,     "ap_t",          "init" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_neg_s_ray_hit,    "ray_hit_fp",    "ray_hit" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_neg_s_side,       "side_fp",       "side" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_neg_s_is_in_fov,  "is_in_fov_fp",  "is_in_fov" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_neg_s_move,       "move_fp",       "move" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_neg_s_rotate,     "rotate_fp",     "rotate" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_neg_s_scale,      "scale_fp",      "scale" );
     return self;
 }
 
@@ -1559,15 +1559,15 @@ void obj_scale_s_scale( obj_scale_s* o, f3_t fac )
     o->inv_scale = v3d_s_mlf( o->inv_scale, ( fac != 0 ) ? 1.0 / fac : 1.0 );
 }
 
-static bcore_flect_self_s* obj_scale_s_create_self( void )
+static bcore_self_s* obj_scale_s_create_self( void )
 {
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( obj_scale_s_def, sizeof( obj_scale_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_scale_s_init_a,     "ap_t",          "init" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_scale_s_ray_hit,    "ray_hit_fp",    "ray_hit" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_scale_s_side,       "side_fp",       "side" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_scale_s_move,       "move_fp",       "move" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_scale_s_rotate,     "rotate_fp",     "rotate" );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )obj_scale_s_scale,      "scale_fp",      "scale" );
+    bcore_self_s* self = bcore_self_s_build_parse_sc( obj_scale_s_def, sizeof( obj_scale_s ) );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_scale_s_init_a,     "ap_t",          "init" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_scale_s_ray_hit,    "ray_hit_fp",    "ray_hit" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_scale_s_side,       "side_fp",       "side" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_scale_s_move,       "move_fp",       "move" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_scale_s_rotate,     "rotate_fp",     "rotate" );
+    bcore_self_s_push_ns_func( self, ( fp_t )obj_scale_s_scale,      "scale_fp",      "scale" );
     return self;
 }
 

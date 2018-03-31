@@ -53,10 +53,10 @@ void cl_s_copy_typed( cl_s* o, tp_t type, vc_t src )
 }
 
 BCORE_DEFINE_FUNCTIONS_OBJ_FLAT( cl_s )
-static bcore_flect_self_s* cl_s_create_self( void )
+static bcore_self_s* cl_s_create_self( void )
 {
-    bcore_flect_self_s* self = bcore_flect_self_s_build_parse_sc( "cl_s = v3d_s", sizeof( cl_s ) );
-    bcore_flect_self_s_push_ns_func( self, ( fp_t )cl_s_copy_typed, "bcore_fp_copy_typed", "copy_typed" );
+    bcore_self_s* self = bcore_self_s_build_parse_sc( "cl_s = v3d_s", sizeof( cl_s ) );
+    bcore_self_s_push_ns_func( self, ( fp_t )cl_s_copy_typed, "bcore_fp_copy_typed", "copy_typed" );
     return self;
 }
 
