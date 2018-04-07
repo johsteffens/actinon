@@ -74,7 +74,7 @@ int main( int argc, const char** argv )
     bcore_register_signal_handler( main_signal_handler );
 
     bcore_msg( "ACTINON: Ray-tracer.\n" );
-    bcore_msg( "Copyright (C) 2017 Johannes B. Steffens.\n\n" );
+    bcore_msg( "Copyright (C) 2017, 2018 Johannes B. Steffens.\n\n" );
 
     if( argc < 2 )
     {

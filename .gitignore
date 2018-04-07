@@ -1,1 +1,5 @@
+actinon.*
+build/actinon
 dev
+bin
+obj
