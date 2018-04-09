@@ -33,11 +33,14 @@ It will render the image in multiple passes, gradually improving quality. After 
    * Library `pthread` of the POSIX.1c standard.
 
 ### Build
-   * Download [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon). 
-   * Unpack both in the same folder. (This should create respective sub-folders `beth-master` and `actinon-master`)
+   * Clone [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon):
+      * `git clone https://github.com/johsteffens/beth.git`
+      * `git clone https://github.com/johsteffens/actinon.git`
+      * *(Ensure both reprositories have the same root folder)*
    * In a terminal ...
-      * enter folder: `cd actinon-master/build`.
-      * run: `make`. This produces the binary file `actinon`.
+      * enter folder actinon/build: `cd actinon/build`.
+      * run: `make`. 
+      * This creates the executale binary file `actinon`.
 
 ### First Trial
    * Pick a source file from folder [src_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
