@@ -10,7 +10,7 @@
 ### [Find more examples here ...](https://github.com/johsteffens/actinon/wiki/Images)
 
 ## What it is
-Actinon is a lightweight ray-tracing renderer and interpreter of a dedicated scripting language. It can render 3D scenes, employing techniques like distributed tracing, path tracing, antialiasing and others. It can visualize transparency, reflection, refraction, media-transition, diffuse-light, indirect-light and more. Various realistic surfaces are achieved by mixing fresnel-reflection, chromatic-reflection, (Oren-Nayar) diffuse-reflection and by simulating surface roughness. The rendering-engine is multi-threaded.
+Actinon is a lightweight ray-tracing renderer and interpreter of a dedicated scripting language. It can render 3D scenes, employing techniques like distributed tracing, path tracing, anti-aliasing and others. It can visualize transparency, reflection, refraction, media-transition, diffuse-light, indirect-light and more. Various realistic surfaces are achieved by mixing fresnel-reflection, chromatic-reflection, (Oren-Nayar) diffuse-reflection and by simulating surface roughness. The rendering-engine is multi-threaded.
 
 For scene-design a special language has been developed. It supports the composition of complex objects from simpler objects. Geometric operations on objects like translation, scaling and rotations can be applied easily and intuitively. Vectors and matrices have dedicated types with associated operators supporting arithmetic in a 3D vector space. The language also allows computing image sequences (e.g. for videos).
 
@@ -36,11 +36,11 @@ It will render the image in multiple passes, gradually improving quality. After 
    * Clone [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon):
       * `git clone https://github.com/johsteffens/beth.git`
       * `git clone https://github.com/johsteffens/actinon.git`
-      * *(Ensure both reprositories have the same root folder)*
+      * *(Ensure both repositories have the same root folder)*
    * In a terminal ...
       * enter folder actinon/build: `cd actinon/build`.
       * run: `make`. 
-      * This creates the executale binary file `actinon`.
+      * This creates the executable binary file `actinon`.
 
 ### First Trial
    * Pick a source file from folder [src_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
@@ -66,7 +66,7 @@ Images or videos you created with actinon from your own script sources are yours
 One objective is demonstrating the capabilities of project '[beth](https://github.com/johsteffens/beth)', which is a foundation-library to develop advanced applications in 'C'.
 
 ### Sentiment
-I've always been fascinated by computer graphics. Particluarly combining physics, mathematics and creativity to achieve realism. In the mid 1990s I experimented with algorithms using lambertian light distribution on rays casted in a virtual 3D scene. Back then I was not even aware that the technique was well-known under the label "ray-tracing". Today, modern workstations are powerful enough to allow deep recursions into the rendering equation, making experimenting in this field even more rewarding.
+I've always been fascinated by computer graphics. Particularly combining physics, mathematics and creativity to achieve realism. In the mid 1990s I experimented with algorithms using Lambertian light distribution on rays casted in a virtual 3D scene. Back then I was not even aware that the technique was well-known under the label "ray-tracing". Today, modern workstations are powerful enough to allow deep recursions into the rendering equation, making experimenting in this field even more rewarding.
 
 ### About The Name
 Actinon is the name of the Radon-219 isotope, which is a radioactive gas. As project-name, it was inspired by a train of thought: ray-tracing -> radiation -> radon -> actinon.
