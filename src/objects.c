@@ -198,55 +198,48 @@ void properties_s_scale( properties_s* o, f3_t fac )
 /**********************************************************************************************************************/
 /// spect_obj_s
 
+/// features
 typedef v2d_s      (*projection_fp   )( vc_t o, v3d_s pos );
 typedef f3_t       (*ray_hit_fp      )( vc_t o, const ray_s* ray, v3d_s* p_nor );
 typedef s2_t       (*side_fp         )( vc_t o, v3d_s pos );
 typedef ray_cone_s (*fov_fp          )( vc_t o, v3d_s pos );
 typedef bl_t       (*is_in_fov_fp    )( vc_t o, const ray_cone_s* fov );
 typedef bl_t       (*is_reachable_fp )( vc_t o, const ray_s* ray, f3_t length );
-
-typedef void (*move_fp  )( vd_t o, const v3d_s* vec );
-typedef void (*rotate_fp)( vd_t o, const m3d_s* mat );
-typedef void (*scale_fp )( vd_t o, f3_t fac );
+typedef void       (*move_fp         )( vd_t o, const v3d_s* vec );
+typedef void       (*rotate_fp       )( vd_t o, const m3d_s* mat );
+typedef void       (*scale_fp        )( vd_t o, f3_t fac );
 
 typedef struct spect_obj_s
 {
-    aware_t p_type;
-    tp_t    o_type;
-
-    projection_fp fp_projection;
-    fov_fp        fp_fov;
-    ray_hit_fp    fp_ray_hit;
-    side_fp       fp_side;
-
-    move_fp       fp_move;
-    rotate_fp     fp_rotate;
-    scale_fp      fp_scale;
-
+    bcore_spect_header_s header;
+    projection_fp   fp_projection;
+    fov_fp          fp_fov;
+    ray_hit_fp      fp_ray_hit;
+    side_fp         fp_side;
+    move_fp         fp_move;
+    rotate_fp       fp_rotate;
+    scale_fp        fp_scale;
     is_in_fov_fp    fp_is_in_fov;
     is_reachable_fp fp_is_reachable;
 } spect_obj_s;
 
-BCORE_DEFINE_FUNCTIONS_OBJ_INST( spect_obj_s )
+sc_t spect_obj_s_def = "spect_obj_s = spect"
+"{"
+    "bcore_spect_header_s header;"
+    "       feature projection_fp   fp_projection   ~> func projection_fp   projection;"
+    "       feature fov_fp          fp_fov          ~> func fov_fp          fov;"
+    "strict feature ray_hit_fp      fp_ray_hit      ~> func ray_hit_fp      ray_hit;"
+    "strict feature side_fp         fp_side         ~> func side_fp         side;"
+    "strict feature move_fp         fp_move         ~> func move_fp         move;"
+    "strict feature rotate_fp       fp_rotate       ~> func rotate_fp       rotate;"
+    "strict feature scale_fp        fp_scale        ~> func scale_fp        scale;"
+    "       feature is_in_fov_fp    fp_is_in_fov    ~> func is_in_fov_fp    is_in_fov;"
+    "       feature is_reachable_fp fp_is_reachable ~> func is_reachable_fp is_reachable;"
+"}";
+
+BCORE_DEFINE_OBJECT_INST( spect_obj_s, spect_obj_s_def )
 
 const spect_obj_s* obj_get_spect( vc_t o ) { return ( ( obj_hdr_s* )o )->p; }
-
-static spect_obj_s* spect_obj_s_create_from_self( const bcore_self_s* self )
-{
-    assert( self != NULL );
-    spect_obj_s* o = spect_obj_s_create();
-    o->o_type = self->type;
-    o->fp_projection   = ( projection_fp   )bcore_self_s_try_external_fp( self, entypeof( "projection_fp"   ), 0 );
-    o->fp_fov          = ( fov_fp          )bcore_self_s_try_external_fp( self, entypeof( "fov_fp"          ), 0 );
-    o->fp_ray_hit      = ( ray_hit_fp      )bcore_self_s_get_external_fp( self, entypeof( "ray_hit_fp"      ), 0 );
-    o->fp_side         = ( side_fp         )bcore_self_s_get_external_fp( self, entypeof( "side_fp"         ), 0 );
-    o->fp_is_in_fov    = ( is_in_fov_fp    )bcore_self_s_try_external_fp( self, entypeof( "is_in_fov_fp"    ), 0 );
-    o->fp_is_reachable = ( is_reachable_fp )bcore_self_s_try_external_fp( self, entypeof( "is_reachable_fp" ), 0 );
-    o->fp_move         = ( move_fp         )bcore_self_s_get_external_fp( self, entypeof( "move_fp"         ), 0 );
-    o->fp_rotate       = ( rotate_fp       )bcore_self_s_get_external_fp( self, entypeof( "rotate_fp"       ), 0 );
-    o->fp_scale        = ( scale_fp        )bcore_self_s_get_external_fp( self, entypeof( "scale_fp"        ), 0 );
-    return o;
-}
 
 v2d_s obj_projection( vc_t o, v3d_s pos )
 {
@@ -479,14 +472,6 @@ void obj_set_auto_envelope( vd_t obj )
     obj_hdr_s* o = obj;
     if( o->prp.envelope ) envelope_s_discard( o->prp.envelope );
     o->prp.envelope = envelope_s_clone( &env );
-}
-
-static bcore_self_s* spect_obj_s_create_self( void )
-{
-    sc_t def = "spect_obj_s = spect { aware_t p_type; tp_t o_type; ... }";
-    bcore_self_s* self = bcore_self_s_build_parse_sc( def, sizeof( spect_obj_s ) );
-    bcore_self_s_push_ns_func( self, ( fp_t )spect_obj_s_create_from_self, "bcore_spect_fp_create_from_self", "create_from_self" );
-    return self;
 }
 
 /**********************************************************************************************************************/
@@ -1738,11 +1723,21 @@ vd_t objects_signal_handler( const bcore_signal_s* o )
         {
             bcore_trait_set( entypeof( "spect_obj" ), entypeof( "bcore_inst" ) );
 
+            BCORE_REGISTER_PLAIN( projection_fp,   function_pointer );
+            BCORE_REGISTER_PLAIN( ray_hit_fp,      function_pointer );
+            BCORE_REGISTER_PLAIN( side_fp,         function_pointer );
+            BCORE_REGISTER_PLAIN( fov_fp,          function_pointer );
+            BCORE_REGISTER_PLAIN( is_in_fov_fp,    function_pointer );
+            BCORE_REGISTER_PLAIN( is_reachable_fp, function_pointer );
+            BCORE_REGISTER_PLAIN( move_fp,         function_pointer );
+            BCORE_REGISTER_PLAIN( rotate_fp,       function_pointer );
+            BCORE_REGISTER_PLAIN( scale_fp,        function_pointer );
+
             BCORE_REGISTER_FLECT( envelope_s );
             BCORE_REGISTER_FLECT( properties_s );
             BCORE_REGISTER_FUNC(  properties_s_init_a );
 
-            BCORE_REGISTER_FLECT( spect_obj_s );
+            BCORE_REGISTER_SPECT( spect_obj_s );
 
             BCORE_REGISTER_FLECT( obj_plane_s );
             BCORE_REGISTER_FUNC(  obj_plane_s_projection );
