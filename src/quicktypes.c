@@ -45,6 +45,15 @@ static sr_s typelist()
     bcore_array_q_push_sc( &list, "scene_s" );
     bcore_array_q_push_sc( &list, "spect_obj_s" );
     bcore_array_q_push_sc( &list, "spect_obj" );
+    bcore_array_q_push_sc( &list, "obj_plane_s" );
+    bcore_array_q_push_sc( &list, "obj_sphere_s" );
+    bcore_array_q_push_sc( &list, "obj_squaroid_s" );
+    bcore_array_q_push_sc( &list, "obj_distance_s" );
+    bcore_array_q_push_sc( &list, "obj_pair_inside_s" );
+    bcore_array_q_push_sc( &list, "obj_pair_outside_s" );
+    bcore_array_q_push_sc( &list, "obj_neg_s" );
+    bcore_array_q_push_sc( &list, "obj_scale_s" );
+
     bcore_array_q_push_sc( &list, "properties_s" );
     bcore_array_q_push_sc( &list, "compound_s" );
     bcore_array_q_push_sc( &list, "meval_s" );

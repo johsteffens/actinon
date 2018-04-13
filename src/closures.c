@@ -138,6 +138,7 @@ BCLOS_DEFINE_STD_CLOSURE( roty_s, "m3d_s roty_s( num v )", roty_s_call )
 BCLOS_DEFINE_STD_CLOSURE( rotz_s, "m3d_s rotz_s( num v )", rotz_s_call )
 
 /**********************************************************************************************************************/
+// string functions
 
 /// creates formatted st_s with format string and format argument
 static sr_s create_string_fa_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
@@ -151,7 +152,36 @@ static sr_s create_string_fa_s_call( vc_t o, bclos_frame_s* frm, const bclos_arg
     return sr_tsd( TYPEOF_st_s, string );
 }
 
-BCLOS_DEFINE_STD_CLOSURE( create_string_fa_s, "v3d_s create_string_fa_s( st_s format, root arg )", create_string_fa_s_call )
+/// converts string to number (f3_t or s3_t depending on content)
+static sr_s string_to_num_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    sr_s arg0 = bclos_arguments_s_get( args, 0, frm );
+    const st_s* string = arg0.o;
+
+    sr_s ret;
+
+    sz_t start = st_s_find_none_sc( string, 0, -1, " \t\n" ); // skip whitespaces
+    sz_t end   = st_s_find_none_sc( string, start, -1, "+-0123456789eE." ); // until non-numeric
+    bl_t is_float = st_s_find_any_sc( string, start, end, ".eE" ) < end;
+
+    if( is_float )
+    {
+        ret = sr_f3( 0 );
+        st_s_parse_fa( string, start, end, "#<f3_t*>", ret.o );
+    }
+    else
+    {
+        ret = sr_s3( 0 );
+        st_s_parse_fa( string, start, end, "#<s3_t*>", ret.o );
+    }
+
+    sr_down( arg0 );
+    return ret;
+}
+
+BCLOS_DEFINE_STD_CLOSURE( create_string_fa_s, "st_s create_string_fa_s( st_s format, root arg )", create_string_fa_s_call )
+BCLOS_DEFINE_STD_CLOSURE( string_to_num_s,    "string_to_num_s( st_s string )", string_to_num_s_call )
 
 /**********************************************************************************************************************/
 
@@ -531,6 +561,17 @@ BCLOS_DEFINE_STD_CLOSURE( create_torus_s, "spect_obj create_torus_s( num radius1
 
 /**********************************************************************************************************************/
 
+static sr_s get_time_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 0 );
+    clock_t time = clock() - start_time_g;
+    return sr_f3( ( ( ( f3_t )time ) )/CLOCKS_PER_SEC );
+}
+
+BCLOS_DEFINE_STD_CLOSURE( get_time_s, "f3_t get_time_s()", get_time_s_call )
+
+/**********************************************************************************************************************/
+
 vd_t closures_signal_handler( const bcore_signal_s* o )
 {
     switch( bcore_signal_s_handle_type( o, typeof( "closures" ) ) )
@@ -552,6 +593,7 @@ vd_t closures_signal_handler( const bcore_signal_s* o )
 
             // string
             BCORE_REGISTER_FLECT( create_string_fa_s );
+            BCORE_REGISTER_FLECT( string_to_num_s );
 
             // math
             BCORE_REGISTER_FLECT( sqrt_s );
@@ -588,6 +630,10 @@ vd_t closures_signal_handler( const bcore_signal_s* o )
             BCORE_REGISTER_FLECT( create_hyperboloid2_s );
             BCORE_REGISTER_FLECT( create_ellipsoid_s );
             BCORE_REGISTER_FLECT( create_cone_s );
+
+            // time
+            BCORE_REGISTER_FLECT( get_time_s );
+
         }
         break;
 

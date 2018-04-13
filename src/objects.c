@@ -21,6 +21,7 @@
 #include "bcore_spect.h"
 #include "bcore_spect_array.h"
 #include "bcore_trait.h"
+#include "bcore_threads.h"
 
 #include "textures.h"
 #include "objects.h"
@@ -251,8 +252,6 @@ v2d_s obj_projection( vc_t o, v3d_s pos )
 ray_cone_s obj_fov( vc_t o, v3d_s pos )
 {
     const obj_hdr_s* hdr = o;
-//    if( hdr->prp.envelope ) return envelope_s_fov( hdr->prp.envelope, pos );
-
     if( !hdr->p->fp_fov ) ERR_fa( "Object '#<sc_t>' has no fov-function", ifnameof( *(aware_t*)o ) );
     return hdr->p->fp_fov( o, pos );
 }
@@ -1809,6 +1808,11 @@ vd_t objects_signal_handler( const bcore_signal_s* o )
             BCORE_REGISTER_FUNC(  obj_scale_s_move );
             BCORE_REGISTER_FUNC(  obj_scale_s_rotate );
             BCORE_REGISTER_FUNC(  obj_scale_s_scale );
+        }
+        break;
+
+        case TYPEOF_down0:
+        {
         }
         break;
 

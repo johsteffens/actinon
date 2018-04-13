@@ -37,6 +37,13 @@
 #include "compound.h"
 
 /**********************************************************************************************************************/
+
+// program arguments
+bcore_arr_st_s* interpreter_args_g = NULL;
+clock_t         start_time_g = 0;
+
+
+/**********************************************************************************************************************/
 // code_s: metacode elements
 
 sc_t code_symbol( code_s o )
@@ -774,6 +781,7 @@ static sr_s meval_s_add( meval_s* o, sr_s v1, sr_s v2 )
             case TYPEOF_s3_t:  r = sr_s3( *( s3_t* )v1.o + *( s3_t* )v2.o ); break;
             case TYPEOF_f3_t:  r = sr_f3( *( s3_t* )v1.o + *( f3_t* )v2.o ); break;
             case TYPEOF_bl_t:  r = sr_s3( *( s3_t* )v1.o + *( bl_t* )v2.o ); break;
+            case TYPEOF_st_s:  r = sr_asd( st_s_create_fa( "#<s3_t>#<sc_t>", *( s3_t* )v1.o, ( ( st_s* )v2.o )->sc ) );
         }
         break;
 
@@ -783,6 +791,7 @@ static sr_s meval_s_add( meval_s* o, sr_s v1, sr_s v2 )
             case TYPEOF_s3_t:  r = sr_f3( *( f3_t* )v1.o + *( s3_t* )v2.o ); break;
             case TYPEOF_f3_t:  r = sr_f3( *( f3_t* )v1.o + *( f3_t* )v2.o ); break;
             case TYPEOF_bl_t:  r = sr_f3( *( f3_t* )v1.o + *( bl_t* )v2.o ); break;
+            case TYPEOF_st_s:  r = sr_asd( st_s_create_fa( "#<f3_t>#<sc_t>", *( f3_t* )v1.o, ( ( st_s* )v2.o )->sc ) );
         }
         break;
 
@@ -1863,8 +1872,10 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     bclos_frame_s_set( frame, typeof( "create_cone"         ), sr_create( typeof( "create_cone_s"         ) ) );
 
     /// special functions
-    bclos_frame_s_set( frame, typeof( "string_fa"   ), sr_create( typeof( "create_string_fa_s"   ) ) );
-    bclos_frame_s_set( frame, typeof( "beth_object" ), sr_create( typeof( "create_beth_object_s" ) ) );
+    bclos_frame_s_set( frame, typeof( "string_fa"     ), sr_create( typeof( "create_string_fa_s"   ) ) );
+    bclos_frame_s_set( frame, typeof( "string_to_num" ), sr_create( typeof( "string_to_num_s"      ) ) );
+    bclos_frame_s_set( frame, typeof( "beth_object"   ), sr_create( typeof( "create_beth_object_s" ) ) );
+    bclos_frame_s_set( frame, typeof( "get_time"      ), sr_create( typeof( "get_time_s" ) ) );
 
     /// Built-in constants
     bclos_frame_s_set( frame, typeof( "scene_s"      ), sr_create( typeof( "scene_s"        ) ) );
@@ -1873,6 +1884,15 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     bclos_frame_s_set( frame, typeof( "arr_s"        ), sr_create( typeof( "arr_s"          ) ) );
     bclos_frame_s_set( frame, typeof( "map_s"        ), sr_create( typeof( "map_s"          ) ) );
 
+    /// program arguments
+    {
+        sr_s args_sr = sr_create( typeof( "arr_s" ) );
+        for( sz_t i = 0; i < interpreter_args_g->size; i++ )
+        {
+            arr_s_push( args_sr.o, sr_awc( interpreter_args_g->data[ i ] ) );
+        }
+        bclos_frame_s_set( frame, typeof( "program_args" ), args_sr );
+    }
     mclosure_s_define( o, frame, NULL, mcode );
     sr_s return_obj = mclosure_s_call( o, NULL, NULL );
     bcore_life_s_discard( l );
@@ -1906,10 +1926,18 @@ vd_t interpreter_signal_handler( const bcore_signal_s* o )
     {
         case TYPEOF_init1:
         {
+            interpreter_args_g = bcore_arr_st_s_create();
+            start_time_g = clock();
             BCORE_REGISTER_FLECT( mtype_s );
             BCORE_REGISTER_FLECT( mcode_s );
             BCORE_REGISTER_FLECT( meval_s );
             BCORE_REGISTER_FLECT( mclosure_s );
+        }
+        break;
+
+        case TYPEOF_down1:
+        {
+            bcore_arr_st_s_discard( interpreter_args_g );
         }
         break;
 

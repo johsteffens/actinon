@@ -35,6 +35,14 @@ void quicktypes_to_stdout( tp_t (*hash)( sc_t name ) );
 #define TYPEOF_scene_s              3915967093
 #define TYPEOF_spect_obj_s           309901730
 #define TYPEOF_spect_obj             295833720
+#define TYPEOF_obj_plane_s           335497953
+#define TYPEOF_obj_sphere_s          323825044
+#define TYPEOF_obj_squaroid_s       1883038045
+#define TYPEOF_obj_distance_s       1058313890
+#define TYPEOF_obj_pair_inside_s     173260390
+#define TYPEOF_obj_pair_outside_s   2081728937
+#define TYPEOF_obj_neg_s             589796633
+#define TYPEOF_obj_scale_s           215342761
 #define TYPEOF_properties_s         2952202878
 #define TYPEOF_compound_s           2450623358
 #define TYPEOF_meval_s               468175712
