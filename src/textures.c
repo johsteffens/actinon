@@ -164,9 +164,9 @@ vd_t textures_signal_handler( const bcore_signal_s* o )
         {
             bcore_trait_set( entypeof( "spect_txm" ), entypeof( "bcore_inst" ) );
 
-            BCORE_REGISTER_FLECT( spect_txm_s );
-            BCORE_REGISTER_FLECT( txm_plain_s );
-            BCORE_REGISTER_FLECT( txm_chess_s );
+            BCORE_REGISTER_OBJECT( spect_txm_s );
+            BCORE_REGISTER_OBJECT( txm_plain_s );
+            BCORE_REGISTER_OBJECT( txm_chess_s );
         }
         break;
 

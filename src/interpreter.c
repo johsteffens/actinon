@@ -1928,10 +1928,10 @@ vd_t interpreter_signal_handler( const bcore_signal_s* o )
         {
             interpreter_args_g = bcore_arr_st_s_create();
             start_time_g = clock();
-            BCORE_REGISTER_FLECT( mtype_s );
-            BCORE_REGISTER_FLECT( mcode_s );
-            BCORE_REGISTER_FLECT( meval_s );
-            BCORE_REGISTER_FLECT( mclosure_s );
+            BCORE_REGISTER_OBJECT( mtype_s );
+            BCORE_REGISTER_OBJECT( mcode_s );
+            BCORE_REGISTER_OBJECT( meval_s );
+            BCORE_REGISTER_OBJECT( mclosure_s );
         }
         break;
 

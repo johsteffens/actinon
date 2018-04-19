@@ -1714,6 +1714,7 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
 
 /**********************************************************************************************************************/
 
+BCORE_DEFINE_SPECT_CACHE( spect_obj_s );
 vd_t objects_signal_handler( const bcore_signal_s* o )
 {
     switch( bcore_signal_s_handle_type( o, typeof( "objects" ) ) )
@@ -1732,13 +1733,13 @@ vd_t objects_signal_handler( const bcore_signal_s* o )
             BCORE_REGISTER_PLAIN( rotate_fp,       function_pointer );
             BCORE_REGISTER_PLAIN( scale_fp,        function_pointer );
 
-            BCORE_REGISTER_FLECT( envelope_s );
-            BCORE_REGISTER_FLECT( properties_s );
+            BCORE_REGISTER_OBJECT( envelope_s );
+            BCORE_REGISTER_OBJECT( properties_s );
             BCORE_REGISTER_FUNC(  properties_s_init_a );
 
             BCORE_REGISTER_SPECT( spect_obj_s );
 
-            BCORE_REGISTER_FLECT( obj_plane_s );
+            BCORE_REGISTER_OBJECT( obj_plane_s );
             BCORE_REGISTER_FUNC(  obj_plane_s_projection );
             BCORE_REGISTER_FUNC(  obj_plane_s_fov );
             BCORE_REGISTER_FUNC(  obj_plane_s_ray_hit );
@@ -1748,7 +1749,7 @@ vd_t objects_signal_handler( const bcore_signal_s* o )
             BCORE_REGISTER_FUNC(  obj_plane_s_rotate );
             BCORE_REGISTER_FUNC(  obj_plane_s_scale );
 
-            BCORE_REGISTER_FLECT( obj_sphere_s );
+            BCORE_REGISTER_OBJECT( obj_sphere_s );
             BCORE_REGISTER_FUNC(  obj_sphere_s_projection );
             BCORE_REGISTER_FUNC(  obj_sphere_s_fov );
             BCORE_REGISTER_FUNC(  obj_sphere_s_ray_hit );
@@ -1759,14 +1760,14 @@ vd_t objects_signal_handler( const bcore_signal_s* o )
             BCORE_REGISTER_FUNC(  obj_sphere_s_rotate );
             BCORE_REGISTER_FUNC(  obj_sphere_s_scale );
 
-            BCORE_REGISTER_FLECT( obj_squaroid_s );
+            BCORE_REGISTER_OBJECT( obj_squaroid_s );
             BCORE_REGISTER_FUNC(  obj_squaroid_s_ray_hit );
             BCORE_REGISTER_FUNC(  obj_squaroid_s_side );
             BCORE_REGISTER_FUNC(  obj_squaroid_s_move );
             BCORE_REGISTER_FUNC(  obj_squaroid_s_rotate );
             BCORE_REGISTER_FUNC(  obj_squaroid_s_scale );
 
-            BCORE_REGISTER_FLECT( obj_distance_s );
+            BCORE_REGISTER_OBJECT( obj_distance_s );
             BCORE_REGISTER_FUNC(  obj_distance_s_projection );
             BCORE_REGISTER_FUNC(  obj_distance_s_ray_hit );
             BCORE_REGISTER_FUNC(  obj_distance_s_side );
@@ -1775,7 +1776,7 @@ vd_t objects_signal_handler( const bcore_signal_s* o )
             BCORE_REGISTER_FUNC(  obj_distance_s_rotate );
             BCORE_REGISTER_FUNC(  obj_distance_s_scale );
 
-            BCORE_REGISTER_FLECT( obj_pair_inside_s );
+            BCORE_REGISTER_OBJECT( obj_pair_inside_s );
             BCORE_REGISTER_FUNC(  obj_pair_inside_s_fov );
             BCORE_REGISTER_FUNC(  obj_pair_inside_s_ray_hit );
             BCORE_REGISTER_FUNC(  obj_pair_inside_s_side );
@@ -1784,7 +1785,7 @@ vd_t objects_signal_handler( const bcore_signal_s* o )
             BCORE_REGISTER_FUNC(  obj_pair_inside_s_rotate );
             BCORE_REGISTER_FUNC(  obj_pair_inside_s_scale );
 
-            BCORE_REGISTER_FLECT( obj_pair_outside_s );
+            BCORE_REGISTER_OBJECT( obj_pair_outside_s );
             BCORE_REGISTER_FUNC(  obj_pair_outside_s_fov );
             BCORE_REGISTER_FUNC(  obj_pair_outside_s_ray_hit );
             BCORE_REGISTER_FUNC(  obj_pair_outside_s_side );
@@ -1793,7 +1794,7 @@ vd_t objects_signal_handler( const bcore_signal_s* o )
             BCORE_REGISTER_FUNC(  obj_pair_outside_s_rotate );
             BCORE_REGISTER_FUNC(  obj_pair_outside_s_scale );
 
-            BCORE_REGISTER_FLECT( obj_neg_s );
+            BCORE_REGISTER_OBJECT( obj_neg_s );
             BCORE_REGISTER_FUNC(  obj_neg_s_ray_hit );
             BCORE_REGISTER_FUNC(  obj_neg_s_side );
             BCORE_REGISTER_FUNC(  obj_neg_s_is_in_fov );
@@ -1801,7 +1802,7 @@ vd_t objects_signal_handler( const bcore_signal_s* o )
             BCORE_REGISTER_FUNC(  obj_neg_s_rotate );
             BCORE_REGISTER_FUNC(  obj_neg_s_scale );
 
-            BCORE_REGISTER_FLECT( obj_scale_s );
+            BCORE_REGISTER_OBJECT( obj_scale_s );
             BCORE_REGISTER_FUNC(  obj_scale_s_init_a );
             BCORE_REGISTER_FUNC(  obj_scale_s_ray_hit );
             BCORE_REGISTER_FUNC(  obj_scale_s_side );

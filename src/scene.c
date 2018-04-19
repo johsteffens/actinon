@@ -1000,11 +1000,11 @@ vd_t scene_signal_handler( const bcore_signal_s* o )
     {
         case TYPEOF_init1:
         {
-            BCORE_REGISTER_FLECT( scene_s );
-            BCORE_REGISTER_FLECT( image_cps_s );
-            BCORE_REGISTER_FLECT( lum_s );
-            BCORE_REGISTER_FLECT( lum_arr_s );
-            BCORE_REGISTER_FLECT( lum_image_s );
+            BCORE_REGISTER_OBJECT( scene_s );
+            BCORE_REGISTER_OBJECT( image_cps_s );
+            BCORE_REGISTER_OBJECT( lum_s );
+            BCORE_REGISTER_OBJECT( lum_arr_s );
+            BCORE_REGISTER_OBJECT( lum_image_s );
         }
         break;
 

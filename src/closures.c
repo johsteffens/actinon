@@ -579,60 +579,60 @@ vd_t closures_signal_handler( const bcore_signal_s* o )
         case TYPEOF_init1:
         {
             // vectors, tensors
-            BCORE_REGISTER_FLECT( create_vec_s );
-            BCORE_REGISTER_FLECT( vecx_s );
-            BCORE_REGISTER_FLECT( vecy_s );
-            BCORE_REGISTER_FLECT( vecz_s );
-            BCORE_REGISTER_FLECT( create_color_s );
-            BCORE_REGISTER_FLECT( colr_s );
-            BCORE_REGISTER_FLECT( colg_s );
-            BCORE_REGISTER_FLECT( colb_s );
-            BCORE_REGISTER_FLECT( rotx_s );
-            BCORE_REGISTER_FLECT( roty_s );
-            BCORE_REGISTER_FLECT( rotz_s );
+            BCORE_REGISTER_OBJECT( create_vec_s );
+            BCORE_REGISTER_OBJECT( vecx_s );
+            BCORE_REGISTER_OBJECT( vecy_s );
+            BCORE_REGISTER_OBJECT( vecz_s );
+            BCORE_REGISTER_OBJECT( create_color_s );
+            BCORE_REGISTER_OBJECT( colr_s );
+            BCORE_REGISTER_OBJECT( colg_s );
+            BCORE_REGISTER_OBJECT( colb_s );
+            BCORE_REGISTER_OBJECT( rotx_s );
+            BCORE_REGISTER_OBJECT( roty_s );
+            BCORE_REGISTER_OBJECT( rotz_s );
 
             // string
-            BCORE_REGISTER_FLECT( create_string_fa_s );
-            BCORE_REGISTER_FLECT( string_to_num_s );
+            BCORE_REGISTER_OBJECT( create_string_fa_s );
+            BCORE_REGISTER_OBJECT( string_to_num_s );
 
             // math
-            BCORE_REGISTER_FLECT( sqrt_s );
-            BCORE_REGISTER_FLECT( sqr_s );
-            BCORE_REGISTER_FLECT( exp_s );
-            BCORE_REGISTER_FLECT( log_s );
-            BCORE_REGISTER_FLECT( to_deg_s );
-            BCORE_REGISTER_FLECT( to_rad_s );
-            BCORE_REGISTER_FLECT( sin_s );
-            BCORE_REGISTER_FLECT( cos_s );
-            BCORE_REGISTER_FLECT( tan_s );
-            BCORE_REGISTER_FLECT( sin_d_s );
-            BCORE_REGISTER_FLECT( cos_d_s );
-            BCORE_REGISTER_FLECT( tan_d_s );
-            BCORE_REGISTER_FLECT( asin_s );
-            BCORE_REGISTER_FLECT( acos_s );
-            BCORE_REGISTER_FLECT( atan_s );
-            BCORE_REGISTER_FLECT( pow_s );
-            BCORE_REGISTER_FLECT( ceiling_s );
-            BCORE_REGISTER_FLECT( floor_s );
+            BCORE_REGISTER_OBJECT( sqrt_s );
+            BCORE_REGISTER_OBJECT( sqr_s );
+            BCORE_REGISTER_OBJECT( exp_s );
+            BCORE_REGISTER_OBJECT( log_s );
+            BCORE_REGISTER_OBJECT( to_deg_s );
+            BCORE_REGISTER_OBJECT( to_rad_s );
+            BCORE_REGISTER_OBJECT( sin_s );
+            BCORE_REGISTER_OBJECT( cos_s );
+            BCORE_REGISTER_OBJECT( tan_s );
+            BCORE_REGISTER_OBJECT( sin_d_s );
+            BCORE_REGISTER_OBJECT( cos_d_s );
+            BCORE_REGISTER_OBJECT( tan_d_s );
+            BCORE_REGISTER_OBJECT( asin_s );
+            BCORE_REGISTER_OBJECT( acos_s );
+            BCORE_REGISTER_OBJECT( atan_s );
+            BCORE_REGISTER_OBJECT( pow_s );
+            BCORE_REGISTER_OBJECT( ceiling_s );
+            BCORE_REGISTER_OBJECT( floor_s );
 
             // files
-            BCORE_REGISTER_FLECT( file_exists_s );
-            BCORE_REGISTER_FLECT( file_delete_s );
+            BCORE_REGISTER_OBJECT( file_exists_s );
+            BCORE_REGISTER_OBJECT( file_delete_s );
 
             // objects
-            BCORE_REGISTER_FLECT( create_beth_object_s );
-            BCORE_REGISTER_FLECT( create_plane_s );
-            BCORE_REGISTER_FLECT( create_sphere_s );
-            BCORE_REGISTER_FLECT( create_squaroid_s );
-            BCORE_REGISTER_FLECT( create_cylinder_s );
-            BCORE_REGISTER_FLECT( create_torus_s );
-            BCORE_REGISTER_FLECT( create_hyperboloid1_s );
-            BCORE_REGISTER_FLECT( create_hyperboloid2_s );
-            BCORE_REGISTER_FLECT( create_ellipsoid_s );
-            BCORE_REGISTER_FLECT( create_cone_s );
+            BCORE_REGISTER_OBJECT( create_beth_object_s );
+            BCORE_REGISTER_OBJECT( create_plane_s );
+            BCORE_REGISTER_OBJECT( create_sphere_s );
+            BCORE_REGISTER_OBJECT( create_squaroid_s );
+            BCORE_REGISTER_OBJECT( create_cylinder_s );
+            BCORE_REGISTER_OBJECT( create_torus_s );
+            BCORE_REGISTER_OBJECT( create_hyperboloid1_s );
+            BCORE_REGISTER_OBJECT( create_hyperboloid2_s );
+            BCORE_REGISTER_OBJECT( create_ellipsoid_s );
+            BCORE_REGISTER_OBJECT( create_cone_s );
 
             // time
-            BCORE_REGISTER_FLECT( get_time_s );
+            BCORE_REGISTER_OBJECT( get_time_s );
 
         }
         break;

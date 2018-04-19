@@ -525,8 +525,8 @@ vd_t container_signal_handler( const bcore_signal_s* o )
     {
         case TYPEOF_init1:
         {
-            BCORE_REGISTER_FLECT( map_s );
-            BCORE_REGISTER_FLECT( arr_s );
+            BCORE_REGISTER_OBJECT( map_s );
+            BCORE_REGISTER_OBJECT( arr_s );
         }
         break;
 

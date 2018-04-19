@@ -462,8 +462,8 @@ vd_t compound_signal_handler( const bcore_signal_s* o )
     {
         case TYPEOF_init1:
         {
-            BCORE_REGISTER_FLECT( trans_data_s );
-            BCORE_REGISTER_FLECT( compound_s );
+            BCORE_REGISTER_OBJECT( trans_data_s );
+            BCORE_REGISTER_OBJECT( compound_s );
         }
         break;
 

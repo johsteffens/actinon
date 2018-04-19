@@ -82,6 +82,9 @@ typedef struct properties_s
 
 typedef struct spect_obj_s spect_obj_s;
 
+BCORE_DEFINE_INLINE_SPECT_GET_TYPED_CACHED( spect_obj_s )
+BCORE_DEFINE_INLINE_SPECT_GET_AWARE( spect_obj_s )
+
 /**********************************************************************************************************************/
 // obj_hdr_s
 

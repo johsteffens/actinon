@@ -98,14 +98,14 @@ vd_t vectors_signal_handler( const bcore_signal_s* o )
     {
         case TYPEOF_init1:
         {
-            BCORE_REGISTER_FLECT( v2d_s );
-            BCORE_REGISTER_FLECT( v3d_s );
-            BCORE_REGISTER_FLECT( m3d_s );
-            BCORE_REGISTER_FLECT( ray_s );
-            BCORE_REGISTER_FLECT( ray_cone_s );
-            BCORE_REGISTER_FLECT( cl_s );
-            BCORE_REGISTER_FLECT( row_cl_s );
-            BCORE_REGISTER_FLECT( image_cl_s );
+            BCORE_REGISTER_OBJECT( v2d_s );
+            BCORE_REGISTER_OBJECT( v3d_s );
+            BCORE_REGISTER_OBJECT( m3d_s );
+            BCORE_REGISTER_OBJECT( ray_s );
+            BCORE_REGISTER_OBJECT( ray_cone_s );
+            BCORE_REGISTER_OBJECT( cl_s );
+            BCORE_REGISTER_OBJECT( row_cl_s );
+            BCORE_REGISTER_OBJECT( image_cl_s );
         }
         break;
 
