@@ -108,17 +108,17 @@ void image_cps_s_write_pnm( const image_cps_s* o, sc_t file )
 {
     vd_t sink = bcore_sink_create_file( file );
 
-    bcore_sink_aware_push_fa( sink, "P6\n#<sz_t> #<sz_t>\n255\n", o->w, o->h );
+    bcore_sink_a_push_fa( sink, "P6\n#<sz_t> #<sz_t>\n255\n", o->w, o->h );
     for( sz_t i = 0; i < o->size; i++ )
     {
         u2_t v = o->data[ i ];
         u0_t c;
-        c = r_from_cps( v ); bcore_sink_aware_push_data( sink, &c, 1 );
-        c = g_from_cps( v ); bcore_sink_aware_push_data( sink, &c, 1 );
-        c = b_from_cps( v ); bcore_sink_aware_push_data( sink, &c, 1 );
+        c = r_from_cps( v ); bcore_sink_a_push_data( sink, &c, 1 );
+        c = g_from_cps( v ); bcore_sink_a_push_data( sink, &c, 1 );
+        c = b_from_cps( v ); bcore_sink_a_push_data( sink, &c, 1 );
     }
 
-    bcore_inst_aware_discard( sink );
+    bcore_inst_a_discard( sink );
 }
 
 tp_t image_cps_s_hash( const image_cps_s* o )

@@ -144,7 +144,7 @@ void compound_s_push_q( compound_s* o, const sr_s* object )
     if( bcore_trait_is_of( type, TYPEOF_spect_obj ) )
     {
         vd_t dst = compound_s_push_type( o, type );
-        bcore_inst_typed_copy( type, dst, object->o );
+        bcore_inst_t_copy( type, dst, object->o );
         obj_hdr_s* hdr = dst;
         if( o->envelope )
         {
@@ -170,7 +170,7 @@ void compound_s_push_q( compound_s* o, const sr_s* object )
         if( compound->envelope )
         {
             vd_t dst = compound_s_push_type( o, TYPEOF_compound_s );
-            bcore_inst_typed_copy( TYPEOF_compound_s, dst, compound );
+            bcore_inst_t_copy( TYPEOF_compound_s, dst, compound );
         }
         else
         {

@@ -313,7 +313,7 @@ envelope_s obj_estimate_envelope( vc_t o, sz_t samples, u2_t rseed, f3_t radius_
 
     tp_t pos_arr_type = bcore_flect_type_parse_sc( "{ v3d_s [] arr; }" );
     const bcore_array_s* pos_arr_spect = bcore_array_s_get_typed( pos_arr_type );
-    struct { v3d_s* data; sz_t size; sz_t space; } * pos_arr = bcore_inst_typed_create( pos_arr_type );
+    struct { v3d_s* data; sz_t size; sz_t space; } * pos_arr = bcore_inst_t_create( pos_arr_type );
 
     v3d_s sum = v3d_s_zero();
 
@@ -355,7 +355,7 @@ envelope_s obj_estimate_envelope( vc_t o, sz_t samples, u2_t rseed, f3_t radius_
         env.radius = sqrt( max_r2 ) * radius_factor;
     }
 
-    bcore_inst_typed_discard( pos_arr_type, pos_arr );
+    bcore_inst_t_discard( pos_arr_type, pos_arr );
 
     return env;
 }
@@ -454,8 +454,8 @@ void obj_set_radiance( vd_t obj, f3_t radiance )
 void obj_set_texture_field( vd_t obj, vc_t texture_field )
 {
     obj_hdr_s* o = obj;
-    bcore_inst_aware_discard( o->prp.texture_field );
-    o->prp.texture_field = bcore_inst_aware_clone( texture_field );
+    bcore_inst_a_discard( o->prp.texture_field );
+    o->prp.texture_field = bcore_inst_a_clone( texture_field );
 }
 
 void obj_set_envelope( vd_t obj, const envelope_s* env )
@@ -870,7 +870,7 @@ BCORE_DEFINE_OBJECT_INST( obj_distance_s, obj_distance_s_def )
 
 void obj_distance_s_set_distance( obj_distance_s* o, vc_t distance )
 {
-    o->distance = bcore_inst_aware_clone( distance );
+    o->distance = bcore_inst_a_clone( distance );
 }
 
 void obj_distance_s_set_cycles( obj_distance_s* o, sz_t cycles )
@@ -882,7 +882,7 @@ obj_distance_s* obj_distance_s_create_distance( vc_t distance, envelope_s* envel
 {
     obj_distance_s* o = obj_distance_s_create();
     o->prp.envelope = envelope;
-    o->distance = bcore_inst_aware_clone( distance );
+    o->distance = bcore_inst_a_clone( distance );
     return o;
 }
 
@@ -1009,8 +1009,8 @@ obj_pair_inside_s* obj_pair_inside_s_create_pair( vc_t o1, vc_t o2 )
 {
     obj_pair_inside_s* o = obj_pair_inside_s_create();
     properties_s_copy( &o->prp, &( ( obj_hdr_s* )o1 )->prp );
-    o->o1 = bcore_inst_aware_clone( o1 );
-    o->o2 = bcore_inst_aware_clone( o2 );
+    o->o1 = bcore_inst_a_clone( o1 );
+    o->o2 = bcore_inst_a_clone( o2 );
     return o;
 }
 
@@ -1160,8 +1160,8 @@ obj_pair_outside_s* obj_pair_outside_s_create_pair( vc_t o1, vc_t o2 )
     obj_pair_outside_s* o = obj_pair_outside_s_create();
     properties_s_copy( &o->prp, &( ( obj_hdr_s* )o1 )->prp );
 
-    o->o1 = bcore_inst_aware_clone( o1 );
-    o->o2 = bcore_inst_aware_clone( o2 );
+    o->o1 = bcore_inst_a_clone( o1 );
+    o->o2 = bcore_inst_a_clone( o2 );
 
     if( o->prp.envelope ) // discard envelope because o2 is outside o1 (true envelope would be bigger)
     {
@@ -1313,7 +1313,7 @@ obj_neg_s* obj_neg_s_create_neg( vc_t o1 )
 {
     obj_neg_s* o = obj_neg_s_create();
     properties_s_copy( &o->prp, &( ( obj_hdr_s* )o1 )->prp );
-    o->o1 = bcore_inst_aware_clone( o1 );
+    o->o1 = bcore_inst_a_clone( o1 );
     return o;
 }
 
@@ -1396,7 +1396,7 @@ obj_scale_s* obj_scale_s_create_scale( vc_t o1, v3d_s scale )
         o->prp.envelope->radius *= v3d_s_max( scale );
     }
 
-    o->o1 = bcore_inst_aware_clone( o1 );
+    o->o1 = bcore_inst_a_clone( o1 );
     o->inv_scale.x = ( scale.x != 0 ) ? ( 1.0 / scale.x ) : 1.0;
     o->inv_scale.y = ( scale.y != 0 ) ? ( 1.0 / scale.y ) : 1.0;
     o->inv_scale.z = ( scale.z != 0 ) ? ( 1.0 / scale.z ) : 1.0;
@@ -1694,8 +1694,8 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
         sr_s v = meval_s_eval( ev, sr_null() );
         if( bcore_trait_is_of( sr_s_type( &v ), typeof( "distance" ) ) )
         {
-            bcore_inst_aware_discard( o->distance );
-            o->distance = bcore_inst_aware_clone( v.o );
+            bcore_inst_a_discard( o->distance );
+            o->distance = bcore_inst_a_clone( v.o );
         }
         else
         {

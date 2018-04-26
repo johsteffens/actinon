@@ -154,8 +154,8 @@ static void mcode_s_err_fv( const mcode_s* o, sz_t index, sc_t format, va_list a
     if( file->size > 0 )
     {
         bcore_source_chain_s* chain = bcore_source_open_file( file->sc );
-        bcore_source_aware_set_index( chain, src_idx );
-        bcore_source_aware_parse_err_fv( chain, format, args );
+        bcore_source_a_set_index( (bcore_source*)chain, src_idx );
+        bcore_source_a_parse_err_fv( (bcore_source*)chain, format, args );
         bcore_source_chain_s_discard( chain );
     }
     else
@@ -187,17 +187,17 @@ void mcode_s_push_name( mcode_s* o, sc_t name )
 void mcode_s_push_src_index( mcode_s* o, sr_s* src )
 {
     bcore_arr_sz_s_push( &o->src_map, o->code.size );
-    bcore_arr_sz_s_push( &o->src_map, bcore_source_q_get_index( src ) );
+    bcore_arr_sz_s_push( &o->src_map, bcore_source_r_get_index( src ) );
 }
 
 void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
 {
     bcore_life_s* l = bcore_life_s_create();
 
-    bcore_arr_st_s_push_sc( &o->file_arr, bcore_source_q_get_file( src ) );
+    bcore_arr_st_s_push_sc( &o->file_arr, bcore_source_r_get_file( src ) );
     sz_t file_index = o->file_arr.size - 1;
 
-    bcore_source_q_parse_fa( src, " " );
+    bcore_source_r_parse_fa( src, " " );
 
     const bcore_hmap_tptp_s* hmap_types_l = hmap_types;
 
@@ -222,37 +222,37 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
 
     bcore_arr_sz_s* jmp_buf = bcore_life_s_push_aware( l, bcore_arr_sz_s_create() ); // jump address buffer
 
-    while( !bcore_source_q_eos( src ) )
+    while( !bcore_source_r_eos( src ) )
     {
         // source information for debugging
         bcore_arr_sz_s_push( &o->src_map, o->code.size );
         bcore_arr_sz_s_push( &o->src_map, file_index );
-        bcore_arr_sz_s_push( &o->src_map, bcore_source_q_get_index( src ) );
+        bcore_arr_sz_s_push( &o->src_map, bcore_source_r_get_index( src ) );
 
         // number literal
-        if( bcore_source_q_parse_bl_fa( src, "#?([0]>='0'&&[0]<='9')" ) )
+        if( bcore_source_r_parse_bl_fa( src, "#?([0]>='0'&&[0]<='9')" ) )
         {
             u3_t vi = 0; // integer part
             f3_t vf = 0; // fraction part (behind decimal point)
             s3_t vx = 0; // exponent
-            bcore_source_q_parse_fa( src, "#<u3_t*>", &vi );
+            bcore_source_r_parse_fa( src, "#<u3_t*>", &vi );
             bl_t is_int = true;
-            if( bcore_source_q_parse_bl_fa( src, "#?'.'" ) )
+            if( bcore_source_r_parse_bl_fa( src, "#?'.'" ) )
             {
                 is_int = false;
                 f3_t f = 0.1;
-                while( bcore_source_q_parse_bl_fa( src, "#?([0]>='0'&&[0]<='9')" ) )
+                while( bcore_source_r_parse_bl_fa( src, "#?([0]>='0'&&[0]<='9')" ) )
                 {
-                    char c = bcore_source_q_get_u0( src );
+                    char c = bcore_source_r_get_u0( src );
                     vf += f * ( c - '0' );
                     f *= 0.1;
                 }
             }
-            if( bcore_source_q_parse_bl_fa( src, "#?([0]=='e'||[0]=='E')" ) )
+            if( bcore_source_r_parse_bl_fa( src, "#?([0]=='e'||[0]=='E')" ) )
             {
                 is_int = false;
-                bcore_source_q_parse_fa( src, "#-<char*>" );
-                bcore_source_q_parse_fa( src, "#<s3_t*>", &vx );
+                bcore_source_r_parse_fa( src, "#-<char*>" );
+                bcore_source_r_parse_fa( src, "#<s3_t*>", &vx );
             }
             if( is_int )
             {
@@ -265,21 +265,21 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                 mcode_s_push_data( o, sr_f3( v ) );
             }
         }
-        else if( bcore_source_q_parse_bl_fa( src, "#?'\"'" ) ) // string literal
+        else if( bcore_source_r_parse_bl_fa( src, "#?'\"'" ) ) // string literal
         {
             st_s* s = st_s_create();
-            while( !bcore_source_q_parse_bl_fa( src, "#?'\"'" ) )
+            while( !bcore_source_r_parse_bl_fa( src, "#?'\"'" ) )
             {
-                if( bcore_source_q_eos( src ) ) bcore_source_q_parse_err_fa( src, "Stream ends in string literal" );
-                char c = bcore_source_q_get_u0( src );
+                if( bcore_source_r_eos( src ) ) bcore_source_r_parse_err_fa( src, "Stream ends in string literal" );
+                char c = bcore_source_r_get_u0( src );
                 if( c == '\\' )
                 {
-                    if     ( bcore_source_q_parse_bl_fa( src, "#?'\"'" ) ) st_s_push_char( s, '\"' );
-                    else if( bcore_source_q_parse_bl_fa( src, "#?'n'"  ) ) st_s_push_char( s, '\n' );
-                    else if( bcore_source_q_parse_bl_fa( src, "#?'r'"  ) ) st_s_push_char( s, '\r' );
-                    else if( bcore_source_q_parse_bl_fa( src, "#?'t'"  ) ) st_s_push_char( s, '\t' );
-                    else if( bcore_source_q_parse_bl_fa( src, "#?'0'"  ) ) st_s_push_char( s, '\0' );
-                    else if( bcore_source_q_parse_bl_fa( src, "#?'\\'" ) ) st_s_push_char( s, '\\' );
+                    if     ( bcore_source_r_parse_bl_fa( src, "#?'\"'" ) ) st_s_push_char( s, '\"' );
+                    else if( bcore_source_r_parse_bl_fa( src, "#?'n'"  ) ) st_s_push_char( s, '\n' );
+                    else if( bcore_source_r_parse_bl_fa( src, "#?'r'"  ) ) st_s_push_char( s, '\r' );
+                    else if( bcore_source_r_parse_bl_fa( src, "#?'t'"  ) ) st_s_push_char( s, '\t' );
+                    else if( bcore_source_r_parse_bl_fa( src, "#?'0'"  ) ) st_s_push_char( s, '\0' );
+                    else if( bcore_source_r_parse_bl_fa( src, "#?'\\'" ) ) st_s_push_char( s, '\\' );
                     else st_s_push_char( s, '\\' );
                 }
                 else
@@ -289,10 +289,10 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
             }
             mcode_s_push_data( o, sr_asd( s ) );
         }
-        else if( bcore_source_q_parse_bl_fa( src, "#?(([0]>='A'&&[0]<='Z')||([0]>='a'&&[0]<='z')||([0]=='_'))" ) ) // name of variable, constant, type, function or flow-control
+        else if( bcore_source_r_parse_bl_fa( src, "#?(([0]>='A'&&[0]<='Z')||([0]>='a'&&[0]<='z')||([0]=='_'))" ) ) // name of variable, constant, type, function or flow-control
         {
             st_s* name = st_s_create();
-            bcore_source_q_parse_fa( src, "#name ", name );
+            bcore_source_r_parse_fa( src, "#name ", name );
             tp_t key = typeof( name->sc );
 
             switch( key )
@@ -344,7 +344,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
 
                 case TYPEOF_else:
                 {
-                    if( jmp_buf->size == 0 ) bcore_source_q_parse_err_fa( src, "'else' without 'if'" );
+                    if( jmp_buf->size == 0 ) bcore_source_r_parse_err_fa( src, "'else' without 'if'" );
                     sz_t idx = bcore_arr_sz_s_pop( jmp_buf );
                     o->code.data[ idx ] = o->code.size;
                     mcode_s_push_code( o, FL_ELSE );
@@ -369,34 +369,34 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
             st_s_discard( name );
         }
         // controls and operators
-        else if( bcore_source_q_parse_bl_fa( src, "#?([0]=='!'||[0]=='?'||[0]=='.'||[0]=='='||[0]=='+'||[0]=='-'||[0]=='*'||[0]=='/'||[0]=='%'||[0]=='>'||[0]=='<'||[0]=='&'||[0]=='|'||[0]==':')" ) ) // operator
+        else if( bcore_source_r_parse_bl_fa( src, "#?([0]=='!'||[0]=='?'||[0]=='.'||[0]=='='||[0]=='+'||[0]=='-'||[0]=='*'||[0]=='/'||[0]=='%'||[0]=='>'||[0]=='<'||[0]=='&'||[0]=='|'||[0]==':')" ) ) // operator
         {
-            char c = bcore_source_q_get_u0( src );
+            char c = bcore_source_r_get_u0( src );
             switch( c )
             {
                 case '!': mcode_s_push_code( o, OP_NOT   ); break;
                 case '?':
                 {
-                    if( bcore_source_q_parse_bl_fa( src, "#?'?'" ) ) mcode_s_push_code( o, OP_DOUBLE_QUERY );
+                    if( bcore_source_r_parse_bl_fa( src, "#?'?'" ) ) mcode_s_push_code( o, OP_DOUBLE_QUERY );
                     else                                             mcode_s_push_code( o, OP_QUERY );
                 }
                 break;
                 case '.': mcode_s_push_code( o, OP_DOT   ); break;
-                case '=': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_EQUAL         : OP_ASSIGN ); break;
-                case '+': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_ADD_ASSIGN    : OP_ADD ); break;
-                case '-': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_SUB_ASSIGN    : OP_SUB ); break;
-                case '*': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_MUL_ASSIGN    : OP_MUL ); break;
-                case '/': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_DIV_ASSIGN    : OP_DIV ); break;
-                case '%': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_MOD_ASSIGN    : OP_MOD ); break;
+                case '=': mcode_s_push_code( o, bcore_source_r_parse_bl_fa( src, "#?'='" ) ? OP_EQUAL         : OP_ASSIGN ); break;
+                case '+': mcode_s_push_code( o, bcore_source_r_parse_bl_fa( src, "#?'='" ) ? OP_ADD_ASSIGN    : OP_ADD ); break;
+                case '-': mcode_s_push_code( o, bcore_source_r_parse_bl_fa( src, "#?'='" ) ? OP_SUB_ASSIGN    : OP_SUB ); break;
+                case '*': mcode_s_push_code( o, bcore_source_r_parse_bl_fa( src, "#?'='" ) ? OP_MUL_ASSIGN    : OP_MUL ); break;
+                case '/': mcode_s_push_code( o, bcore_source_r_parse_bl_fa( src, "#?'='" ) ? OP_DIV_ASSIGN    : OP_DIV ); break;
+                case '%': mcode_s_push_code( o, bcore_source_r_parse_bl_fa( src, "#?'='" ) ? OP_MOD_ASSIGN    : OP_MOD ); break;
                 case '<':
                 {
-                    if     ( bcore_source_q_parse_bl_fa( src, "#?'='" ) ) mcode_s_push_code( o, OP_SMALLER_EQUAL );
-                    else if( bcore_source_q_parse_bl_fa( src, "#?'>'" ) ) mcode_s_push_code( o, OP_UNEQUAL );
-                    else if( bcore_source_q_parse_bl_fa( src, "#?'-'" ) ) mcode_s_push_code( o, CL_FSIGNATURE );
+                    if     ( bcore_source_r_parse_bl_fa( src, "#?'='" ) ) mcode_s_push_code( o, OP_SMALLER_EQUAL );
+                    else if( bcore_source_r_parse_bl_fa( src, "#?'>'" ) ) mcode_s_push_code( o, OP_UNEQUAL );
+                    else if( bcore_source_r_parse_bl_fa( src, "#?'-'" ) ) mcode_s_push_code( o, CL_FSIGNATURE );
                     else                                                  mcode_s_push_code( o, OP_SMALLER );
                 }
                 break;
-                case '>': mcode_s_push_code( o, bcore_source_q_parse_bl_fa( src, "#?'='" ) ? OP_LARGER_EQUAL  : OP_LARGER ); break;
+                case '>': mcode_s_push_code( o, bcore_source_r_parse_bl_fa( src, "#?'='" ) ? OP_LARGER_EQUAL  : OP_LARGER ); break;
                 case '&': mcode_s_push_code( o, OP_AND ); break;
                 case '|': mcode_s_push_code( o, OP_OR  ); break;
                 case '^': mcode_s_push_code( o, OP_XOR ); break;
@@ -405,9 +405,9 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
             }
         }
         // controls
-        else if( bcore_source_q_parse_bl_fa( src, "#?([0]==';'||[0]==','||[0]=='('||[0]==')'||[0]=='['||[0]==']')" ) ) // controls and operators
+        else if( bcore_source_r_parse_bl_fa( src, "#?([0]==';'||[0]==','||[0]=='('||[0]==')'||[0]=='['||[0]==']')" ) ) // controls and operators
         {
-            char c = bcore_source_q_get_u0( src );
+            char c = bcore_source_r_get_u0( src );
             switch( c )
             {
                 case ';':
@@ -417,7 +417,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                         sz_t idx = bcore_arr_sz_s_pop( jmp_buf );
                         o->code.data[ idx ] = o->code.size;
                     }
-                    if( jmp_buf->size > 0 ) bcore_source_q_parse_err_fa( src, "Trailing jump address at end of statement." );
+                    if( jmp_buf->size > 0 ) bcore_source_r_parse_err_fa( src, "Trailing jump address at end of statement." );
                     mcode_s_push_code( o, CL_SEMICOLON );
                 }
                 break;
@@ -426,10 +426,10 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                 case '(':
                 {
 
-                    if     ( bcore_source_q_parse_bl_fa( src, "#?'&)'" ) ) mcode_s_push_code( o, OP_INSIDE_CPS );
-                    else if( bcore_source_q_parse_bl_fa( src, "#?'|)'" ) ) mcode_s_push_code( o, OP_OUTSIDE_CPS );
-                    else if( bcore_source_q_parse_bl_fa( src, "#?':)'" ) ) mcode_s_push_code( o, OP_COMPOUND );
-                    else if( bcore_source_q_parse_bl_fa( src, "#?'@)'" ) ) mcode_s_push_code( o, OP_ENVELOPE );
+                    if     ( bcore_source_r_parse_bl_fa( src, "#?'&)'" ) ) mcode_s_push_code( o, OP_INSIDE_CPS );
+                    else if( bcore_source_r_parse_bl_fa( src, "#?'|)'" ) ) mcode_s_push_code( o, OP_OUTSIDE_CPS );
+                    else if( bcore_source_r_parse_bl_fa( src, "#?':)'" ) ) mcode_s_push_code( o, OP_COMPOUND );
+                    else if( bcore_source_r_parse_bl_fa( src, "#?'@)'" ) ) mcode_s_push_code( o, OP_ENVELOPE );
                     else                                                   mcode_s_push_code( o, CL_ROUND_BRACKET_OPEN );
 
                 }
@@ -438,7 +438,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                 case ')': mcode_s_push_code( o, CL_ROUND_BRACKET_CLOSE  ); break;
                 case '[':
                 {
-                    if( bcore_source_q_parse_bl_fa( src, "#?']'" ) ) mcode_s_push_code( o, CL_DYN_ARRAY );
+                    if( bcore_source_r_parse_bl_fa( src, "#?']'" ) ) mcode_s_push_code( o, CL_DYN_ARRAY );
                     else                                             mcode_s_push_code( o, CL_SQUARE_BRACKET_OPEN  );
                 }
                 break;
@@ -446,25 +446,25 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                 default : break;
             }
         }
-        else if( bcore_source_q_parse_bl_fa( src, "#?'{' " ) ) // recurse into block
+        else if( bcore_source_r_parse_bl_fa( src, "#?'{' " ) ) // recurse into block
         {
             mcode_s* code = mcode_s_create();
             mcode_s_parse( code, hmap_types_l, src );
             mcode_s_push_data( o, sr_asd( code ) );
-            bcore_source_q_parse_fa( src, "} " );
+            bcore_source_r_parse_fa( src, "} " );
         }
-        else if( bcore_source_q_parse_bl_fa( src, "#=?'}'" ) ) // end of block (no consumption)
+        else if( bcore_source_r_parse_bl_fa( src, "#=?'}'" ) ) // end of block (no consumption)
         {
             break;
         }
-        else if( bcore_source_q_parse_bl_fa( src, "#?'#parse' " ) ) // include file (code is inlined)
+        else if( bcore_source_r_parse_bl_fa( src, "#?'#parse' " ) ) // include file (code is inlined)
         {
             st_s* file = st_s_create();
-            bcore_source_q_parse_fa( src, "#string ", file );
-            if( file->size == 0 ) bcore_source_q_parse_err_fa( src, "File name expected." );
+            bcore_source_r_parse_fa( src, "#string ", file );
+            if( file->size == 0 ) bcore_source_r_parse_err_fa( src, "File name expected." );
             if( file->sc[ 0 ] != '/' ) // make path relative to current file path
             {
-                st_s* cur_file = st_s_create_sc( bcore_source_q_get_file( src ) );
+                st_s* cur_file = st_s_create_sc( bcore_source_r_get_file( src ) );
                 sz_t idx = st_s_find_char( cur_file, cur_file->size, 0, '/' );
                 if( idx < cur_file->size )
                 {
@@ -477,21 +477,21 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
             }
             sr_s chain = sr_asd( bcore_source_chain_s_create() );
             bcore_source_chain_s_push_d( chain.o, bcore_source_file_s_create_name( file->sc ) );
-            bcore_source_chain_s_push_d( chain.o, bcore_inst_typed_create( typeof( "bcore_source_string_s" ) ) );
+            bcore_source_chain_s_push_d( chain.o, bcore_inst_t_create( typeof( "bcore_source_string_s" ) ) );
             mcode_s_parse( o, hmap_types_l, &chain );
             sr_down( chain );
             st_s_discard( file );
         }
-        else if( bcore_source_q_parse_bl_fa( src, "#?'#source_file_name' " ) ) // constant representing the file name of the current script file
+        else if( bcore_source_r_parse_bl_fa( src, "#?'#source_file_name' " ) ) // constant representing the file name of the current script file
         {
-            mcode_s_push_data( o, sr_asd( st_s_create_sc( bcore_source_q_get_file( src ) ) ) );
+            mcode_s_push_data( o, sr_asd( st_s_create_sc( bcore_source_r_get_file( src ) ) ) );
         }
         else
         {
-            bcore_source_q_parse_err_fa( src, "Syntax error." );
+            bcore_source_r_parse_err_fa( src, "Syntax error." );
         }
 
-        bcore_source_q_parse_fa( src, " " );
+        bcore_source_r_parse_fa( src, " " );
     }
     bcore_life_s_discard( l );
 }
@@ -1279,7 +1279,7 @@ sr_s meval_s_eval_call( meval_s* o, const sr_s* closure )
     }
     meval_s_expect_code( o, CL_ROUND_BRACKET_OPEN  );
     bclos_arguments_s* args = bclos_arguments_s_create();
-    sr_s sig_obj = bclos_closure_q_sig( closure );
+    sr_s sig_obj = bclos_closure_r_sig( closure );
     if( !sig_obj.o ) meval_s_err_fa( o, "Function '#<sc_t>' has no signature.", ifnameof( sr_s_type( closure ) ) );
     const bclos_signature_s* sig = sig_obj.o;
     for( sz_t i = 0; i < sig->size; i++ )
@@ -1299,7 +1299,7 @@ sr_s meval_s_eval_call( meval_s* o, const sr_s* closure )
         }
         bclos_arguments_s_push( args, arg );
     }
-    sr_s obj = sr_fork( bclos_closure_q_call( closure, o->frame, args ) );
+    sr_s obj = sr_fork( bclos_closure_r_call( closure, o->frame, args ) );
     bclos_arguments_s_discard( args );
     meval_s_expect_code( o, CL_ROUND_BRACKET_CLOSE  );
     sr_down( sig_obj );
@@ -1372,7 +1372,7 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
                 case OP_MOD_ASSIGN: obj = meval_s_mod( o, sr_cw( front_obj ), obj ); break;
                 default: break;
             }
-            bcore_inst_typed_copy_typed( sr_s_type( &front_obj ), front_obj.o, sr_s_type( &obj ), obj.o );
+            bcore_inst_t_copy_typed( sr_s_type( &front_obj ), front_obj.o, sr_s_type( &obj ), obj.o );
             sr_down( obj );
             return sr_fork( front_obj );
         }
@@ -1381,16 +1381,16 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
             meval_s_expect_code( o, CL_NAME );
             tp_t key = meval_s_get_code( o );
             sr_s ret = sr_null();
-            if( bcore_via_q_nexists( &front_obj, key ) )
+            if( bcore_via_r_nexists( &front_obj, key ) )
             {
                 if( meval_s_try_code( o, OP_ASSIGN ) )
                 {
-                    bcore_via_q_nset( &front_obj, key, sr_clone( meval_s_eval( o, sr_null() ) ) );
+                    bcore_via_r_nset( &front_obj, key, sr_clone( meval_s_eval( o, sr_null() ) ) );
                     ret = sr_s_fork( &front_obj );
                 }
                 else
                 {
-                    ret = sr_fork( bcore_via_q_nget( &front_obj, key ) );
+                    ret = sr_fork( bcore_via_r_nget( &front_obj, key ) );
                 }
             }
             else
