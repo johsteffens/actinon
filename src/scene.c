@@ -82,7 +82,7 @@ void image_cps_s_set_size( image_cps_s* o, sz_t w, sz_t h, u2_t v )
 {
     o->w = w;
     o->h = h;
-    bcore_array_aware_set_size( o, w * h );
+    bcore_array_a_set_size( (bcore_array*)o, w * h );
     for( sz_t i = 0; i < o->size; i++ ) o->data[ i ] = v;
 }
 
@@ -691,12 +691,12 @@ BCORE_DEFINE_CREATE_SELF( lum_arr_s,  "lum_arr_s = bcore_inst { aware_t _; lum_s
 
 void lum_arr_s_clear( lum_arr_s* o )
 {
-    bcore_array_aware_set_size( o, 0 );
+    bcore_array_a_set_size( (bcore_array*)o, 0 );
 }
 
 void lum_arr_s_push( lum_arr_s* o, lum_s lum )
 {
-    if( o->space == o->size ) bcore_array_aware_set_space( o, o->space > 0 ? o->space * 2 : 256 );
+    if( o->space == o->size ) bcore_array_a_set_space( (bcore_array*)o, o->space > 0 ? o->space * 2 : 256 );
     o->data[ o->size++ ] = lum;
 }
 
@@ -726,7 +726,7 @@ BCORE_DEFINE_CREATE_SELF( lum_image_s,  "lum_image_s = bcore_inst { aware_t _; s
 
 void lum_image_s_reset( lum_image_s* o, sz_t width, sz_t height )
 {
-    bcore_array_aware_set_size( &o->arr, width * height );
+    bcore_array_a_set_size( (bcore_array*)&o->arr, width * height );
     for( sz_t i = 0; i < o->arr.size; i++ )
     {
         o->arr.data[ i ].clr = ( cl_s ) { 0, 0, 0 };

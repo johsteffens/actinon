@@ -68,7 +68,7 @@ BCORE_DEFINE_OBJECT_INST( row_cl_s, "row_cl_s = bcore_inst { aware_t _; cl_s [] 
 
 void row_cl_s_set_size( row_cl_s* o, sz_t size, cl_s color )
 {
-    bcore_array_aware_set_size( o, size );
+    bcore_array_a_set_size( (bcore_array*)o, size );
     for( sz_t i = 0; i < size; i++ ) o->data[ i ] = color;
 }
 
@@ -79,7 +79,7 @@ BCORE_DEFINE_OBJECT_INST( image_cl_s, "image_cl_s = bcore_inst { aware_t _; sz_t
 
 void image_cl_s_set_size( image_cl_s* o, sz_t w, sz_t h, cl_s color )
 {
-    bcore_array_aware_set_size( o, w * h );
+    bcore_array_a_set_size( (bcore_array*)o, w * h );
     for( sz_t i = 0; i < o->size; i++ ) o->data[ i ] = color;
     o->w = w;
     o->h = h;

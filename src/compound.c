@@ -113,7 +113,7 @@ const aware_t* compound_s_get_object( const compound_s* o, sz_t index )
 
 void compound_s_clear( compound_s* o )
 {
-    bcore_array_aware_set_size( o, 0 );
+    bcore_array_a_set_size( (bcore_array*)o, 0 );
 }
 
 vd_t compound_s_push_type( compound_s* o, tp_t type )
@@ -121,13 +121,13 @@ vd_t compound_s_push_type( compound_s* o, tp_t type )
     if( type == TYPEOF_compound_s )
     {
         sr_s sr = sr_create( type );
-        bcore_array_aware_push( o, sr );
+        bcore_array_a_push( (bcore_array*)o, sr );
         return sr.o;
     }
     else if( bcore_trait_is_of( type, TYPEOF_spect_obj ) )
     {
         sr_s sr = sr_create( type );
-        bcore_array_aware_push( o, sr );
+        bcore_array_a_push( (bcore_array*)o, sr );
         return sr.o;
     }
     else

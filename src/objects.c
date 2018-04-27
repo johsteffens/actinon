@@ -327,7 +327,7 @@ envelope_s obj_estimate_envelope( vc_t o, sz_t samples, u2_t rseed, f3_t radius_
         if( a < f3_inf )
         {
             v3d_s pos = ray_s_pos( &ray, a );
-            bcore_array_spect_push( pos_arr_spect, pos_arr, sr_twc( TYPEOF_v3d_s, &pos ) );
+            bcore_array_p_push( pos_arr_spect, (bcore_array*)pos_arr, sr_twc( TYPEOF_v3d_s, &pos ) );
             sum = v3d_s_add( sum, ray_s_pos( &ray, a ) );
             ray.p = v3d_s_mlf( sum, ( 1.0 / pos_arr->size ) );
 
