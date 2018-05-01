@@ -1427,7 +1427,7 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
         if( code == OP_QUERY )
         {
             meval_s_get_code( o );
-            bcore_txt_ml_to_stdout( meval_s_eval( o, sr_null() ) );
+            bcore_txt_ml_x_to_stdout( meval_s_eval( o, sr_null() ) );
             return sr_null();
         }
         else if( code == OP_DOUBLE_QUERY )
@@ -1914,7 +1914,7 @@ st_s* mclosure_selftest()
 {
     st_s* log = st_s_create();
     sr_s obj = bcore_interpret_auto_file( "../../actinon/dev/test.txt" );
-    bcore_txt_ml_to_string( obj, log );
+    bcore_txt_ml_x_to_string( obj, log );
     return log;
 }
 
