@@ -163,7 +163,7 @@ static sc_t properties_s_def =
     "func ap_t init = properties_s_init_a;"
 "}";
 
-BCORE_DEFINE_OBJECT_INST( properties_s, properties_s_def )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_INST( properties_s, properties_s_def )
 
 void properties_s_init_a( bcore_nucleus_s* nc )
 {
@@ -238,7 +238,7 @@ sc_t spect_obj_s_def = "spect_obj_s = spect"
     "       feature is_reachable_fp fp_is_reachable ~> func is_reachable_fp is_reachable;"
 "}";
 
-BCORE_DEFINE_OBJECT_INST( spect_obj_s, spect_obj_s_def )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_INST( spect_obj_s, spect_obj_s_def )
 
 const spect_obj_s* obj_get_spect( vc_t o ) { return ( ( obj_hdr_s* )o )->p; }
 
@@ -507,7 +507,7 @@ static sc_t obj_plane_s_def =
     "func scale_fp      scale      = obj_plane_s_scale;"
 "}";
 
-BCORE_DEFINE_OBJECT_INST( obj_plane_s, obj_plane_s_def )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_INST( obj_plane_s, obj_plane_s_def )
 
 v2d_s obj_plane_s_projection( const obj_plane_s* o, v3d_s pos )
 {
@@ -585,7 +585,7 @@ static sc_t obj_sphere_s_def =
     "func scale_fp        scale           = obj_sphere_s_scale;"
 "}";
 
-BCORE_DEFINE_OBJECT_INST( obj_sphere_s, obj_sphere_s_def )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_INST( obj_sphere_s, obj_sphere_s_def )
 
 void obj_sphere_s_set_radius( obj_sphere_s* o, f3_t radius )
 {
@@ -698,7 +698,7 @@ static sc_t obj_squaroid_s_def =
     "func scale_fp        scale           = obj_squaroid_s_scale;"
 "}";
 
-BCORE_DEFINE_OBJECT_INST( obj_squaroid_s, obj_squaroid_s_def )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_INST( obj_squaroid_s, obj_squaroid_s_def )
 
 void obj_squaroid_s_set_param( obj_squaroid_s* o, f3_t a, f3_t b, f3_t c, f3_t r )
 {
@@ -866,7 +866,7 @@ static sc_t obj_distance_s_def =
     "func scale_fp        scale           = obj_distance_s_scale;"
 "}";
 
-BCORE_DEFINE_OBJECT_INST( obj_distance_s, obj_distance_s_def )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_INST( obj_distance_s, obj_distance_s_def )
 
 void obj_distance_s_set_distance( obj_distance_s* o, vc_t distance )
 {
@@ -1003,7 +1003,7 @@ static sc_t obj_pair_inside_s_def =
     "func scale_fp        scale           = obj_pair_inside_s_scale;"
 "}";
 
-BCORE_DEFINE_OBJECT_INST( obj_pair_inside_s, obj_pair_inside_s_def )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_INST( obj_pair_inside_s, obj_pair_inside_s_def )
 
 obj_pair_inside_s* obj_pair_inside_s_create_pair( vc_t o1, vc_t o2 )
 {
@@ -1153,7 +1153,7 @@ static sc_t obj_pair_outside_s_def =
     "func scale_fp        scale           = obj_pair_outside_s_scale;"
 "}";
 
-BCORE_DEFINE_OBJECT_INST( obj_pair_outside_s, obj_pair_outside_s_def )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_INST( obj_pair_outside_s, obj_pair_outside_s_def )
 
 obj_pair_outside_s* obj_pair_outside_s_create_pair( vc_t o1, vc_t o2 )
 {
@@ -1307,7 +1307,7 @@ static sc_t obj_neg_s_def =
     "func scale_fp        scale           = obj_neg_s_scale;"
 "}";
 
-BCORE_DEFINE_OBJECT_INST( obj_neg_s, obj_neg_s_def )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_INST( obj_neg_s, obj_neg_s_def )
 
 obj_neg_s* obj_neg_s_create_neg( vc_t o1 )
 {
@@ -1380,7 +1380,7 @@ static sc_t obj_scale_s_def =
     "func scale_fp        scale           = obj_scale_s_scale;"
 "}";
 
-BCORE_DEFINE_OBJECT_INST( obj_scale_s, obj_scale_s_def )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_INST( obj_scale_s, obj_scale_s_def )
 
 obj_scale_s* obj_scale_s_create_scale( vc_t o1, v3d_s scale )
 {

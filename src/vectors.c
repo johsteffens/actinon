@@ -63,7 +63,7 @@ static bcore_self_s* cl_s_create_self( void )
 /**********************************************************************************************************************/
 /// row_cl_s
 
-BCORE_DEFINE_OBJECT_INST( row_cl_s, "row_cl_s = bcore_inst { aware_t _; cl_s [] arr; }" )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_INST( row_cl_s, "row_cl_s = bcore_inst { aware_t _; cl_s [] arr; }" )
 
 
 void row_cl_s_set_size( row_cl_s* o, sz_t size, cl_s color )
@@ -75,7 +75,7 @@ void row_cl_s_set_size( row_cl_s* o, sz_t size, cl_s color )
 /**********************************************************************************************************************/
 /// image_cl_s
 
-BCORE_DEFINE_OBJECT_INST( image_cl_s, "image_cl_s = bcore_inst { aware_t _; sz_t w; sz_t h; cl_s [] arr; }" )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_INST( image_cl_s, "image_cl_s = bcore_inst { aware_t _; sz_t w; sz_t h; cl_s [] arr; }" )
 
 void image_cl_s_set_size( image_cl_s* o, sz_t w, sz_t h, cl_s color )
 {
