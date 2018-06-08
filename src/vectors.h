@@ -38,10 +38,6 @@
 
 /**********************************************************************************************************************/
 /// f3_t
-static inline f3_t f3_sqr( f3_t v ) { return v * v; }
-static inline f3_t f3_abs( f3_t v ) { return v < 0 ? -v : v; }
-static inline f3_t f3_max( f3_t v1, f3_t v2  ) { return v1 > v2 ? v1 : v2; }
-static inline f3_t f3_min( f3_t v1, f3_t v2  ) { return v1 < v2 ? v1 : v2; }
 
 // Note: generators xsg, xsg2 show strong hyper-structures on polar coordinates
 

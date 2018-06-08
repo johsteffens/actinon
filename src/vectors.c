@@ -26,11 +26,11 @@
 
 /**********************************************************************************************************************/
 
-BCORE_DEFINE_OBJECT_FLAT( v2d_s,      "v2d_s = bcore_inst { f3_t x; f3_t y; }" )
-BCORE_DEFINE_OBJECT_FLAT( v3d_s,      "v3d_s = bcore_inst { f3_t x; f3_t y; f3_t z; }" )
-BCORE_DEFINE_OBJECT_FLAT( m3d_s,      "m3d_s = bcore_inst { v3d_s x; v3d_s y; v3d_s z; }" )
-BCORE_DEFINE_OBJECT_FLAT( ray_s,      "ray_s = bcore_inst { v3d_s p; v3d_s d; }" )
-BCORE_DEFINE_OBJECT_FLAT( ray_cone_s, "ray_cone_s = bcore_inst { ray_s ray; f3_t cos_rs; }" )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_FLAT( v2d_s,      "v2d_s = bcore_inst { f3_t x; f3_t y; }" )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_FLAT( v3d_s,      "v3d_s = bcore_inst { f3_t x; f3_t y; f3_t z; }" )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_FLAT( m3d_s,      "m3d_s = bcore_inst { v3d_s x; v3d_s y; v3d_s z; }" )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_FLAT( ray_s,      "ray_s = bcore_inst { v3d_s p; v3d_s d; }" )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_FLAT( ray_cone_s, "ray_cone_s = bcore_inst { ray_s ray; f3_t cos_rs; }" )
 
 /**********************************************************************************************************************/
 /// cl_s

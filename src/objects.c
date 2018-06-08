@@ -39,7 +39,7 @@ static sc_t envelope_s_def =
     "f3_t radius;"
 "}";
 
-BCORE_DEFINE_OBJECT_FLAT( envelope_s, envelope_s_def )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_FLAT( envelope_s, envelope_s_def )
 
 
 void envelope_s_move( envelope_s* o, const v3d_s* vec )
