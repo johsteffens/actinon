@@ -203,7 +203,7 @@ sr_s map_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
         meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN );
         sr_s st = meval_s_eval( ev, sr_null() );
         if( sr_s_type( &st ) != TYPEOF_st_s ) meval_s_err_fa( ev, "String expected." );
-        bcore_bin_ml_to_file( sr_cw( *sr_o ), ( ( st_s* )st.o )->sc );
+        bcore_bin_ml_x_to_file( sr_cw( *sr_o ), ( ( st_s* )st.o )->sc );
         sr_down( st );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
@@ -490,7 +490,7 @@ sr_s arr_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
         meval_s_expect_code( ev, CL_ROUND_BRACKET_OPEN );
         sr_s st = meval_s_eval( ev, sr_null() );
         if( sr_s_type( &st ) != TYPEOF_st_s ) meval_s_err_fa( ev, "String expected." );
-        bcore_bin_ml_to_file( sr_cw( *sr_o ), ( ( st_s* )st.o )->sc );
+        bcore_bin_ml_x_to_file( sr_cw( *sr_o ), ( ( st_s* )st.o )->sc );
         sr_down( st );
         meval_s_expect_code( ev, CL_ROUND_BRACKET_CLOSE );
     }
