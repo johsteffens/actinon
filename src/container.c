@@ -68,8 +68,8 @@ void map_s_set( map_s* o, tp_t key, sr_s obj )
 
 void map_s_move( map_s* o, const v3d_s* vec )
 {
-    sz_t size = bcore_hmap_tp_sr_s_size( &o->m );
-    for( sz_t i = 0; i < size; i++ )
+    uz_t size = bcore_hmap_tp_sr_s_size( &o->m );
+    for( uz_t i = 0; i < size; i++ )
     {
         const sr_s* sr = bcore_hmap_tp_sr_s_idx_val( &o->m, i );
         if( sr )
@@ -97,8 +97,8 @@ void map_s_move( map_s* o, const v3d_s* vec )
 
 void map_s_rotate( map_s* o, const m3d_s* mat )
 {
-    sz_t size = bcore_hmap_tp_sr_s_size( &o->m );
-    for( sz_t i = 0; i < size; i++ )
+    uz_t size = bcore_hmap_tp_sr_s_size( &o->m );
+    for( uz_t i = 0; i < size; i++ )
     {
         const sr_s* sr = bcore_hmap_tp_sr_s_idx_val( &o->m, i );
         if( sr )
@@ -126,8 +126,8 @@ void map_s_rotate( map_s* o, const m3d_s* mat )
 
 void map_s_scale( map_s* o, f3_t fac )
 {
-    sz_t size = bcore_hmap_tp_sr_s_size( &o->m );
-    for( sz_t i = 0; i < size; i++ )
+    uz_t size = bcore_hmap_tp_sr_s_size( &o->m );
+    for( uz_t i = 0; i < size; i++ )
     {
         const sr_s* sr = bcore_hmap_tp_sr_s_idx_val( &o->m, i );
         if( sr )
@@ -243,23 +243,23 @@ static sc_t arr_s_def =
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( arr_s )
 BCORE_DEFINE_CREATE_SELF( arr_s, arr_s_def )
 
-sz_t arr_s_get_size( const arr_s* o )
+uz_t arr_s_get_size( const arr_s* o )
 {
     return o->a.size;
 }
 
-void arr_s_set_size( arr_s* o, sz_t size )
+void arr_s_set_size( arr_s* o, uz_t size )
 {
     bcore_arr_sr_s_set_size( &o->a, size );
 }
 
-sr_s* arr_s_get( arr_s* o, sz_t idx )
+sr_s* arr_s_get( arr_s* o, uz_t idx )
 {
     if( idx < o->a.size ) return &o->a.data[ idx ];
     return NULL;
 }
 
-void arr_s_set( arr_s* o, sz_t idx, sr_s obj )
+void arr_s_set( arr_s* o, uz_t idx, sr_s obj )
 {
     if( idx < o->a.size )
     {
@@ -275,7 +275,7 @@ void arr_s_push( arr_s* o, sr_s obj )
 
 void arr_s_cat( arr_s* o, const arr_s* arr )
 {
-    for( sz_t i = 0; i < arr->a.size; i++ )
+    for( uz_t i = 0; i < arr->a.size; i++ )
     {
         arr_s_push( o, sr_cw( arr->a.data[ i ] ) );
     }
@@ -288,8 +288,8 @@ void arr_s_clear( arr_s* o )
 
 void arr_s_move( arr_s* o, const v3d_s* vec )
 {
-    sz_t size = arr_s_get_size( o );
-    for( sz_t i = 0; i < size; i++ )
+    uz_t size = arr_s_get_size( o );
+    for( uz_t i = 0; i < size; i++ )
     {
         sr_s* sr = arr_s_get( o, i );
         if( sr )
@@ -317,8 +317,8 @@ void arr_s_move( arr_s* o, const v3d_s* vec )
 
 void arr_s_rotate( arr_s* o, const m3d_s* mat )
 {
-    sz_t size = arr_s_get_size( o );
-    for( sz_t i = 0; i < size; i++ )
+    uz_t size = arr_s_get_size( o );
+    for( uz_t i = 0; i < size; i++ )
     {
         sr_s* sr = arr_s_get( o, i );
         if( sr )
@@ -346,8 +346,8 @@ void arr_s_rotate( arr_s* o, const m3d_s* mat )
 
 void arr_s_scale( arr_s* o, f3_t fac )
 {
-    sz_t size = arr_s_get_size( o );
-    for( sz_t i = 0; i < size; i++ )
+    uz_t size = arr_s_get_size( o );
+    for( uz_t i = 0; i < size; i++ )
     {
         sr_s* sr = arr_s_get( o, i );
         if( sr )
@@ -373,7 +373,7 @@ void arr_s_scale( arr_s* o, f3_t fac )
     }
 }
 
-sr_s arr_s_create_inside_composite( arr_s* o, sz_t start, sz_t size )
+sr_s arr_s_create_inside_composite( arr_s* o, uz_t start, uz_t size )
 {
     size = size > o->a.size ? o->a.size : size;
     if( size == 1 )
@@ -391,7 +391,7 @@ sr_s arr_s_create_inside_composite( arr_s* o, sz_t start, sz_t size )
     return sr_null();
 }
 
-sr_s arr_s_create_outside_composite( arr_s* o, sz_t start, sz_t size )
+sr_s arr_s_create_outside_composite( arr_s* o, uz_t start, uz_t size )
 {
     size = size > o->a.size ? o->a.size : size;
     if( size == 1 )
@@ -409,11 +409,11 @@ sr_s arr_s_create_outside_composite( arr_s* o, sz_t start, sz_t size )
     return sr_null();
 }
 
-sr_s arr_s_create_compound( arr_s* o, sz_t start, sz_t size )
+sr_s arr_s_create_compound( arr_s* o, uz_t start, uz_t size )
 {
     size = size > o->a.size ? o->a.size : size;
     sr_s sr = sr_create( TYPEOF_compound_s );
-    for( sz_t i = start; i < size; i++ )
+    for( uz_t i = start; i < size; i++ )
     {
         compound_s_push_q( sr.o, arr_s_get( o, i ) );
     }

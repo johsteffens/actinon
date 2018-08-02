@@ -307,20 +307,20 @@ f3_t obj_ray_exit( vc_t o, const ray_s* ray, v3d_s* p_nor )
     }
 }
 
-envelope_s obj_estimate_envelope( vc_t o, sz_t samples, u2_t rseed, f3_t radius_factor )
+envelope_s obj_estimate_envelope( vc_t o, uz_t samples, u2_t rseed, f3_t radius_factor )
 {
     const obj_hdr_s* hdr = o;
 
     tp_t pos_arr_type = bcore_flect_type_parse_sc( "{ v3d_s [] arr; }" );
     const bcore_array_s* pos_arr_spect = bcore_array_s_get_typed( pos_arr_type );
-    struct { v3d_s* data; sz_t size; sz_t space; } * pos_arr = bcore_inst_t_create( pos_arr_type );
+    struct { v3d_s* data; uz_t size; uz_t space; } * pos_arr = bcore_inst_t_create( pos_arr_type );
 
     v3d_s sum = v3d_s_zero();
 
     u2_t rv = rseed;
     ray_s ray;
     ray.p = hdr->prp.pos;
-    for( sz_t i = 0; i < samples; i++ )
+    for( uz_t i = 0; i < samples; i++ )
     {
         ray.d = v3d_s_random_sphere_belt( &rv, 1.0 );
         f3_t a = obj_ray_exit( o, &ray, NULL );
@@ -345,7 +345,7 @@ envelope_s obj_estimate_envelope( vc_t o, sz_t samples, u2_t rseed, f3_t radius_
     if( pos_arr->size > 0 )
     {
         f3_t max_r2 = 0;
-        for( sz_t i = 0; i < pos_arr->size; i++ )
+        for( uz_t i = 0; i < pos_arr->size; i++ )
         {
             v3d_s pos = pos_arr->data[ i ];
             f3_t r = v3d_s_diff_sqr( ray.p, pos );
@@ -843,7 +843,7 @@ typedef struct obj_distance_s
         };
     };
     f3_t inv_scale;
-    sz_t cycles;
+    uz_t cycles;
     vd_t distance;
 } obj_distance_s;
 
@@ -854,7 +854,7 @@ static sc_t obj_distance_s_def =
     "spect spect_obj_s -> p;"
     "properties_s prp;"
     "f3_t inv_scale = 1.0;"
-    "sz_t cycles = 200;"
+    "uz_t cycles = 200;"
     "aware* distance;"
 
     "func projection_fp   projection      = obj_distance_s_projection;"
@@ -873,7 +873,7 @@ void obj_distance_s_set_distance( obj_distance_s* o, vc_t distance )
     o->distance = bcore_inst_a_clone( distance );
 }
 
-void obj_distance_s_set_cycles( obj_distance_s* o, sz_t cycles )
+void obj_distance_s_set_cycles( obj_distance_s* o, uz_t cycles )
 {
     o->cycles = cycles;
 }
@@ -919,7 +919,7 @@ f3_t obj_distance_s_ray_hit( const obj_distance_s* o, const ray_s* r, v3d_s* p_n
 
     if( dist > 0 )
     {
-        for( sz_t i = 0; i < o->cycles; i++ )
+        for( uz_t i = 0; i < o->cycles; i++ )
         {
             offs1 += dist + f3_eps;
             dist = distance( o->distance, ray_s_pos( &ray, offs1 ) );
@@ -928,7 +928,7 @@ f3_t obj_distance_s_ray_hit( const obj_distance_s* o, const ray_s* r, v3d_s* p_n
     }
     else
     {
-        for( sz_t i = 0; i < o->cycles; i++ )
+        for( uz_t i = 0; i < o->cycles; i++ )
         {
             offs1 -= dist - f3_eps;
             dist = distance( o->distance, ray_s_pos( &ray, offs1 ) );

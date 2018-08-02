@@ -161,8 +161,8 @@ static sr_s string_to_num_s_call( vc_t o, bclos_frame_s* frm, const bclos_argume
 
     sr_s ret;
 
-    sz_t start = st_s_find_none_sc( string, 0, -1, " \t\n" ); // skip whitespaces
-    sz_t end   = st_s_find_none_sc( string, start, -1, "+-0123456789eE." ); // until non-numeric
+    uz_t start = st_s_find_none_sc( string, 0, -1, " \t\n" ); // skip whitespaces
+    uz_t end   = st_s_find_none_sc( string, start, -1, "+-0123456789eE." ); // until non-numeric
     bl_t is_float = st_s_find_any_sc( string, start, end, ".eE" ) < end;
 
     if( is_float )

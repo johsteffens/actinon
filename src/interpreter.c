@@ -120,7 +120,7 @@ typedef struct mcode_s
     bcore_arr_tp_s    code;
     bcore_name_map_s  names;
     bcore_arr_st_s    file_arr;
-    bcore_arr_sz_s    src_map;     // map to source code: repeating triplet: code index, file index and source index
+    bcore_arr_uz_s    src_map;     // map to source code: repeating triplet: code index, file index and source index
     bclos_frame_s     local_frame; // local frame used by closures of mcode
 } mcode_s;
 
@@ -132,18 +132,18 @@ static sc_t mcode_s_def =
     "bcore_arr_tp_s   code;"
     "bcore_name_map_s names;"
     "bcore_arr_st_s   file_arr;"
-    "bcore_arr_sz_s   src_map;"
+    "bcore_arr_uz_s   src_map;"
     "bclos_frame_s    local_frame;"
 "}";
 
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( mcode_s )
 BCORE_DEFINE_CREATE_SELF( mcode_s, mcode_s_def )
 
-static void mcode_s_err_fv( const mcode_s* o, sz_t index, sc_t format, va_list args )
+static void mcode_s_err_fv( const mcode_s* o, uz_t index, sc_t format, va_list args )
 {
     s3_t src_idx = 0;
     s3_t file_idx = 0;
-    for( sz_t i = 0; i < o->src_map.size; i += 3 )
+    for( uz_t i = 0; i < o->src_map.size; i += 3 )
     {
         if( o->src_map.data[ i ] > index ) break;
         file_idx = o->src_map.data[ i + 1 ];
@@ -186,8 +186,8 @@ void mcode_s_push_name( mcode_s* o, sc_t name )
 
 void mcode_s_push_src_index( mcode_s* o, sr_s* src )
 {
-    bcore_arr_sz_s_push( &o->src_map, o->code.size );
-    bcore_arr_sz_s_push( &o->src_map, bcore_source_r_get_index( src ) );
+    bcore_arr_uz_s_push( &o->src_map, o->code.size );
+    bcore_arr_uz_s_push( &o->src_map, bcore_source_r_get_index( src ) );
 }
 
 void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
@@ -195,7 +195,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
     bcore_life_s* l = bcore_life_s_create();
 
     bcore_arr_st_s_push_sc( &o->file_arr, bcore_source_r_get_file( src ) );
-    sz_t file_index = o->file_arr.size - 1;
+    uz_t file_index = o->file_arr.size - 1;
 
     bcore_source_r_parse_fa( src, " " );
 
@@ -220,14 +220,14 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
         hmap_types_l = map;
     }
 
-    bcore_arr_sz_s* jmp_buf = bcore_life_s_push_aware( l, bcore_arr_sz_s_create() ); // jump address buffer
+    bcore_arr_uz_s* jmp_buf = bcore_life_s_push_aware( l, bcore_arr_uz_s_create() ); // jump address buffer
 
     while( !bcore_source_r_eos( src ) )
     {
         // source information for debugging
-        bcore_arr_sz_s_push( &o->src_map, o->code.size );
-        bcore_arr_sz_s_push( &o->src_map, file_index );
-        bcore_arr_sz_s_push( &o->src_map, bcore_source_r_get_index( src ) );
+        bcore_arr_uz_s_push( &o->src_map, o->code.size );
+        bcore_arr_uz_s_push( &o->src_map, file_index );
+        bcore_arr_uz_s_push( &o->src_map, bcore_source_r_get_index( src ) );
 
         // number literal
         if( bcore_source_r_parse_bl_fa( src, "#?([0]>='0'&&[0]<='9')" ) )
@@ -309,7 +309,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                 case TYPEOF_if:
                 {
                     mcode_s_push_code( o, FL_IF );
-                    bcore_arr_sz_s_push( jmp_buf, o->code.size );
+                    bcore_arr_uz_s_push( jmp_buf, o->code.size );
                     mcode_s_push_code( o, 0 ); // end of if-block
                 }
                 break;
@@ -317,7 +317,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                 case TYPEOF_while:
                 {
                     mcode_s_push_code( o, FL_WHILE );
-                    bcore_arr_sz_s_push( jmp_buf, o->code.size );
+                    bcore_arr_uz_s_push( jmp_buf, o->code.size );
                     mcode_s_push_code( o, 0 ); // end of while-block
                 }
                 break;
@@ -325,7 +325,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                 case TYPEOF_for:
                 {
                     mcode_s_push_code( o, FL_FOR );
-                    bcore_arr_sz_s_push( jmp_buf, o->code.size );
+                    bcore_arr_uz_s_push( jmp_buf, o->code.size );
                     mcode_s_push_code( o, 0 ); // end of while-block
                 }
                 break;
@@ -345,10 +345,10 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                 case TYPEOF_else:
                 {
                     if( jmp_buf->size == 0 ) bcore_source_r_parse_err_fa( src, "'else' without 'if'" );
-                    sz_t idx = bcore_arr_sz_s_pop( jmp_buf );
+                    uz_t idx = bcore_arr_uz_s_pop( jmp_buf );
                     o->code.data[ idx ] = o->code.size;
                     mcode_s_push_code( o, FL_ELSE );
-                    bcore_arr_sz_s_push( jmp_buf, o->code.size );
+                    bcore_arr_uz_s_push( jmp_buf, o->code.size );
                     mcode_s_push_code( o, 0 ); // end of else-block
                 }
                 break;
@@ -414,7 +414,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
                 {
                     if( jmp_buf->size > 0 )
                     {
-                        sz_t idx = bcore_arr_sz_s_pop( jmp_buf );
+                        uz_t idx = bcore_arr_uz_s_pop( jmp_buf );
                         o->code.data[ idx ] = o->code.size;
                     }
                     if( jmp_buf->size > 0 ) bcore_source_r_parse_err_fa( src, "Trailing jump address at end of statement." );
@@ -465,7 +465,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
             if( file->sc[ 0 ] != '/' ) // make path relative to current file path
             {
                 st_s* cur_file = st_s_create_sc( bcore_source_r_get_file( src ) );
-                sz_t idx = st_s_find_char( cur_file, cur_file->size, 0, '/' );
+                uz_t idx = st_s_find_char( cur_file, cur_file->size, 0, '/' );
                 if( idx < cur_file->size )
                 {
                     cur_file->data[ idx ] = 0;
@@ -496,7 +496,7 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
     bcore_life_s_discard( l );
 }
 
-static tp_t mcode_s_peek_code( const mcode_s* o, const sz_t* index )
+static tp_t mcode_s_peek_code( const mcode_s* o, const uz_t* index )
 {
     if( *index < o->code.size )
     {
@@ -505,14 +505,14 @@ static tp_t mcode_s_peek_code( const mcode_s* o, const sz_t* index )
     return 0;
 }
 
-static tp_t mcode_s_get_code( const mcode_s* o, sz_t* index )
+static tp_t mcode_s_get_code( const mcode_s* o, uz_t* index )
 {
     tp_t code = ( *index < o->code.size ) ? o->code.data[ ( *index )++ ] : 0;
     return code;
 }
 
 /// if matching: consumes code and returns true; else returns false;
-static bl_t mcode_s_try_code( const mcode_s* o, sz_t* index, tp_t code )
+static bl_t mcode_s_try_code( const mcode_s* o, uz_t* index, tp_t code )
 {
     if( mcode_s_peek_code( o, index ) == code )
     {
@@ -523,7 +523,7 @@ static bl_t mcode_s_try_code( const mcode_s* o, sz_t* index, tp_t code )
 }
 
 /// if matching: consumes code and returns true; else returns false;
-bl_t mcode_s_try_name( const mcode_s* o, sz_t* index, tp_t key )
+bl_t mcode_s_try_name( const mcode_s* o, uz_t* index, tp_t key )
 {
     if
     (
@@ -538,7 +538,7 @@ bl_t mcode_s_try_name( const mcode_s* o, sz_t* index, tp_t key )
     return false;
 }
 
-static bl_t mcode_s_end_code( const mcode_s* o, sz_t* index )
+static bl_t mcode_s_end_code( const mcode_s* o, uz_t* index )
 {
     return ( *index == o->code.size ) ? true : false;
 }
@@ -550,7 +550,7 @@ typedef struct meval_s
     aware_t _;
     const mcode_s* mcode; // not owned only referenced
     bclos_frame_s* frame; // not owned only referenced
-    sz_t           index; // code index
+    uz_t           index; // code index
 } meval_s;
 
 static sc_t meval_s_def =
@@ -559,7 +559,7 @@ static sc_t meval_s_def =
     "aware_t _;"
     "private mcode_s*       mcode;"
     "private bclos_frame_s* frame;"
-    "sz_t                   index;"
+    "uz_t                   index;"
 "}";
 
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( meval_s )
@@ -1173,8 +1173,8 @@ tp_t meval_s_get_code( meval_s* o )
 sr_s meval_s_get_data( meval_s* o )
 {
     if( !meval_s_try_code( o, CL_DATA ) ) meval_s_err_fa( o, "Data entry expected." );
-    sz_t idx = meval_s_get_code( o );
-    if( idx > o->mcode->data.size ) meval_s_err_fa( o, "Data index '#<sz_t>' out of range.", idx );
+    uz_t idx = meval_s_get_code( o );
+    if( idx > o->mcode->data.size ) meval_s_err_fa( o, "Data index '#<uz_t>' out of range.", idx );
     return sr_cw( o->mcode->data.data[ idx ] );
 }
 
@@ -1201,12 +1201,12 @@ void meval_s_expect_code( meval_s* o, tp_t code )
     }
 }
 
-sz_t meval_s_get_index( meval_s* o )
+uz_t meval_s_get_index( meval_s* o )
 {
     return o->index;
 }
 
-void meval_s_jmp_to( meval_s* o, sz_t address )
+void meval_s_jmp_to( meval_s* o, uz_t address )
 {
     if( address >= o->mcode->code.size ) meval_s_err_fa( o, "Target address out of range." );
     o->index = address;
@@ -1282,7 +1282,7 @@ sr_s meval_s_eval_call( meval_s* o, const sr_s* closure )
     sr_s sig_obj = bclos_closure_r_sig( closure );
     if( !sig_obj.o ) meval_s_err_fa( o, "Function '#<sc_t>' has no signature.", ifnameof( sr_s_type( closure ) ) );
     const bclos_signature_s* sig = sig_obj.o;
-    for( sz_t i = 0; i < sig->size; i++ )
+    for( uz_t i = 0; i < sig->size; i++ )
     {
         if( i > 0 ) meval_s_expect_code( o, CL_COMMA );
         sr_s arg  = meval_s_eval( o, sr_null() );
@@ -1290,7 +1290,7 @@ sr_s meval_s_eval_call( meval_s* o, const sr_s* closure )
         tp_t arg_type = sr_s_type( &arg );
         if( sig_type != 0 && arg_type != sig_type && !bcore_trait_is_of( arg_type, sig_type ) )
         {
-            meval_s_err_fa( o, "Function '#<sc_t>': Argument #<sz_t> is '#<sc_t>' and not of '#<sc_t>'.",
+            meval_s_err_fa( o, "Function '#<sc_t>': Argument #<uz_t> is '#<sc_t>' and not of '#<sc_t>'.",
                                 ifnameof( sr_s_type( closure ) ),
                                 i + 1,
                                 ifnameof( arg_type ),
@@ -1641,7 +1641,7 @@ sr_s meval_s_execute( meval_s* o )
             meval_s_get_code( o );
             if( code == FL_IF )
             {
-                sz_t jmp_target = meval_s_get_code( o );
+                uz_t jmp_target = meval_s_get_code( o );
                 meval_s_expect_code( o, CL_ROUND_BRACKET_OPEN );
                 sr_s cond = meval_s_eval( o, sr_null() );
                 meval_s_expect_code( o, CL_ROUND_BRACKET_CLOSE );
@@ -1660,7 +1660,7 @@ sr_s meval_s_execute( meval_s* o )
                 if( meval_s_peek_code( o ) == FL_ELSE )
                 {
                     meval_s_get_code( o );
-                    sz_t jmp_target = meval_s_get_code( o );
+                    uz_t jmp_target = meval_s_get_code( o );
                     if( flag )
                     {
                         meval_s_jmp_to( o, jmp_target );
@@ -1673,8 +1673,8 @@ sr_s meval_s_execute( meval_s* o )
             }
             else if( code == FL_WHILE )
             {
-                sz_t end_while = meval_s_get_code( o );
-                sz_t begin_while = meval_s_get_index( o );
+                uz_t end_while = meval_s_get_code( o );
+                uz_t begin_while = meval_s_get_index( o );
                 for( ;; )
                 {
                     meval_s_expect_code( o, CL_ROUND_BRACKET_OPEN );
@@ -1699,7 +1699,7 @@ sr_s meval_s_execute( meval_s* o )
             }
             else if( code == FL_FOR )
             {
-                sz_t end_for = meval_s_get_code( o );
+                uz_t end_for = meval_s_get_code( o );
 
                 bclos_frame_s* for_frame = bclos_frame_s_create();
                 for_frame->external = o->frame;
@@ -1715,8 +1715,8 @@ sr_s meval_s_execute( meval_s* o )
                 if( sr_s_type( &arr_sr ) != TYPEOF_arr_s ) meval_s_err_fa( o, "Expected: for '#<sc_t>' in 'list-expression'.", meval_s_get_name( o, key ) );
                 arr_s* arr = arr_sr.o;
                 meval_s_expect_code( o, CL_ROUND_BRACKET_CLOSE );
-                sz_t begin_loop = meval_s_get_index( o );
-                for( sz_t i = 0; i < arr->a.size; i++ )
+                uz_t begin_loop = meval_s_get_index( o );
+                for( uz_t i = 0; i < arr->a.size; i++ )
                 {
                     sr_s* element = &arr->a.data[ i ];
                     if( element->p )
@@ -1794,7 +1794,7 @@ static sr_s mclosure_s_call( mclosure_s* o, bclos_frame_s* frame, const bclos_ar
 
     if( o->signature )
     {
-        for( sz_t i = 0; i < o->signature->size; i++ )
+        for( uz_t i = 0; i < o->signature->size; i++ )
         {
             bclos_signature_arg_s sig_arg = o->signature->data[ i ];
             sr_s arg_obj = bclos_arguments_s_get( args, i, frame );
@@ -1887,7 +1887,7 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     /// program arguments
     {
         sr_s args_sr = sr_create( typeof( "arr_s" ) );
-        for( sz_t i = 0; i < interpreter_args_g->size; i++ )
+        for( uz_t i = 0; i < interpreter_args_g->size; i++ )
         {
             arr_s_push( args_sr.o, sr_awc( interpreter_args_g->data[ i ] ) );
         }

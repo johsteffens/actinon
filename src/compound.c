@@ -43,8 +43,8 @@ typedef struct compound_s
         struct
         {
             vd_t* data;
-            sz_t  size;
-            sz_t  space;
+            uz_t  size;
+            uz_t  space;
         };
     };
 } compound_s;
@@ -59,7 +59,7 @@ static sc_t compound_s_def =
 
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( compound_s )
 
-sz_t compound_s_get_size( const compound_s* o )
+uz_t compound_s_get_size( const compound_s* o )
 {
     return o ? o->size : 0;
 }
@@ -77,7 +77,7 @@ void compound_s_set_auto_envelope( compound_s* o )
         envelope_s_discard( o->envelope );
         o->envelope = NULL;
     }
-    for( sz_t i = 0; i < o->size; i++ )
+    for( uz_t i = 0; i < o->size; i++ )
     {
         envelope_s env = envelope_create( v3d_s_zero(), 0 );
         vd_t obj = o->data[ i ];
@@ -106,7 +106,7 @@ void compound_s_set_auto_envelope( compound_s* o )
     }
 }
 
-const aware_t* compound_s_get_object( const compound_s* o, sz_t index )
+const aware_t* compound_s_get_object( const compound_s* o, uz_t index )
 {
     return o ? o->data[ index ] : NULL;
 }
@@ -174,7 +174,7 @@ void compound_s_push_q( compound_s* o, const sr_s* object )
         }
         else
         {
-            for( sz_t i = 0; i < compound->size; i++ )
+            for( uz_t i = 0; i < compound->size; i++ )
             {
                 compound_s_push( o, sr_awc( compound->data[ i ] ) );
             }
@@ -183,8 +183,8 @@ void compound_s_push_q( compound_s* o, const sr_s* object )
     else if( type == TYPEOF_map_s )
     {
         map_s* map = object->o;
-        sz_t size = bcore_hmap_tp_sr_s_size( &map->m );
-        for( sz_t i = 0; i < size; i++ )
+        uz_t size = bcore_hmap_tp_sr_s_size( &map->m );
+        for( uz_t i = 0; i < size; i++ )
         {
             if( bcore_hmap_tp_sr_s_idx_key( &map->m, i ) )
             {
@@ -195,7 +195,7 @@ void compound_s_push_q( compound_s* o, const sr_s* object )
     else if( type == TYPEOF_arr_s )
     {
         const arr_s* arr = object->o;
-        for( sz_t i = 0; i < arr->a.size; i++ )
+        for( uz_t i = 0; i < arr->a.size; i++ )
         {
             compound_s_push_q( o, &arr->a.data[ i ] );
         }
@@ -217,7 +217,7 @@ f3_t compound_s_ray_hit( const compound_s* o, const ray_s* ray, v3d_s* p_nor, vc
     if( o->envelope && !envelope_s_ray_hits( o->envelope, ray ) ) return f3_inf;
     v3d_s nor;
     f3_t min_a = f3_inf;
-    for( sz_t i = 0; i < o->size; i++ )
+    for( uz_t i = 0; i < o->size; i++ )
     {
         aware_t* element = o->data[ i ];
         vc_t hit_obj_l = NULL;
@@ -248,7 +248,7 @@ f3_t compound_s_ray_trans_hit( const compound_s* o, const ray_s* ray, trans_data
     if( o->envelope && !envelope_s_ray_hits( o->envelope, ray ) ) return f3_inf;
     v3d_s nor;
     f3_t min_a = f3_inf;
-    for( sz_t i = 0; i < o->size; i++ )
+    for( uz_t i = 0; i < o->size; i++ )
     {
         aware_t* element = o->data[ i ];
         obj_hdr_s* hit_obj = NULL;
@@ -298,10 +298,10 @@ f3_t compound_s_ray_trans_hit( const compound_s* o, const ray_s* ray, trans_data
     return min_a;
 }
 
-sz_t compound_s_side_count( const compound_s* o, v3d_s pos, s2_t side )
+uz_t compound_s_side_count( const compound_s* o, v3d_s pos, s2_t side )
 {
-    sz_t count = 0;
-    for( sz_t i = 0; i < o->size; i++ )
+    uz_t count = 0;
+    for( uz_t i = 0; i < o->size; i++ )
     {
         count += ( obj_side( o->data[ i ], pos ) == side );
     }
@@ -317,7 +317,7 @@ static bcore_self_s* compound_s_create_self( void )
 void compound_s_move( compound_s* o, const v3d_s* vec )
 {
     if( o->envelope ) envelope_s_move( o->envelope, vec );
-    for( sz_t i = 0; i < o->size; i++ )
+    for( uz_t i = 0; i < o->size; i++ )
     {
         vd_t obj = o->data[ i ];
         if( obj )
@@ -338,7 +338,7 @@ void compound_s_move( compound_s* o, const v3d_s* vec )
 void compound_s_rotate( compound_s* o, const m3d_s* mat )
 {
     if( o->envelope ) envelope_s_rotate( o->envelope, mat );
-    for( sz_t i = 0; i < o->size; i++ )
+    for( uz_t i = 0; i < o->size; i++ )
     {
         vd_t obj = o->data[ i ];
         if( obj )
@@ -359,7 +359,7 @@ void compound_s_rotate( compound_s* o, const m3d_s* mat )
 void compound_s_scale( compound_s* o, f3_t fac )
 {
     if( o->envelope ) envelope_s_scale( o->envelope, fac );
-    for( sz_t i = 0; i < o->size; i++ )
+    for( uz_t i = 0; i < o->size; i++ )
     {
         vd_t obj = o->data[ i ];
         if( obj )

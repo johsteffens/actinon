@@ -389,16 +389,16 @@ typedef struct row_cl_s
         struct
         {
             cl_s* data;
-            sz_t size, space;
+            uz_t size, space;
         };
     };
 } row_cl_s;
 
 BCORE_DECLARE_FUNCTIONS_OBJ( row_cl_s )
 
-void row_cl_s_set_size( row_cl_s* o, sz_t size, cl_s color );
+void row_cl_s_set_size( row_cl_s* o, uz_t size, cl_s color );
 
-static inline void row_cl_s_set_pixel( row_cl_s* o, sz_t x, cl_s cl )
+static inline void row_cl_s_set_pixel( row_cl_s* o, uz_t x, cl_s cl )
 {
     if( x < o->size ) o->data[ x ] = cl;
 }
@@ -410,42 +410,42 @@ static inline void row_cl_s_set_pixel( row_cl_s* o, sz_t x, cl_s cl )
 typedef struct image_cl_s
 {
     aware_t _;
-    sz_t w, h; // width, height,
+    uz_t w, h; // width, height,
     union
     {
         bcore_array_dyn_solid_static_s arr;
         struct
         {
             cl_s* data;
-            sz_t size, space;
+            uz_t size, space;
         };
     };
 } image_cl_s;
 
 BCORE_DECLARE_FUNCTIONS_OBJ( image_cl_s )
 
-void image_cl_s_set_size( image_cl_s* o, sz_t w, sz_t h, cl_s color );
+void image_cl_s_set_size( image_cl_s* o, uz_t w, uz_t h, cl_s color );
 
-static inline void image_cl_s_set_pixel( image_cl_s* o, sz_t x, sz_t y, cl_s cl )
+static inline void image_cl_s_set_pixel( image_cl_s* o, uz_t x, uz_t y, cl_s cl )
 {
     if( x < o->w && y < o->h ) o->data[ y * o->w + x ] = cl;
 }
 
-static inline void image_cl_s_set_row( image_cl_s* o, sz_t y, const row_cl_s* row )
+static inline void image_cl_s_set_row( image_cl_s* o, uz_t y, const row_cl_s* row )
 {
-    for( sz_t i = 0; i < o->w; i++ )
+    for( uz_t i = 0; i < o->w; i++ )
     {
         if( i == row->size ) break;
         o->data[ y * o->w + i ] = row->data[ i ];
     }
 }
 
-static inline cl_s image_cl_s_get_pixel( const image_cl_s* o, sz_t x, sz_t y )
+static inline cl_s image_cl_s_get_pixel( const image_cl_s* o, uz_t x, uz_t y )
 {
     return o->data[ y * o->w + x ];
 }
 
-static inline void image_cl_s_add_pixel( image_cl_s* o, sz_t x, sz_t y, cl_s cl )
+static inline void image_cl_s_add_pixel( image_cl_s* o, uz_t x, uz_t y, cl_s cl )
 {
     v3d_s_o_add( &o->data[ y * o->w + x ], cl );
 }

@@ -31,7 +31,7 @@ extern bl_t scene_s_overwrite_output_files_g;
 typedef struct image_cps_s image_cps_s;
 BCORE_DECLARE_FUNCTIONS_OBJ( image_cps_s )
 
-void image_cps_s_set_size( image_cps_s* o, sz_t w, sz_t h, u2_t v );
+void image_cps_s_set_size( image_cps_s* o, uz_t w, uz_t h, u2_t v );
 tp_t image_cps_s_hash( const image_cps_s* o );
 void image_cps_s_write_pnm( const image_cps_s* o, sc_t file );
 
@@ -42,8 +42,8 @@ BCORE_DECLARE_FUNCTIONS_OBJ( scene_s )
 void scene_s_clear( scene_s* o );
 
 /// appends light & matter from object; returns number of atomic objects pushed
-sz_t scene_s_push( scene_s* o, const sr_s* object );
-sz_t scene_s_objects( const scene_s* o ); // number of objects
+uz_t scene_s_push( scene_s* o, const sr_s* object );
+uz_t scene_s_objects( const scene_s* o ); // number of objects
 
 sr_s scene_s_meval_key( sr_s* o, meval_s* ev, tp_t key );
 

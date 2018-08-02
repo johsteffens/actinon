@@ -49,14 +49,14 @@ bl_t scene_s_overwrite_output_files_g = false;
 typedef struct image_cps_s
 {
     aware_t _;
-    sz_t w, h; // width, height,
+    uz_t w, h; // width, height,
     union
     {
         bcore_array_dyn_solid_static_s arr;
         struct
         {
             u2_t* data;
-            sz_t size, space;
+            uz_t size, space;
         };
     };
 } image_cps_s;
@@ -64,7 +64,7 @@ typedef struct image_cps_s
 BCORE_DECLARE_FUNCTIONS_OBJ( image_cps_s )
 
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( image_cps_s )
-BCORE_DEFINE_CREATE_SELF( image_cps_s, "image_cps_s = bcore_inst { aware_t _; sz_t w; sz_t h; u2_t [] data; }" )
+BCORE_DEFINE_CREATE_SELF( image_cps_s, "image_cps_s = bcore_inst { aware_t _; uz_t w; uz_t h; u2_t [] data; }" )
 
 u2_t cps_from_rgb( u0_t r, u0_t g, u0_t b ) { return ( u2_t )r | ( ( u2_t )g ) << 8 | ( ( u2_t )b ) << 16; }
 u0_t r_from_cps( u2_t v ) { return v;       }
@@ -78,20 +78,20 @@ u2_t cps_from_cl( cl_s cl )
     return cps_from_rgb( r, g, b );
 }
 
-void image_cps_s_set_size( image_cps_s* o, sz_t w, sz_t h, u2_t v )
+void image_cps_s_set_size( image_cps_s* o, uz_t w, uz_t h, u2_t v )
 {
     o->w = w;
     o->h = h;
     bcore_array_a_set_size( (bcore_array*)o, w * h );
-    for( sz_t i = 0; i < o->size; i++ ) o->data[ i ] = v;
+    for( uz_t i = 0; i < o->size; i++ ) o->data[ i ] = v;
 }
 
-void image_cps_s_set_pixel( image_cps_s* o, sz_t x, sz_t y, u2_t v )
+void image_cps_s_set_pixel( image_cps_s* o, uz_t x, uz_t y, u2_t v )
 {
     if( x < o->w && y < o->h ) o->data[ y * o->w + x ] = v;
 }
 
-void image_cps_s_set_pixel_cl( image_cps_s* o, sz_t x, sz_t y, cl_s cl )
+void image_cps_s_set_pixel_cl( image_cps_s* o, uz_t x, uz_t y, cl_s cl )
 {
     image_cps_s_set_pixel( o, x, y, cps_from_cl( cl ) );
 }
@@ -99,7 +99,7 @@ void image_cps_s_set_pixel_cl( image_cps_s* o, sz_t x, sz_t y, cl_s cl )
 void image_cps_s_copy_cl( image_cps_s* o, const image_cl_s* src )
 {
     image_cps_s_set_size( o, src->w, src->h, 0 );
-    for( sz_t i = 0; i < o->size; i++ ) o->data[ i ] = cps_from_cl( src->data[ i ] );
+    for( uz_t i = 0; i < o->size; i++ ) o->data[ i ] = cps_from_cl( src->data[ i ] );
 }
 
 /**********************************************************************************************************************/
@@ -108,8 +108,8 @@ void image_cps_s_write_pnm( const image_cps_s* o, sc_t file )
 {
     vd_t sink = bcore_sink_create_file( file );
 
-    bcore_sink_a_push_fa( sink, "P6\n#<sz_t> #<sz_t>\n255\n", o->w, o->h );
-    for( sz_t i = 0; i < o->size; i++ )
+    bcore_sink_a_push_fa( sink, "P6\n#<uz_t> #<uz_t>\n255\n", o->w, o->h );
+    for( uz_t i = 0; i < o->size; i++ )
     {
         u2_t v = o->data[ i ];
         u0_t c;
@@ -124,7 +124,7 @@ void image_cps_s_write_pnm( const image_cps_s* o, sc_t file )
 tp_t image_cps_s_hash( const image_cps_s* o )
 {
     tp_t hash = bcore_tp_init();
-    for( sz_t i = 0; i < o->size; i++ ) hash = bcore_tp_fold_u2( hash, o->data[ i ] );
+    for( uz_t i = 0; i < o->size; i++ ) hash = bcore_tp_fold_u2( hash, o->data[ i ] );
     return hash;
 }
 
@@ -134,13 +134,13 @@ tp_t image_cps_s_hash( const image_cps_s* o )
 typedef struct scene_s
 {
     aware_t _;
-    sz_t threads;
-    sz_t image_width;
-    sz_t image_height;
+    uz_t threads;
+    uz_t image_width;
+    uz_t image_height;
     f3_t gamma;
     f3_t gradient_threshold;
-    sz_t gradient_samples;
-    sz_t gradient_cycles;
+    uz_t gradient_samples;
+    uz_t gradient_cycles;
 
     cl_s background_color;
 
@@ -149,11 +149,11 @@ typedef struct scene_s
     v3d_s camera_top_direction;
     f3_t  camera_focal_length;
 
-    sz_t trace_depth;
+    uz_t trace_depth;
     f3_t trace_min_intensity;
 
-    sz_t direct_samples;
-    sz_t path_samples;
+    uz_t direct_samples;
+    uz_t path_samples;
     f3_t max_path_length;  // path rays longer than max_path_length obtain background color
 
     compound_s* light;  // light sources
@@ -167,13 +167,13 @@ static sc_t scene_s_def =
 "scene_s = bcore_inst"
 "{"
     "aware_t _;"
-    "sz_t threads = 10;"
-    "sz_t image_width = 800;"
-    "sz_t image_height = 600;"
+    "uz_t threads = 10;"
+    "uz_t image_width = 800;"
+    "uz_t image_height = 600;"
     "f3_t gamma = 1.0;"
     "f3_t gradient_threshold = 0.1;"
-    "sz_t gradient_samples = 10;"
-    "sz_t gradient_cycles = 1;"
+    "uz_t gradient_samples = 10;"
+    "uz_t gradient_cycles = 1;"
     "cl_s background_color;"
 
     "v3d_s camera_position;"
@@ -181,10 +181,10 @@ static sc_t scene_s_def =
     "v3d_s camera_top_direction;"
     "f3_t  camera_focal_length = 1.0;"
 
-    "sz_t trace_depth         = 11;"
+    "uz_t trace_depth         = 11;"
     "f3_t trace_min_intensity = 0;"
-    "sz_t direct_samples      = 100;"
-    "sz_t path_samples        = 0;"  // requires trace_depth > 10
+    "uz_t direct_samples      = 100;"
+    "uz_t path_samples        = 0;"  // requires trace_depth > 10
     "f3_t max_path_length     = 1E+30;"  // path rays longer than max_path_length obtain background color
 
     "compound_s* light;"
@@ -210,7 +210,7 @@ static bcore_self_s* scene_s_create_self( void )
     return self;
 }
 
-sz_t scene_s_push( scene_s* o, const sr_s* object )
+uz_t scene_s_push( scene_s* o, const sr_s* object )
 {
     tp_t type = sr_s_type( object );
     if( bcore_trait_is_of( type, typeof( "spect_obj" ) ) )
@@ -232,8 +232,8 @@ sz_t scene_s_push( scene_s* o, const sr_s* object )
     else if( type == TYPEOF_map_s )
     {
         map_s* map = object->o;
-        sz_t size = bcore_hmap_tp_sr_s_size( &map->m );
-        for( sz_t i = 0; i < size; i++ )
+        uz_t size = bcore_hmap_tp_sr_s_size( &map->m );
+        for( uz_t i = 0; i < size; i++ )
         {
             if( bcore_hmap_tp_sr_s_idx_key( &map->m, i ) )
             {
@@ -244,8 +244,8 @@ sz_t scene_s_push( scene_s* o, const sr_s* object )
     else if( type == TYPEOF_arr_s )
     {
         arr_s* arr = object->o;
-        sz_t size = arr_s_get_size( arr );
-        for( sz_t i = 0; i < size; i++ )
+        uz_t size = arr_s_get_size( arr );
+        for( uz_t i = 0; i < size; i++ )
         {
             scene_s_push( o, arr_s_get( arr, i ) );
         }
@@ -253,9 +253,9 @@ sz_t scene_s_push( scene_s* o, const sr_s* object )
     return 0;
 }
 
-sz_t scene_s_objects( const scene_s* o )
+uz_t scene_s_objects( const scene_s* o )
 {
-    sz_t size = 0;
+    uz_t size = 0;
     size += compound_s_get_size( o->light );
     size += compound_s_get_size( o->matter );
     return size;
@@ -382,7 +382,7 @@ cl_s scene_s_lum( const scene_s* scene,
                   const ray_s* ray,
                   f3_t offs,
                   trans_data_s* trans,
-                  sz_t depth,
+                  uz_t depth,
                   f3_t intensity )
 {
     cl_s lum = { 0, 0, 0 };
@@ -505,7 +505,7 @@ cl_s scene_s_lum( const scene_s* scene,
         cl_s lum_l = { 0, 0, 0 };
 
         /// process sources with radiance directly  (light-sources)
-        for( sz_t i = 0; i < compound_s_get_size( scene->light ); i++ )
+        for( uz_t i = 0; i < compound_s_get_size( scene->light ); i++ )
         {
             cl_s cl_sum = { 0, 0, 0 };
             ray_s out = surface;
@@ -516,10 +516,10 @@ cl_s scene_s_lum( const scene_s* scene,
             m3d_s src_con = m3d_s_transposed( m3d_s_con_z( fov_to_src.ray.d ) );
             f3_t cyl_hgt = areal_coverage( fov_to_src.cos_rs );
             cl_s color = obj_color( light_src, light_src->prp.pos );
-            sz_t direct_samples = scene->direct_samples * diffuse_intensity;
+            uz_t direct_samples = scene->direct_samples * diffuse_intensity;
             direct_samples = ( direct_samples == 0 ) ? 1 : direct_samples;
 
-            for( sz_t j = 0; j < direct_samples; j++ )
+            for( uz_t j = 0; j < direct_samples; j++ )
             {
                 out.d = m3d_s_mlv( &src_con, v3d_s_random_sphere_cap( &rv, cyl_hgt ) );
                 f3_t weight = v3d_s_mlv( out.d, surface.d );
@@ -556,10 +556,10 @@ cl_s scene_s_lum( const scene_s* scene,
             f3_t per_energy = v3d_s_sqr( lum_l );
             per_energy = per_energy > 0.01 ? per_energy : 0.01;
 
-            sz_t path_samples = scene->path_samples * diffuse_intensity;
+            uz_t path_samples = scene->path_samples * diffuse_intensity;
             path_samples = ( path_samples == 0 ) ? 1 : path_samples;
 
-            for( sz_t i = 0; i < path_samples; i++ )
+            for( uz_t i = 0; i < path_samples; i++ )
             {
                 out.d = m3d_s_mlv( &out_con, v3d_s_random_sphere_cap( &rv, 1.0 ) );
                 f3_t weight = v3d_s_mlv( out.d, surface.d );
@@ -681,7 +681,7 @@ typedef struct lum_arr_s
         struct
         {
             lum_s* data;
-            sz_t size, space;
+            uz_t size, space;
         };
     };
 } lum_arr_s;
@@ -716,18 +716,18 @@ void lum_arr_s_push_pos( lum_arr_s* o, v2d_s pos )
 typedef struct lum_image_s
 {
     aware_t _;
-    sz_t width;
-    sz_t height;
+    uz_t width;
+    uz_t height;
     lum_arr_s arr;
 } lum_image_s;
 
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( lum_image_s )
-BCORE_DEFINE_CREATE_SELF( lum_image_s,  "lum_image_s = bcore_inst { aware_t _; sz_t width; sz_t height; lum_arr_s arr; }" )
+BCORE_DEFINE_CREATE_SELF( lum_image_s,  "lum_image_s = bcore_inst { aware_t _; uz_t width; uz_t height; lum_arr_s arr; }" )
 
-void lum_image_s_reset( lum_image_s* o, sz_t width, sz_t height )
+void lum_image_s_reset( lum_image_s* o, uz_t width, uz_t height )
 {
     bcore_array_a_set_size( (bcore_array*)&o->arr, width * height );
-    for( sz_t i = 0; i < o->arr.size; i++ )
+    for( uz_t i = 0; i < o->arr.size; i++ )
     {
         o->arr.data[ i ].clr = ( cl_s ) { 0, 0, 0 };
         o->arr.data[ i ].pos = ( v2d_s ) { 0, 0 };
@@ -743,14 +743,14 @@ void lum_image_s_push( lum_image_s* o, lum_s lum )
     s2_t y = lum.pos.y / lum.weight;
     if( x >= 0 && x < o->width && y >= 0 && y < o->height )
     {
-        sz_t idx = y * o->width + x;
+        uz_t idx = y * o->width + x;
         o->arr.data[ idx ] = lum_s_add( &o->arr.data[ idx ], &lum );
     }
 }
 
 void lum_image_s_push_arr( lum_image_s* o, const lum_arr_s* lum_arr )
 {
-    for( sz_t i = 0; i < lum_arr->size; i++ ) lum_image_s_push( o, lum_arr->data[ i ] );
+    for( uz_t i = 0; i < lum_arr->size; i++ ) lum_image_s_push( o, lum_arr->data[ i ] );
 }
 
 lum_s lum_image_s_get_avg( const lum_image_s* o, s2_t x, s2_t y )
@@ -758,7 +758,7 @@ lum_s lum_image_s_get_avg( const lum_image_s* o, s2_t x, s2_t y )
     lum_s lum = { .pos = { 0, 0 }, .clr = { 0, 0, 0 }, .weight = 0 };
     if( x >= 0 && x < o->width && y >= 0 && y < o->height )
     {
-        sz_t idx = y * o->width + x;
+        uz_t idx = y * o->width + x;
         lum = o->arr.data[ idx ];
     }
 
@@ -795,9 +795,9 @@ void lum_image_s_create_image_file( const lum_image_s* o, sc_t file )
     image_cl_s_set_size( image, o->width, o->height, cl_black() );
     image_cps_s* image_cps = image_cps_s_create();
 
-    for( sz_t j = 0; j < o->height; j++ )
+    for( uz_t j = 0; j < o->height; j++ )
     {
-        for( sz_t i = 0; i < o->width; i++ )
+        for( uz_t i = 0; i < o->width; i++ )
         {
             image_cl_s_set_pixel( image, i, j, lum_image_s_get_avg( o, i, j ).clr );
         }
@@ -816,7 +816,7 @@ typedef struct lum_machine_s
 {
     const scene_s* scene;
     lum_arr_s* lum_arr;
-    sz_t index;
+    uz_t index;
     bcore_mutex_s mutex;
 } lum_machine_s;
 
@@ -842,10 +842,10 @@ lum_machine_s* lum_machine_s_plant( const scene_s* scene, lum_arr_s* lum_arr )
     return o;
 }
 
-sz_t lum_machine_s_get_index( lum_machine_s* o )
+uz_t lum_machine_s_get_index( lum_machine_s* o )
 {
     bcore_mutex_s_lock( &o->mutex );
-    sz_t index = o->index++;
+    uz_t index = o->index++;
     if( ( ( index + 1 ) %  5000 ) == 0 ) bcore_msg( "." );
     if( ( ( index + 1 ) % 50000 ) == 0 ) bcore_msg( "%5.1f%% ", ( 100.0 * index ) / o->lum_arr->size );
     bcore_mutex_s_unlock( &o->mutex );
@@ -854,9 +854,9 @@ sz_t lum_machine_s_get_index( lum_machine_s* o )
 
 vd_t lum_machine_s_func( lum_machine_s* o )
 {
-    sz_t width = o->scene->image_width;
-    sz_t height = o->scene->image_height;
-    sz_t unit_sz = ( height >> 1 );
+    uz_t width = o->scene->image_width;
+    uz_t height = o->scene->image_height;
+    uz_t unit_sz = ( height >> 1 );
     f3_t unit_f = 1.0 / unit_sz;
 
     m3d_s camera_rotation;
@@ -871,7 +871,7 @@ vd_t lum_machine_s_func( lum_machine_s* o )
         camera_rotation = m3d_s_transposed( camera_rotation );
     }
 
-    sz_t index;
+    uz_t index;
     while( ( index = lum_machine_s_get_index( o ) ) < o->lum_arr->size )
     {
         lum_s* lum = &o->lum_arr->data[ index ];
@@ -912,15 +912,15 @@ vd_t lum_machine_s_func( lum_machine_s* o )
 void lum_machine_s_run( const scene_s* scene, lum_arr_s* lum_arr )
 {
     lum_machine_s* machine = lum_machine_s_plant( scene, lum_arr );
-    sz_t threads = scene->threads > 0 ? scene->threads : 1;
+    uz_t threads = scene->threads > 0 ? scene->threads : 1;
 
 //    pthread_t* thread_arr = bcore_u_alloc( sizeof( pthread_t ), NULL, threads, NULL );
-//    for( sz_t i = 0; i < threads; i++ ) pthread_create( &thread_arr[ i ], NULL, ( vd_t(*)(vd_t) )lum_machine_s_func, machine );
-//    for( sz_t i = 0; i < threads; i++ ) pthread_join( thread_arr[ i ], NULL );
+//    for( uz_t i = 0; i < threads; i++ ) pthread_create( &thread_arr[ i ], NULL, ( vd_t(*)(vd_t) )lum_machine_s_func, machine );
+//    for( uz_t i = 0; i < threads; i++ ) pthread_join( thread_arr[ i ], NULL );
 
     bcore_thread_s* thread_arr = bcore_u_alloc( sizeof( bcore_thread_s ), NULL, threads, NULL );
-    for( sz_t i = 0; i < threads; i++ ) thread_arr[ i ] = bcore_thread_call( ( vd_t(*)(vd_t) )lum_machine_s_func, machine );
-    for( sz_t i = 0; i < threads; i++ ) bcore_thread_join( thread_arr[ i ] );
+    for( uz_t i = 0; i < threads; i++ ) thread_arr[ i ] = bcore_thread_call( ( vd_t(*)(vd_t) )lum_machine_s_func, machine );
+    for( uz_t i = 0; i < threads; i++ ) bcore_thread_join( thread_arr[ i ] );
 
     bcore_free( thread_arr );
     lum_machine_s_discard( machine );
@@ -937,7 +937,7 @@ void scene_s_create_image_file( scene_s* o, sc_t file )
 
     bcore_life_s* l = bcore_life_s_create();
 
-    bcore_msg_fa( "Number of objects: #<sz_t>\n", scene_s_objects( o ) );
+    bcore_msg_fa( "Number of objects: #<uz_t>\n", scene_s_objects( o ) );
 
     lum_arr_s* lum_arr = bcore_life_s_push_aware( l, lum_arr_s_create() );
 
@@ -945,9 +945,9 @@ void scene_s_create_image_file( scene_s* o, sc_t file )
     clock_t time = clock();
     st_s_print_fa( "\tmain image: " );
 
-    for( sz_t j = 0; j < o->image_height; j++ )
+    for( uz_t j = 0; j < o->image_height; j++ )
     {
-        for( sz_t i = 0; i < o->image_width; i++ )
+        for( uz_t i = 0; i < o->image_width; i++ )
         {
             lum_arr_s_push_pos( lum_arr, ( v2d_s ){ i + 0.5, j + 0.5 } );
         }
@@ -959,13 +959,13 @@ void scene_s_create_image_file( scene_s* o, sc_t file )
     lum_image_s_push_arr( lum_image, lum_arr );
 
     u2_t rv = 1234;
-    sz_t rnd_samples = o->gradient_samples;
+    uz_t rnd_samples = o->gradient_samples;
     f3_t sqr_gradient_theshold = f3_sqr( o->gradient_threshold );
 
     lum_image_s_create_image_file( lum_image, file );
-    for( sz_t k = 0; k < o->gradient_cycles; k++ )
+    for( uz_t k = 0; k < o->gradient_cycles; k++ )
     {
-        st_s_print_fa( "\n\tgradient pass #pl3 {#<sz_t>}: ", k + 1 );
+        st_s_print_fa( "\n\tgradient pass #pl3 {#<uz_t>}: ", k + 1 );
         lum_arr_s_clear( lum_arr );
         for( s3_t j = 0; j < o->image_height; j++ )
         {
@@ -973,7 +973,7 @@ void scene_s_create_image_file( scene_s* o, sc_t file )
             {
                 if( lum_image_s_sqr_grad( lum_image, i, j ) > sqr_gradient_theshold )
                 {
-                    for( sz_t k = 0; k < rnd_samples; k++ )
+                    for( uz_t k = 0; k < rnd_samples; k++ )
                     {
                         f3_t dx = f3_rnd1( &rv );
                         f3_t dy = f3_rnd1( &rv );

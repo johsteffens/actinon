@@ -66,28 +66,28 @@ static bcore_self_s* cl_s_create_self( void )
 BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_INST( row_cl_s, "row_cl_s = bcore_inst { aware_t _; cl_s [] arr; }" )
 
 
-void row_cl_s_set_size( row_cl_s* o, sz_t size, cl_s color )
+void row_cl_s_set_size( row_cl_s* o, uz_t size, cl_s color )
 {
     bcore_array_a_set_size( (bcore_array*)o, size );
-    for( sz_t i = 0; i < size; i++ ) o->data[ i ] = color;
+    for( uz_t i = 0; i < size; i++ ) o->data[ i ] = color;
 }
 
 /**********************************************************************************************************************/
 /// image_cl_s
 
-BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_INST( image_cl_s, "image_cl_s = bcore_inst { aware_t _; sz_t w; sz_t h; cl_s [] arr; }" )
+BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_INST( image_cl_s, "image_cl_s = bcore_inst { aware_t _; uz_t w; uz_t h; cl_s [] arr; }" )
 
-void image_cl_s_set_size( image_cl_s* o, sz_t w, sz_t h, cl_s color )
+void image_cl_s_set_size( image_cl_s* o, uz_t w, uz_t h, cl_s color )
 {
     bcore_array_a_set_size( (bcore_array*)o, w * h );
-    for( sz_t i = 0; i < o->size; i++ ) o->data[ i ] = color;
+    for( uz_t i = 0; i < o->size; i++ ) o->data[ i ] = color;
     o->w = w;
     o->h = h;
 }
 
 void image_cl_s_saturate( image_cl_s* o, f3_t gamma )
 {
-    for( sz_t i = 0; i < o->size; i++ ) o->data[ i ] = cl_s_sat( o->data[ i ], gamma );
+    for( uz_t i = 0; i < o->size; i++ ) o->data[ i ] = cl_s_sat( o->data[ i ], gamma );
 }
 
 /**********************************************************************************************************************/

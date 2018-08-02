@@ -85,9 +85,9 @@ int main( int argc, const char** argv )
     bcore_life_s* l = bcore_life_s_create();
     st_s* in_file  = bcore_life_s_push_aware( l, st_s_create_sc( argv[ 1 ] ) );
 
-    for( sz_t i = 0; i < 2; i++ ) bcore_arr_st_s_push_sc( interpreter_args_g, argv[ i ] );
+    for( uz_t i = 0; i < 2; i++ ) bcore_arr_st_s_push_sc( interpreter_args_g, argv[ i ] );
 
-    for( sz_t i = 2; i < argc; i++ )
+    for( uz_t i = 2; i < argc; i++ )
     {
         st_s* arg = st_s_create_sc( argv[ i ] );
         if( st_s_equal_sc( arg, "-f" ) )

@@ -126,7 +126,7 @@ f3_t obj_ray_hit( vc_t o, const ray_s* ray, v3d_s* p_nor );
 f3_t obj_ray_exit( vc_t o, const ray_s* ray, v3d_s* p_nor );
 
 /// estimates an envelope for given object via random ray-casting
-envelope_s obj_estimate_envelope( vc_t o, sz_t samples, u2_t rseed, f3_t radius_factor );
+envelope_s obj_estimate_envelope( vc_t o, uz_t samples, u2_t rseed, f3_t radius_factor );
 
 /// return 1 when pos is outside object, -1 otherwise
 s2_t obj_side( vc_t o, v3d_s pos );
@@ -182,7 +182,7 @@ typedef struct obj_distance_s obj_distance_s;
 BCORE_DECLARE_FUNCTIONS_OBJ( obj_distance_s )
 
 void obj_distance_s_set_distance( obj_distance_s* o, vc_t distance );
-void obj_distance_s_set_cycles( obj_distance_s* o, sz_t cycles );
+void obj_distance_s_set_cycles( obj_distance_s* o, uz_t cycles );
 
 /**********************************************************************************************************************/
 /// obj_pair_inside_s  (combination of two objects)

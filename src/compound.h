@@ -44,8 +44,8 @@ typedef struct compound_s compound_s;
 
 BCORE_DECLARE_FUNCTIONS_OBJ( compound_s )
 
-sz_t           compound_s_get_size(   const compound_s* o );
-const aware_t* compound_s_get_object( const compound_s* o, sz_t index );
+uz_t           compound_s_get_size(   const compound_s* o );
+const aware_t* compound_s_get_object( const compound_s* o, uz_t index );
 
 /// envelopes
 void compound_s_set_envelope( compound_s* o, const envelope_s* envelope );
@@ -63,7 +63,7 @@ f3_t compound_s_ray_hit( const compound_s* o, const ray_s* r, v3d_s* p_nor, vc_t
 f3_t compound_s_ray_trans_hit( const compound_s* o, const ray_s* r, trans_data_s* trans );
 
 /// counts number of objects where pos is on the side 'side'
-sz_t compound_s_side_count( const compound_s* o, v3d_s pos, s2_t side );
+uz_t compound_s_side_count( const compound_s* o, v3d_s pos, s2_t side );
 
 void compound_s_move(   compound_s* o, const v3d_s* vec );
 void compound_s_rotate( compound_s* o, const m3d_s* mat );

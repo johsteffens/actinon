@@ -54,10 +54,10 @@ typedef struct arr_s
 
 BCORE_DECLARE_FUNCTIONS_OBJ( arr_s )
 
-sz_t arr_s_get_size( const arr_s* o );
-void arr_s_set_size( arr_s* o, sz_t size ); // resize keeping existing data
-sr_s* arr_s_get(     arr_s* o, sz_t idx );
-void arr_s_set(      arr_s* o, sz_t idx, sr_s obj );
+uz_t arr_s_get_size( const arr_s* o );
+void arr_s_set_size( arr_s* o, uz_t size ); // resize keeping existing data
+sr_s* arr_s_get(     arr_s* o, uz_t idx );
+void arr_s_set(      arr_s* o, uz_t idx, sr_s obj );
 void arr_s_push(     arr_s* o, sr_s obj );
 void arr_s_cat(      arr_s* o, const arr_s* arr ); // catenates arrays
 
@@ -65,9 +65,9 @@ void arr_s_move(   arr_s* o, const v3d_s* vec );
 void arr_s_rotate( arr_s* o, const m3d_s* mat );
 void arr_s_scale(  arr_s* o, f3_t fac );
 
-sr_s arr_s_create_inside_composite( arr_s* o, sz_t start, sz_t size );
-sr_s arr_s_create_outside_composite( arr_s* o, sz_t start, sz_t size );
-sr_s arr_s_create_compound( arr_s* o, sz_t start, sz_t size );
+sr_s arr_s_create_inside_composite( arr_s* o, uz_t start, uz_t size );
+sr_s arr_s_create_outside_composite( arr_s* o, uz_t start, uz_t size );
+sr_s arr_s_create_compound( arr_s* o, uz_t start, uz_t size );
 
 sr_s arr_s_meval_key( sr_s* o, meval_s* ev, tp_t key );
 
