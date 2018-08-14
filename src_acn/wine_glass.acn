@@ -192,7 +192,7 @@ def create_glass =
     wine;
 };
 
-// This block finalizes the scene and computes the scene-image
+// This block represents the main function. This implementation finalizes the scene and computes the scene-image.
 {
     // 'clear' removes all objects from the scene but keeps scene parameters (rendering & camera) intact.
     scene.clear(); // This is not really needed for a single image but useful for a video sequence
@@ -204,3 +204,16 @@ def create_glass =
     def file_name = #source_file_name + ".pnm";
     scene.create_image( file_name );
 }();
+
+
+// The code ends here
+
+/** Reserved key words (do not use as custom identifier)
+ *
+ *  Types:
+ *     bool, int, float, num, string, map, list, object, v3d, func
+ *
+ *  Controls:
+ *     def, for, while, if, else
+ */
+
