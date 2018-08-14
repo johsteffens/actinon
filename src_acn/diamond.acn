@@ -72,14 +72,14 @@ def create_plate = <-( num floor_offs, num radius, num height ) *
 
     def chw = radius * 0.65;
 
-    def list = [];
-    list.push( cover );
-    list.push( ( cover * rotx(  90 ) ) - vecy( chw ) );
-    list.push( ( cover * rotx( -90 ) ) + vecy( chw ) );
-    list.push( ( cover * roty(  90 ) ) + vecx( chw ) );
-    list.push( ( cover * roty( -90 ) ) - vecx( chw ) );
+    def lst = [];
+    lst.push( cover );
+    lst.push( ( cover * rotx(  90 ) ) - vecy( chw ) );
+    lst.push( ( cover * rotx( -90 ) ) + vecy( chw ) );
+    lst.push( ( cover * roty(  90 ) ) + vecx( chw ) );
+    lst.push( ( cover * roty( -90 ) ) - vecx( chw ) );
 
-    def cloth = list.create_inside_composite();
+    def cloth = lst.create_inside_composite();
     cloth.move( vecz( floor_offs + height ) );
     cloth.rotate( rotz( 45 ) );
     cloth.set_material( "diffuse" );
@@ -140,26 +140,26 @@ def create_stand = <-( num bottom_zoffs, num radius ) *
     def sph = create_sphere( 1 );
     def cov = create_plane();
 
-    def list = [];
-    list.push( ( sph * radius ) );
-    list.push( !( cov - vecz( radius * 0.1 ) ) );
-    list.push( !( ( sph * radius ) + vecz( radius * 0.4 ) ) );
-    list.push( cov + vecz( radius * 0.08 ) );
+    def lst = [];
+    lst.push( ( sph * radius ) );
+    lst.push( !( cov - vecz( radius * 0.1 ) ) );
+    lst.push( !( ( sph * radius ) + vecz( radius * 0.4 ) ) );
+    lst.push( cov + vecz( radius * 0.08 ) );
 
-    def ring = list.create_inside_composite();
+    def ring = lst.create_inside_composite();
 
     ring.set_color( color( 0.83, 0.68, 0.22 ) );
     ring.set_chromatic_reflectivity( 0.7 );
 
-    list.clear();
-    list.push( ( sph * radius ) );
-    list.push( !( ( sph * radius ) + vec( -radius * 0.05, -radius * 0.2, 0 ) ) );
-    list.push( !( ( sph * radius ) + vec( -radius * 0.05,  radius * 0.2, 0 ) ) );
-    list.push( ( cov * rotx(  90 ) ) * rotz( -7 ) );
-    list.push( ( cov * rotx( -90 ) ) * rotz(  7 ) );
-    list.push( ( cov * roty( -90 ) ) + vecx( radius * 0.5 ) );
-    list.push( !cov );
-    def bar = list.create_inside_composite();
+    lst.clear();
+    lst.push( ( sph * radius ) );
+    lst.push( !( ( sph * radius ) + vec( -radius * 0.05, -radius * 0.2, 0 ) ) );
+    lst.push( !( ( sph * radius ) + vec( -radius * 0.05,  radius * 0.2, 0 ) ) );
+    lst.push( ( cov * rotx(  90 ) ) * rotz( -7 ) );
+    lst.push( ( cov * rotx( -90 ) ) * rotz(  7 ) );
+    lst.push( ( cov * roty( -90 ) ) + vecx( radius * 0.5 ) );
+    lst.push( !cov );
+    def bar = lst.create_inside_composite();
     bar.set_envelope( ( ( sph * radius * 0.8 ) + vecx( radius ) ) * roty( -45 ) );
     bar.move( vec( radius * 0.45, 0, bottom_zoffs ) );
     bar.set_color( color( 0.83, 0.68, 0.22 ) );

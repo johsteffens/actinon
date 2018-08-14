@@ -78,11 +78,11 @@ def create_plate = <-( num floor_offs, num radius, num height ) *
     def plate = cone & ( cover - vecz( radius + cloth_height ) ) & !( cover - vecz( radius + height ) );
     plate.move( vecz( floor_offs + radius + height ) );
 
-    def list = [];
-    list.push( cover );
-    list.push( cyl * radius * 0.8 );
+    def lst = [];
+    lst.push( cover );
+    lst.push( cyl * radius * 0.8 );
 
-    def cloth = list.create_inside_composite();
+    def cloth = lst.create_inside_composite();
     cloth.move( vecz( floor_offs + height ) );
     cloth.set_material( "diffuse" );
     cloth.set_color( color( 0.7, 0.8, 0.9 ) );
