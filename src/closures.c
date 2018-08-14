@@ -152,6 +152,8 @@ static sr_s create_string_fa_s_call( vc_t o, bclos_frame_s* frm, const bclos_arg
     return sr_tsd( TYPEOF_st_s, string );
 }
 
+BCLOS_DEFINE_STD_CLOSURE( create_string_fa_s, "st_s create_string_fa_s( st_s format, root arg )", create_string_fa_s_call )
+
 /// converts string to number (f3_t or s3_t depending on content)
 static sr_s string_to_num_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
@@ -180,7 +182,6 @@ static sr_s string_to_num_s_call( vc_t o, bclos_frame_s* frm, const bclos_argume
     return ret;
 }
 
-BCLOS_DEFINE_STD_CLOSURE( create_string_fa_s, "st_s create_string_fa_s( st_s format, root arg )", create_string_fa_s_call )
 BCLOS_DEFINE_STD_CLOSURE( string_to_num_s,    "string_to_num_s( st_s string )", string_to_num_s_call )
 
 /**********************************************************************************************************************/
@@ -384,13 +385,13 @@ BCLOS_DEFINE_STD_CLOSURE( floor_s, "f3_t floor_s( num val )", floor_s_call )
 /**********************************************************************************************************************/
 
 /// file_exists( f )
-static bl_t file_exists_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+static sr_s file_exists_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
     sr_s arg0 = bclos_arguments_s_get( args, 0, frm );
     bl_t ret = bcore_source_file_s_exists( ( ( st_s* )arg0.o )->sc );
     sr_down( arg0 );
-    return ret;
+    return sr_bl( ret );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( file_exists_s, "bl_t file_exists_s( st_s file )", file_exists_s_call )
@@ -398,15 +399,32 @@ BCLOS_DEFINE_STD_CLOSURE( file_exists_s, "bl_t file_exists_s( st_s file )", file
 /**********************************************************************************************************************/
 
 /// file_delete( f )
-static void file_delete_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+static sr_s file_delete_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
     sr_s arg0 = bclos_arguments_s_get( args, 0, frm );
     bcore_source_file_s_delete( ( ( st_s* )arg0.o )->sc );
     sr_down( arg0 );
+    return sr_null();
 }
 
 BCLOS_DEFINE_STD_CLOSURE( file_delete_s, "file_delete_s( st_s file )", file_delete_s_call )
+
+/**********************************************************************************************************************/
+
+/// file_rename( f )
+static sr_s file_rename_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 2 );
+    sr_s arg0 = bclos_arguments_s_get( args, 0, frm );
+    sr_s arg1 = bclos_arguments_s_get( args, 1, frm );
+    bl_t success = bcore_source_file_s_rename( ( ( st_s* )arg0.o )->sc, ( ( st_s* )arg1.o )->sc );
+    sr_down( arg0 );
+    sr_down( arg1 );
+    return sr_bl( success );
+}
+
+BCLOS_DEFINE_STD_CLOSURE( file_rename_s, "bl_t file_rename_s( st_s src_file, st_s dst_file )", file_rename_s_call )
 
 /**********************************************************************************************************************/
 
@@ -618,6 +636,7 @@ vd_t closures_signal_handler( const bcore_signal_s* o )
             // files
             BCORE_REGISTER_OBJECT( file_exists_s );
             BCORE_REGISTER_OBJECT( file_delete_s );
+            BCORE_REGISTER_OBJECT( file_rename_s );
 
             // objects
             BCORE_REGISTER_OBJECT( create_beth_object_s );

@@ -1856,9 +1856,10 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     bclos_frame_s_set( frame, typeof( "floor"   ), sr_cc( sr_create( typeof( "floor_s"      ) ) ) );
     bclos_frame_s_set( frame, typeof( "ceiling" ), sr_cc( sr_create( typeof( "ceiling_s"    ) ) ) );
 
-    // file
+    /// file
     bclos_frame_s_set( frame, typeof( "file_exists" ), sr_cc( sr_create( typeof( "file_exists_s"  ) ) ) );
     bclos_frame_s_set( frame, typeof( "file_delete" ), sr_cc( sr_create( typeof( "file_delete_s"  ) ) ) );
+    bclos_frame_s_set( frame, typeof( "file_rename" ), sr_cc( sr_create( typeof( "file_rename_s"  ) ) ) );
 
     /// object creation functions
     bclos_frame_s_set( frame, typeof( "create_plane"        ), sr_create( typeof( "create_plane_s"        ) ) );
