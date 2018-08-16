@@ -1,0 +1,253 @@
+// Actinon source code
+
+/* Copyright 2018 Johannes Bernhard Steffens
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+<mclosure_s></>
+
+def scene = scene_s;
+scene.threads = 10;
+
+scene.image_width         = 400;
+scene.image_height        = 300;
+scene.gamma               = 1.0;
+
+scene.gradient_cycles     = 50;
+scene.gradient_samples    = 2;
+scene.gradient_threshold  = 0.03;
+
+scene.trace_depth         = 25;
+scene.trace_min_intensity = 0.03;
+scene.direct_samples      = 50;
+scene.path_samples        = 50;
+scene.max_path_length     = 0.1;
+
+def camera_position = vec( 0, -0.5, 0.1 );
+
+scene.camera_position       = camera_position;
+scene.camera_view_direction = vec( 0, 0, -0.05 ) - camera_position;
+scene.camera_top_direction  = vec( 0, 0, 1 );
+scene.camera_focal_length   = 5;
+scene.background_color = color( 0.8, 0.7, 0.6 );
+
+def create_light = <-( lamp_radius, radiance, color ) *
+{
+    def sph = create_sphere( 1 );
+    def light = sph * lamp_radius;
+    light.set_radiance( radiance );
+    light.set_color( color );
+    light;
+};
+
+def create_floor = <-( num zoffs ) *
+{
+    def plane = create_plane();
+    plane.set_material( "diffuse" );
+    plane.set_color( color( 0.1, 0.08, 0.05 ) );
+    plane.set_refractive_index( 1.01 );
+    plane.move( vec( 0, 0, zoffs ) );
+    plane;
+};
+
+def create_plate = <-( num floor_offs, num radius, num height ) *
+{
+    def cloth_height = 0.00075;
+    def cover = create_plane();
+    def cone = create_cone( 1, 1, 1 );
+    def cyl = create_cylinder( 1, 1 );
+
+    def plate = cone & ( cover - vecz( radius + cloth_height ) ) & !( cover - vecz( radius + height ) );
+    plate.move( vecz( floor_offs + radius + height ) );
+
+    def chw = radius * 0.65;
+
+    def lst = [];
+    lst.push( cover );
+    lst.push( ( cover * rotx(  90 ) ) - vecy( chw ) );
+    lst.push( ( cover * rotx( -90 ) ) + vecy( chw ) );
+    lst.push( ( cover * roty(  90 ) ) + vecx( chw ) );
+    lst.push( ( cover * roty( -90 ) ) - vecx( chw ) );
+
+    def cloth = lst.create_inside_composite();
+    cloth.move( vecz( floor_offs + height ) );
+    cloth.rotate( rotz( 45 ) );
+    cloth.set_material( "diffuse" );
+    cloth.set_color( color( 0.3, 0.1, 0.05 ) );
+    plate.set_material( "diffuse_polished" );
+    plate.set_color( color( 0.1, 0.05, 0.03 ) );
+
+    plate : cloth;
+};
+
+def create_diamond = <-( num radius ) *
+{
+    def plane = create_plane();
+    plane.set_color( color( 1, 0.5, 0.3 ) );
+
+    def sphere = create_sphere( 1 );
+
+    def plate = plane + vecz( 0.24 );
+    def side = plane * rotx( 90 );
+
+    // array of cut-surfaces
+    def cuts = [];
+    
+    // function producing a series of cuts around the diamond
+    def append_to_cuts = <-( cut_side, num_cuts ) *
+    {
+        def i = 0;
+        while( i < num_cuts )
+        {
+            cuts.push( cut_side * rotz( i * 360 / num_cuts ) ); 
+            i += 1; 
+        }();
+    };
+
+    // applying 56 diamond cuts
+    append_to_cuts( ( ( side * rotx( 37 - 90 ) ) - vecy( 1.00 ) )                    , 16 );
+    append_to_cuts( ( ( side * rotx( 32 - 90 ) ) - vecy( 1.02 ) ) * rotz(  180 / 16 ),  8 );
+    append_to_cuts( ( ( side * rotx( 26 - 90 ) ) - vecy( 1.12 ) ) * rotz( -180 / 16 ),  8 );
+    append_to_cuts( ( ( side * rotx( 90 - 42 ) ) - vecy( 1.00 ) )                    , 16 );
+    append_to_cuts( ( ( side * rotx( 90 - 40 ) ) - vecy( 1.02 ) ) * rotz(  180 / 16 ),  8 );
+
+    // together with plate and bounding sphere we compose the diamond
+    def gem = cuts.create_inside_composite() & plate & sphere;
+
+    // diamond material parameters
+    gem.set_material( "diamond" );
+
+    // we specify a bounding sphere to accelerate rendering 
+    gem.set_envelope( sphere * 1.01 );
+
+    gem.scale( radius );
+
+    gem;
+};
+
+def create_stand = <-( num bottom_zoffs, num radius ) *
+{
+    def sph = create_sphere( 1 );
+    def cov = create_plane();
+
+    def lst = [];
+    lst.push( ( sph * radius ) );
+    lst.push( !( cov - vecz( radius * 0.1 ) ) );
+    lst.push( !( ( sph * radius ) + vecz( radius * 0.4 ) ) );
+    lst.push( cov + vecz( radius * 0.08 ) );
+
+    def ring = lst.create_inside_composite();
+
+    ring.set_material( "gold" );
+
+    lst.clear();
+    lst.push( ( sph * radius ) );
+    lst.push( !( ( sph * radius ) + vec( -radius * 0.05, -radius * 0.2, 0 ) ) );
+    lst.push( !( ( sph * radius ) + vec( -radius * 0.05,  radius * 0.2, 0 ) ) );
+    lst.push( ( cov * rotx(  90 ) ) * rotz( -7 ) );
+    lst.push( ( cov * rotx( -90 ) ) * rotz(  7 ) );
+    lst.push( ( cov * roty( -90 ) ) + vecx( radius * 0.5 ) );
+    lst.push( !cov );
+    def bar = lst.create_inside_composite();
+    bar.set_envelope( ( ( sph * radius * 0.8 ) + vecx( radius ) ) * roty( -45 ) );
+    bar.move( vec( radius * 0.45, 0, bottom_zoffs ) );
+    
+    bar.set_material( "gold" );
+
+    ring.move( vec( 0, 0, bottom_zoffs + radius * 0.85 ) );
+
+    def stand = [];
+    stand.push( ring );
+    stand.push( bar );
+    stand.rotate( rotz( 90 ) );
+    stand.push( bar );
+    stand.rotate( rotz( 90 ) );
+    stand.push( bar );
+    stand.rotate( rotz( 90 ) );
+    stand.push( bar );
+
+    stand;
+
+    
+};
+
+def create_diamond_on_stand = <-( num bottom_zoffs ) *
+{
+    def stand = create_stand( bottom_zoffs, 0.05 );
+
+    def diamond = create_diamond( 0.0472 );
+    diamond.move( vecz( 0.046 + bottom_zoffs ) );
+    diamond : stand;
+};
+
+
+def create_image = <-( num index ) *
+{
+    def file_name = #source_file_name + ".image_" + string_fa( "#pl6'0'{#<s3_t*>}", index ) + ".pnm";
+    def temp_file_name = file_name + ".temp.pnm";
+    
+    ?? "Creating " + file_name + "\n";
+    
+    if( !file_exists( file_name ) & !file_exists( temp_file_name ) )
+    {
+		file_touch( temp_file_name );
+
+		scene.clear();
+		scene.push( create_light( 0.035, 0.2, vec( 1.0, 0.8, 0.7 ) ) + vec(  0.04, 0.04, 0.125 ) );
+		scene.push( create_light( 0.035, 0.4, vec( 0.3, 0.5, 1.0 ) ) + vec( -0.20, 0, 0.03 ) );
+
+		def floor_offset = -0.075;
+		scene.push( create_floor( floor_offset ) );
+
+		def plate_height = 0.01;
+		
+		def diamond_on_plate = create_plate( floor_offset, 0.12, plate_height ) : 
+							   create_diamond_on_stand( floor_offset + plate_height - 0.004 );
+							   
+		def angle = 25 + index;
+
+		diamond_on_plate.rotate( rotz( angle ) );
+
+		scene.push( diamond_on_plate );
+
+		scene.create_image( temp_file_name );
+		
+		file_rename( temp_file_name, file_name );
+    }();
+
+};
+
+{
+    ?? "Rotating diamond video rendering:";
+    ?? "  Abort       : Ctl-C";
+    ?? "  Cleanup     : Remove temp-files " + #source_file_name + ".image_??????.pnm.temp.pnm.";
+    ?? "  Distributed : Run in a network on a shared file system in a common folder.";
+    ?? "  Restart     : First remove temp-files where processing was aborted, then restart.";
+
+
+	def index = 0;
+	while( index < 90 )
+	{
+		create_image( index );
+		index += 1;
+	}();
+	
+    ?? "Finished.";
+    ?? "If this is a distributed job check for incomplete images.";
+    ?? "";
+    ?? "Creating a webm-video with ffmpeg:";
+    ?? "  ffmpeg -r 30 -i " + #source_file_name + ".image_%06d.pnm -c:v libvpx-vp9 -crf 5 -b:v 5M " + #source_file_name + ".webm";
+    
+}();
+
