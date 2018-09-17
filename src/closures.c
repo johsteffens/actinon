@@ -15,6 +15,7 @@
  *  limitations under the License.
  */
 
+#include "bcore_file.h"
 #include "bcore_sources.h"
 
 #include "closures.h"
@@ -389,7 +390,7 @@ static sr_s file_exists_s_call( vc_t o, bclos_frame_s* frm, const bclos_argument
 {
     ASSERT( args->size == 1 );
     sr_s arg0 = bclos_arguments_s_get( args, 0, frm );
-    bl_t ret = bcore_source_file_s_exists( ( ( st_s* )arg0.o )->sc );
+    bl_t ret = bcore_file_exists( ( ( st_s* )arg0.o )->sc );
     sr_down( arg0 );
     return sr_bl( ret );
 }
@@ -398,17 +399,31 @@ BCLOS_DEFINE_STD_CLOSURE( file_exists_s, "bl_t file_exists_s( st_s file )", file
 
 /**********************************************************************************************************************/
 
+/// file_touch( f )
+static sr_s file_touch_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
+{
+    ASSERT( args->size == 1 );
+    sr_s arg0 = bclos_arguments_s_get( args, 0, frm );
+    bl_t success = bcore_file_touch( ( ( st_s* )arg0.o )->sc );
+    sr_down( arg0 );
+    return sr_bl( success );
+}
+
+BCLOS_DEFINE_STD_CLOSURE( file_touch_s, "bl_t file_touch_s( st_s file )", file_touch_s_call )
+
+/**********************************************************************************************************************/
+
 /// file_delete( f )
 static sr_s file_delete_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
     sr_s arg0 = bclos_arguments_s_get( args, 0, frm );
-    bcore_source_file_s_delete( ( ( st_s* )arg0.o )->sc );
+    bl_t success = bcore_file_delete( ( ( st_s* )arg0.o )->sc );
     sr_down( arg0 );
-    return sr_null();
+    return sr_bl( success );
 }
 
-BCLOS_DEFINE_STD_CLOSURE( file_delete_s, "file_delete_s( st_s file )", file_delete_s_call )
+BCLOS_DEFINE_STD_CLOSURE( file_delete_s, "bl_t file_delete_s( st_s file )", file_delete_s_call )
 
 /**********************************************************************************************************************/
 
@@ -418,7 +433,7 @@ static sr_s file_rename_s_call( vc_t o, bclos_frame_s* frm, const bclos_argument
     ASSERT( args->size == 2 );
     sr_s arg0 = bclos_arguments_s_get( args, 0, frm );
     sr_s arg1 = bclos_arguments_s_get( args, 1, frm );
-    bl_t success = bcore_source_file_s_rename( ( ( st_s* )arg0.o )->sc, ( ( st_s* )arg1.o )->sc );
+    bl_t success = bcore_file_rename( ( ( st_s* )arg0.o )->sc, ( ( st_s* )arg1.o )->sc );
     sr_down( arg0 );
     sr_down( arg1 );
     return sr_bl( success );
@@ -635,6 +650,7 @@ vd_t closures_signal_handler( const bcore_signal_s* o )
 
             // files
             BCORE_REGISTER_OBJECT( file_exists_s );
+            BCORE_REGISTER_OBJECT( file_touch_s );
             BCORE_REGISTER_OBJECT( file_delete_s );
             BCORE_REGISTER_OBJECT( file_rename_s );
 

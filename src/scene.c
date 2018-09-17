@@ -27,6 +27,7 @@
 #include "bcore_txt_ml.h"
 #include "bcore_trait.h"
 #include "bcore_sources.h"
+#include "bcore_file.h"
 
 #include "scene.h"
 #include "objects.h"
@@ -928,7 +929,7 @@ void lum_machine_s_run( const scene_s* scene, lum_arr_s* lum_arr )
 
 void scene_s_create_image_file( scene_s* o, sc_t file )
 {
-    if( bcore_source_file_s_exists( file ) && !scene_s_overwrite_output_files_g )
+    if( bcore_file_exists( file ) && !scene_s_overwrite_output_files_g )
     {
         bcore_msg_fa( "File '#<sc_t>' exists. Overwrite it? [Y|N]:", file );
         char buf[ 2 ];

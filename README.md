@@ -5,7 +5,8 @@
 
 [<img width = "200" height = "200" src = "https://raw.githubusercontent.com/johsteffens/actinon/master/image/wine_glass.acn.png">](https://raw.githubusercontent.com/johsteffens/actinon/master/image/wine_glass.acn.png "Image created with Actinon" )
 
-[<img width = "200" height = "200" src = "https://raw.githubusercontent.com/johsteffens/actinon/master/image/diamond.acn.png">](https://raw.githubusercontent.com/johsteffens/actinon/master/image/diamond.acn.png "Image created with Actinon" )
+[<img width = "200" height = "150" src = "https://raw.githubusercontent.com/johsteffens/actinon/master/image/diamond_video.acn.image_000049.png">](https://raw.githubusercontent.com/johsteffens/actinon/master/image/diamond_video.acn.image_000049.png "Image created with Actinon" )
+
 
 ### [Find more examples here ...](https://github.com/johsteffens/actinon/wiki/Images)
 

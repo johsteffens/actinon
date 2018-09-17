@@ -1858,6 +1858,7 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
 
     /// file
     bclos_frame_s_set( frame, typeof( "file_exists" ), sr_cc( sr_create( typeof( "file_exists_s"  ) ) ) );
+    bclos_frame_s_set( frame, typeof( "file_touch"  ), sr_cc( sr_create( typeof( "file_touch_s"   ) ) ) );
     bclos_frame_s_set( frame, typeof( "file_delete" ), sr_cc( sr_create( typeof( "file_delete_s"  ) ) ) );
     bclos_frame_s_set( frame, typeof( "file_rename" ), sr_cc( sr_create( typeof( "file_rename_s"  ) ) ) );
 
