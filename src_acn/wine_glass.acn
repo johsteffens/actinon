@@ -163,10 +163,10 @@ def create_glass =
 
     def neckcyl = ( cylinder * 0.08 ) & ( cover + vecz( 0.5 ) ) & !( cover - vecz( 0.5 ) );
 
-    def perl = ( sphere * 0.15 );
+    def pearl = ( sphere * 0.15 );
 
     // Operator '|': See comments about operator '&' above.
-    def neck = neckcyl | ( perl + vecz( 0.45 ) ) | ( perl - vecz( 0.45 ) );
+    def neck = neckcyl | ( pearl + vecz( 0.45 ) ) | ( pearl - vecz( 0.45 ) );
     neck.set_envelope( sphere * 1.2 );
 
     neck.move( vecz( 0.55 ) );
