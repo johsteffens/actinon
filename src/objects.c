@@ -1723,19 +1723,19 @@ vd_t objects_signal_handler( const bcore_signal_s* o )
         {
             bcore_trait_set( entypeof( "spect_obj" ), entypeof( "bcore_inst" ) );
 
-            BCORE_REGISTER_PLAIN( projection_fp,   function_pointer );
-            BCORE_REGISTER_PLAIN( ray_hit_fp,      function_pointer );
-            BCORE_REGISTER_PLAIN( side_fp,         function_pointer );
-            BCORE_REGISTER_PLAIN( fov_fp,          function_pointer );
-            BCORE_REGISTER_PLAIN( is_in_fov_fp,    function_pointer );
-            BCORE_REGISTER_PLAIN( is_reachable_fp, function_pointer );
-            BCORE_REGISTER_PLAIN( move_fp,         function_pointer );
-            BCORE_REGISTER_PLAIN( rotate_fp,       function_pointer );
-            BCORE_REGISTER_PLAIN( scale_fp,        function_pointer );
+            BCORE_REGISTER_FEATURE( projection_fp );
+            BCORE_REGISTER_FEATURE( ray_hit_fp );
+            BCORE_REGISTER_FEATURE( side_fp );
+            BCORE_REGISTER_FEATURE( fov_fp );
+            BCORE_REGISTER_FEATURE( is_in_fov_fp );
+            BCORE_REGISTER_FEATURE( is_reachable_fp );
+            BCORE_REGISTER_FEATURE( move_fp );
+            BCORE_REGISTER_FEATURE( rotate_fp );
+            BCORE_REGISTER_FEATURE( scale_fp );
 
             BCORE_REGISTER_OBJECT( envelope_s );
             BCORE_REGISTER_OBJECT( properties_s );
-            BCORE_REGISTER_FUNC(  properties_s_init_a );
+            BCORE_REGISTER_FUNC(   properties_s_init_a );
 
             BCORE_REGISTER_SPECT( spect_obj_s );
 
