@@ -1602,7 +1602,7 @@ sr_s obj_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
         else if( st_s_equal_sc( string, "water" ) )
         {
             hdr->prp.refractive_index = 1.32;
-            hdr->prp.transparency = ( cl_s ) { 0.5, 0.9, 0.99 }; // coarse approximation of absoption curve of water
+            hdr->prp.transparency = ( cl_s ) { 0.5, 0.9, 0.99 }; // coarse approximation of absorption curve of water
             hdr->prp.fresnel_reflectivity = 1;
             hdr->prp.chromatic_reflectivity = 0;
             hdr->prp.diffuse_reflectivity = 0;

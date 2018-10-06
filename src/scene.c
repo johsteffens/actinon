@@ -67,6 +67,8 @@ BCORE_DECLARE_FUNCTIONS_OBJ( image_cps_s )
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( image_cps_s )
 BCORE_DEFINE_CREATE_SELF( image_cps_s, "image_cps_s = bcore_inst { aware_t _; uz_t w; uz_t h; u2_t [] data; }" )
 
+//----------------------------------------------------------------------------------------------------------------------
+
 u2_t cps_from_rgb( u0_t r, u0_t g, u0_t b ) { return ( u2_t )r | ( ( u2_t )g ) << 8 | ( ( u2_t )b ) << 16; }
 u0_t r_from_cps( u2_t v ) { return v;       }
 u0_t g_from_cps( u2_t v ) { return v >>  8; }
@@ -79,6 +81,8 @@ u2_t cps_from_cl( cl_s cl )
     return cps_from_rgb( r, g, b );
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 void image_cps_s_set_size( image_cps_s* o, uz_t w, uz_t h, u2_t v )
 {
     o->w = w;
@@ -87,15 +91,21 @@ void image_cps_s_set_size( image_cps_s* o, uz_t w, uz_t h, u2_t v )
     for( uz_t i = 0; i < o->size; i++ ) o->data[ i ] = v;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 void image_cps_s_set_pixel( image_cps_s* o, uz_t x, uz_t y, u2_t v )
 {
     if( x < o->w && y < o->h ) o->data[ y * o->w + x ] = v;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 void image_cps_s_set_pixel_cl( image_cps_s* o, uz_t x, uz_t y, cl_s cl )
 {
     image_cps_s_set_pixel( o, x, y, cps_from_cl( cl ) );
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 void image_cps_s_copy_cl( image_cps_s* o, const image_cl_s* src )
 {
@@ -103,7 +113,11 @@ void image_cps_s_copy_cl( image_cps_s* o, const image_cl_s* src )
     for( uz_t i = 0; i < o->size; i++ ) o->data[ i ] = cps_from_cl( src->data[ i ] );
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 /**********************************************************************************************************************/
+
+//----------------------------------------------------------------------------------------------------------------------
 
 void image_cps_s_write_pnm( const image_cps_s* o, sc_t file )
 {
@@ -122,12 +136,16 @@ void image_cps_s_write_pnm( const image_cps_s* o, sc_t file )
     bcore_inst_a_discard( sink );
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 tp_t image_cps_s_hash( const image_cps_s* o )
 {
     tp_t hash = bcore_tp_init();
     for( uz_t i = 0; i < o->size; i++ ) hash = bcore_tp_fold_u2( hash, o->data[ i ] );
     return hash;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 /**********************************************************************************************************************/
 /// scene_s
@@ -196,6 +214,8 @@ static sc_t scene_s_def =
 
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( scene_s )
 
+//----------------------------------------------------------------------------------------------------------------------
+
 void scene_s_init_a( vd_t nc )
 {
     struct { ap_t a; vc_t p; scene_s* o; } * nc_l = nc;
@@ -204,12 +224,16 @@ void scene_s_init_a( vd_t nc )
     nc_l->o->matter = compound_s_create();
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 static bcore_self_s* scene_s_create_self( void )
 {
     bcore_self_s* self = bcore_self_s_build_parse_sc( scene_s_def, sizeof( scene_s ) );
     bcore_self_s_push_ns_func( self, ( fp_t )scene_s_init_a, "ap_t", "init" );
     return self;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 uz_t scene_s_push( scene_s* o, const sr_s* object )
 {
@@ -254,6 +278,8 @@ uz_t scene_s_push( scene_s* o, const sr_s* object )
     return 0;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 uz_t scene_s_objects( const scene_s* o )
 {
     uz_t size = 0;
@@ -261,6 +287,8 @@ uz_t scene_s_objects( const scene_s* o )
     size += compound_s_get_size( o->matter );
     return size;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 sr_s scene_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
 {
@@ -302,6 +330,8 @@ sr_s scene_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
     return sr_null();
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 f3_t scene_s_hit( const scene_s* o, const ray_s* r, v3d_s* p_nor, vc_t* hit_obj )
 {
     f3_t min_a = f3_inf;
@@ -327,6 +357,8 @@ f3_t scene_s_hit( const scene_s* o, const ray_s* r, v3d_s* p_nor, vc_t* hit_obj 
     return min_a;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 f3_t scene_s_trans_hit( const scene_s* o, const ray_s* r, trans_data_s* trans )
 {
     f3_t min_a = f3_inf;
@@ -349,7 +381,11 @@ f3_t scene_s_trans_hit( const scene_s* o, const ray_s* r, trans_data_s* trans )
     return min_a;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 /**********************************************************************************************************************/
+
+//----------------------------------------------------------------------------------------------------------------------
 
 /** This function computes a weight according to the Oren-Nayar (1993) reflectance model
  *  using the simplified version.
@@ -378,6 +414,8 @@ f3_t oren_nayar_weight( f3_t weight, f3_t theta_i, f3_t on_a, f3_t on_b, v3d_s o
         )
     );
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 cl_s scene_s_lum( const scene_s* scene,
                   const ray_s* ray,
@@ -633,7 +671,7 @@ cl_s scene_s_lum( const scene_s* scene,
     return lum;
 }
 
-/**********************************************************************************************************************/
+//----------------------------------------------------------------------------------------------------------------------
 
 void scene_s_clear( scene_s* o )
 {
@@ -651,6 +689,8 @@ typedef struct lum_s
     f3_t  weight;
 } lum_s;
 
+//----------------------------------------------------------------------------------------------------------------------
+
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( lum_s )
 BCORE_DEFINE_CREATE_SELF( lum_s,  "lum_s = bcore_inst { v2d_s pos; cl_s clr; f3_t weight = 1.0; }" )
 
@@ -660,6 +700,8 @@ tp_t lum_s_key( const lum_s* o )
     s2_t y = o->pos.y;
     return bcore_tp_fold_u2( bcore_tp_fold_u2( bcore_tp_init(), x ), y );
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 lum_s lum_s_add( const lum_s* o1, const lum_s* o2 )
 {
@@ -695,11 +737,15 @@ void lum_arr_s_clear( lum_arr_s* o )
     bcore_array_a_set_size( (bcore_array*)o, 0 );
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 void lum_arr_s_push( lum_arr_s* o, lum_s lum )
 {
     if( o->space == o->size ) bcore_array_a_set_space( (bcore_array*)o, o->space > 0 ? o->space * 2 : 256 );
     o->data[ o->size++ ] = lum;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 /// sets position and initializes other values with defaults
 void lum_arr_s_push_pos( lum_arr_s* o, v2d_s pos )
@@ -725,6 +771,8 @@ typedef struct lum_image_s
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( lum_image_s )
 BCORE_DEFINE_CREATE_SELF( lum_image_s,  "lum_image_s = bcore_inst { aware_t _; uz_t width; uz_t height; lum_arr_s arr; }" )
 
+//----------------------------------------------------------------------------------------------------------------------
+
 void lum_image_s_reset( lum_image_s* o, uz_t width, uz_t height )
 {
     bcore_array_a_set_size( (bcore_array*)&o->arr, width * height );
@@ -738,6 +786,8 @@ void lum_image_s_reset( lum_image_s* o, uz_t width, uz_t height )
     o->height = height;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 void lum_image_s_push( lum_image_s* o, lum_s lum )
 {
     s2_t x = lum.pos.x / lum.weight;
@@ -749,10 +799,14 @@ void lum_image_s_push( lum_image_s* o, lum_s lum )
     }
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 void lum_image_s_push_arr( lum_image_s* o, const lum_arr_s* lum_arr )
 {
     for( uz_t i = 0; i < lum_arr->size; i++ ) lum_image_s_push( o, lum_arr->data[ i ] );
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 lum_s lum_image_s_get_avg( const lum_image_s* o, s2_t x, s2_t y )
 {
@@ -767,12 +821,16 @@ lum_s lum_image_s_get_avg( const lum_image_s* o, s2_t x, s2_t y )
     return ( lum_s ) { .pos = v2d_s_mlf( lum.pos, f ), .clr = v3d_s_mlf( lum.clr, f ), .weight = 1.0 };
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 f3_t lum_image_s_clr_dev( const lum_image_s* o, v3d_s ref, s3_t x, s3_t y )
 {
     if( x < 0 || x >= o->width  ) return 0;
     if( y < 0 || y >= o->height ) return 0;
     return v3d_s_sqr( v3d_s_sub( ref, lum_image_s_get_avg( o, x, y ).clr ) );
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 f3_t lum_image_s_sqr_grad( const lum_image_s* o, s3_t x, s3_t y )
 {
@@ -789,6 +847,8 @@ f3_t lum_image_s_sqr_grad( const lum_image_s* o, s3_t x, s3_t y )
     g1 = lum_image_s_clr_dev( o, v, x + 1, y + 1 ); g0 = g1 > g0 ? g1 : g0;
     return g0;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 void lum_image_s_create_image_file( const lum_image_s* o, sc_t file )
 {
@@ -821,11 +881,15 @@ typedef struct lum_machine_s
     bcore_mutex_s mutex;
 } lum_machine_s;
 
+//----------------------------------------------------------------------------------------------------------------------
+
 void lum_machine_s_init( lum_machine_s* o )
 {
     bcore_memzero( o, sizeof( *o ) );
     bcore_mutex_s_init( &o->mutex );
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 void lum_machine_s_down( lum_machine_s* o )
 {
@@ -835,6 +899,8 @@ void lum_machine_s_down( lum_machine_s* o )
 BCORE_DEFINE_FUNCTION_CREATE( lum_machine_s )
 BCORE_DEFINE_FUNCTION_DISCARD( lum_machine_s )
 
+//----------------------------------------------------------------------------------------------------------------------
+
 lum_machine_s* lum_machine_s_plant( const scene_s* scene, lum_arr_s* lum_arr )
 {
     lum_machine_s* o = lum_machine_s_create();
@@ -842,6 +908,8 @@ lum_machine_s* lum_machine_s_plant( const scene_s* scene, lum_arr_s* lum_arr )
     o->lum_arr = lum_arr;
     return o;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 uz_t lum_machine_s_get_index( lum_machine_s* o )
 {
@@ -852,6 +920,8 @@ uz_t lum_machine_s_get_index( lum_machine_s* o )
     bcore_mutex_s_unlock( &o->mutex );
     return index;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 vd_t lum_machine_s_func( lum_machine_s* o )
 {
@@ -910,14 +980,12 @@ vd_t lum_machine_s_func( lum_machine_s* o )
     return NULL;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 void lum_machine_s_run( const scene_s* scene, lum_arr_s* lum_arr )
 {
     lum_machine_s* machine = lum_machine_s_plant( scene, lum_arr );
     uz_t threads = scene->threads > 0 ? scene->threads : 1;
-
-//    pthread_t* thread_arr = bcore_u_alloc( sizeof( pthread_t ), NULL, threads, NULL );
-//    for( uz_t i = 0; i < threads; i++ ) pthread_create( &thread_arr[ i ], NULL, ( vd_t(*)(vd_t) )lum_machine_s_func, machine );
-//    for( uz_t i = 0; i < threads; i++ ) pthread_join( thread_arr[ i ], NULL );
 
     bcore_thread_s* thread_arr = bcore_u_alloc( sizeof( bcore_thread_s ), NULL, threads, NULL );
     for( uz_t i = 0; i < threads; i++ ) thread_arr[ i ] = bcore_thread_call( ( vd_t(*)(vd_t) )lum_machine_s_func, machine );
@@ -926,6 +994,8 @@ void lum_machine_s_run( const scene_s* scene, lum_arr_s* lum_arr )
     bcore_free( thread_arr );
     lum_machine_s_discard( machine );
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 void scene_s_create_image_file( scene_s* o, sc_t file )
 {
@@ -993,7 +1063,11 @@ void scene_s_create_image_file( scene_s* o, sc_t file )
     bcore_life_s_discard( l );
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 /**********************************************************************************************************************/
+
+//----------------------------------------------------------------------------------------------------------------------
 
 vd_t scene_signal_handler( const bcore_signal_s* o )
 {

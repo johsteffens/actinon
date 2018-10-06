@@ -15,7 +15,6 @@
  *  limitations under the License.
  */
 
-#include "scene.h"
 #include "bcore_sinks.h"
 #include "bcore_spect_inst.h"
 #include "bcore_life.h"

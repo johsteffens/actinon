@@ -635,9 +635,9 @@ static sr_s meval_s_mul( meval_s* o, sr_s v1, sr_s v2 )
         case TYPEOF_bl_t:
         switch( t2 )
         {
-            case TYPEOF_s3_t:  r = sr_s3( *( bl_t* )v1.o * *( s3_t* )v2.o ); break;
-            case TYPEOF_f3_t:  r = sr_f3( *( bl_t* )v1.o * *( f3_t* )v2.o ); break;
-            case TYPEOF_bl_t:  r = sr_bl( *( bl_t* )v1.o * *( bl_t* )v2.o ); break;
+            case TYPEOF_s3_t:  r = sr_s3( *( bl_t* )v1.o  * *( s3_t* )v2.o ); break;
+            case TYPEOF_f3_t:  r = sr_f3( *( bl_t* )v1.o  * *( f3_t* )v2.o ); break;
+            case TYPEOF_bl_t:  r = sr_bl( *( bl_t* )v1.o && *( bl_t* )v2.o ); break;
             case TYPEOF_v3d_s: r = sr_create( TYPEOF_v3d_s ); *( v3d_s* )r.o = v3d_s_mlf( *( v3d_s* )v2.o, *( bl_t* )v1.o ); break;
         }
         break;
