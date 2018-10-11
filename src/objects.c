@@ -213,6 +213,7 @@ typedef void       (*scale_fp        )( vd_t o, f3_t fac );
 typedef struct spect_obj_s
 {
     bcore_spect_header_s header;
+
     projection_fp   fp_projection;
     fov_fp          fp_fov;
     ray_hit_fp      fp_ray_hit;
@@ -224,7 +225,9 @@ typedef struct spect_obj_s
     is_reachable_fp fp_is_reachable;
 } spect_obj_s;
 
-sc_t spect_obj_s_def = "spect_obj_s = spect"
+static const tp_t spect_obj_s_parent_type_g = TYPEOF_bcore_inst;
+
+static sc_t spect_obj_s_def = "spect_obj_s = spect"
 "{"
     "bcore_spect_header_s header;"
     "       feature projection_fp   fp_projection   ~> func projection_fp   projection;"
@@ -1737,7 +1740,7 @@ vd_t objects_signal_handler( const bcore_signal_s* o )
             BCORE_REGISTER_OBJECT( properties_s );
             BCORE_REGISTER_FUNC(   properties_s_init_a );
 
-            BCORE_REGISTER_SPECT( spect_obj_s );
+            BCORE_REGISTER_SPECT( spect_obj );
 
             BCORE_REGISTER_OBJECT( obj_plane_s );
             BCORE_REGISTER_FUNC(  obj_plane_s_projection );

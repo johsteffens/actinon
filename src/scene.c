@@ -1,4 +1,4 @@
-/** Rayflux Scene */
+/** Tracing and rendering model */
 
 /** Copyright 2017 Johannes Bernhard Steffens
  *

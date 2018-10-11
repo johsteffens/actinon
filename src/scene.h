@@ -1,4 +1,4 @@
-/** Rayflux Scene */
+/** Tracing and rendering model */
 
 /** Copyright 2017 Johannes Bernhard Steffens
  *
@@ -23,6 +23,12 @@
 #include "vectors.h"
 #include "interpreter.h"
 #include "quicktypes.h"
+
+/**********************************************************************************************************************/
+// renderer-specific object functions
+
+/// color on object's surface
+cl_s obj_color( vc_t o, v3d_s pos );
 
 /**********************************************************************************************************************/
 

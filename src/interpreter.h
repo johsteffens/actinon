@@ -28,7 +28,6 @@
 extern bcore_arr_st_s* interpreter_args_g;
 extern clock_t         start_time_g;
 
-
 /**********************************************************************************************************************/
 
 /// operators and controls
