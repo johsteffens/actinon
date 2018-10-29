@@ -39,7 +39,7 @@
 /**********************************************************************************************************************/
 /// f3_t
 
-// Note: generators xsg, xsg2 show strong hyper-structures on polar coordinates
+// Note: generators xsg, xsg2 show strong hyper-structures on polar coordinates. No not use these for path tracing.
 
 /// random generator (range -1, 1)
 static inline f3_t f3_rnd0( u2_t* rv ) { return ( *rv = bcore_xsg1_u2( *rv ) ) * ( 2.0 / 0xFFFFFFFFu ) - 1.0; }

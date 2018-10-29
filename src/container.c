@@ -511,7 +511,7 @@ sr_s arr_s_meval_key( sr_s* sr_o, meval_s* ev, tp_t key )
     }
     else
     {
-        meval_s_err_fa( ev, "Map has no element of name #<sc_t>.", meval_s_get_name( ev, key ) );
+        meval_s_err_fa( ev, "arr_s has no element of name #<sc_t>.", meval_s_get_name( ev, key ) );
     }
 
     return sr_fork( obj );
