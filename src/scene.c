@@ -121,7 +121,7 @@ void image_cps_s_copy_cl( image_cps_s* o, const image_cl_s* src )
 
 void image_cps_s_write_pnm( const image_cps_s* o, sc_t file )
 {
-    vd_t sink = bcore_sink_create_file( file );
+    vd_t sink = bcore_sink_open_file( file );
 
     bcore_sink_a_push_fa( sink, "P6\n#<uz_t> #<uz_t>\n255\n", o->w, o->h );
     for( uz_t i = 0; i < o->size; i++ )
