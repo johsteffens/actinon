@@ -730,8 +730,9 @@ obj_squaroid_s* obj_squaroid_s_create_ellipsoid( f3_t rx, f3_t ry, f3_t rz )
     o->r = -1;
     f3_t rmax = rx > ry ? rx : ry;
     rmax = rmax > rz ? rmax : rz;
-    envelope_s env = envelope_create( v3d_s_zero(), rmax + 2 * f3_eps );
-    obj_set_envelope( o, &env );
+    // TODO remove commented out code (envelope should not be used here because it impairs proper inversion)
+    // envelope_s env = envelope_create( v3d_s_zero(), rmax + 2 * f3_eps );
+    // obj_set_envelope( o, &env );
     return o;
 }
 
