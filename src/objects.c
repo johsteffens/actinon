@@ -225,7 +225,7 @@ typedef struct spect_obj_s
     is_reachable_fp fp_is_reachable;
 } spect_obj_s;
 
-static const tp_t spect_obj_s_parent_type_g = TYPEOF_bcore_inst;
+//static const tp_t spect_obj_s_parent_type_g = TYPEOF_bcore_inst;
 
 static sc_t spect_obj_s_def = "spect_obj_s = spect"
 "{"
@@ -1725,7 +1725,7 @@ vd_t objects_signal_handler( const bcore_signal_s* o )
     {
         case TYPEOF_init1:
         {
-            bcore_trait_set( entypeof( "spect_obj" ), entypeof( "bcore_inst" ) );
+            //bcore_trait_set( entypeof( "spect_obj" ), entypeof( "bcore_inst" ) );
 
             BCORE_REGISTER_FEATURE( projection_fp );
             BCORE_REGISTER_FEATURE( ray_hit_fp );
