@@ -62,8 +62,6 @@ typedef struct image_cps_s
     };
 } image_cps_s;
 
-BCORE_DECLARE_FUNCTIONS_OBJ( image_cps_s )
-
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( image_cps_s )
 BCORE_DEFINE_CREATE_SELF( image_cps_s, "image_cps_s = bcore_inst { aware_t _; uz_t w; uz_t h; u2_t [] data; }" )
 
