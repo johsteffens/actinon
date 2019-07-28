@@ -244,7 +244,7 @@ def create_image = <-( num index ) *
 	}();
 	
     ?? "Finished.";
-    ?? "If this is a distributed job check for incomplete images.";
+    ?? "If this is a distributed job, check for incomplete images.";
     ?? "";
     ?? "Creating a webm-video with ffmpeg:";
     ?? "  ffmpeg -r 30 -i " + #source_file_name + ".image_%06d.pnm -c:v libvpx-vp9 -crf 5 -b:v 5M " + #source_file_name + ".webm";
