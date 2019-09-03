@@ -1,0 +1,265 @@
+// Actinon source code
+
+/* Copyright 2018 Johannes Bernhard Steffens
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+def tools = map_s;
+
+tools.v3d_length = <-( v3d v ) * { sqrt( v * v ); };
+
+tools.spheroid_obj = <-( param ) * 
+{ 
+    def obj = create_squaroid( param.a, param.b, param.c, param.r );
+    obj.move( param.pos );
+    obj;
+};
+
+tools.spheroid_param = <-( pos, num sx, num sy, num sz, num r ) *
+{   
+    def param = map_s;
+    param.pos = pos;
+    param.a = sqr( 1.0 / sx );
+    param.b = sqr( 1.0 / sy );
+    param.c = sqr( 1.0 / sz );
+    param.r = r;
+    param;
+};
+
+tools.fused_spheroid_param = <-( map s, num dz, num sx, num r ) *
+{
+    def a0 = s.a;
+    def a1 = sqr( 1.0 / sx );
+    def c0 = s.c;
+    def r0 = s.r;
+    def r1 = r;
+    def z1 = dz;
+
+    def zm  = ( a0 * r1 - a1 * r0 ) / ( z1 * a1 * c0 );
+    def zm2 = zm * zm;
+    def xm2 = -( c0 * zm2 + r0 ) / a0;
+    def c1  = -( a1 * xm2 + r1 ) / ( sqr( zm - z1 ) );
+
+    def param = map_s;
+    param.pos = s.pos + vecz( dz );
+    param.a = a1;
+    param.b = a1 * ( s.b ) / ( s.a );
+    param.c = c1;
+    param.r = r1;
+    param.zm = zm + s.pos.z;
+    param;
+};
+
+tools.create_straight_bar = <-( map start, num thickness, num width, num length, map end ) *
+{
+    end.pos = start.pos + ( roty( start.angle ) * vecx( length ) );
+    end.angle = start.angle;
+    
+    def th = thickness * 0.5;
+
+    def cov = create_plane();
+    def cyl = create_cylinder( th, th ) * roty( 90 );
+    
+    def vz = vecz( th     );
+    def vx = vecx( length * 0.5 );
+    def vy = vecy( width  * 0.5 );
+
+    def buf = [];
+    buf.push(  cov + vz );
+    buf.push( !cov - vz );
+    
+    cov = create_plane() * roty(  90 );
+    buf.push(  cov + vx );
+    buf.push( !cov - vx );
+    def edge = cyl & ( cov + vx ) & !( cov - vx );
+    
+    cov = create_plane() * rotx( -90 );
+    buf.push(  cov + vy );
+    buf.push( !cov - vy );
+    
+    
+    buf = [] : buf.create_inside_composite();
+    buf.push( edge + vy );
+    buf.push( edge - vy );
+    
+    def bar = buf.create_outside_composite();
+    
+    bar.set_auto_envelope();
+    
+    bar.move( vecx( length * 0.5 ) );
+    bar *= roty( start.angle );
+    bar.move( start.pos );
+    
+    bar;
+};
+
+tools.create_curved_bar = <-( map start, num thickness, num width, num radius, num angle, map end ) *
+{
+    def cov = create_plane() * rotx( -90 );
+    def cyl = create_cylinder( 1, 1 ) * rotx( -90 );
+    def tor = create_torus( radius, thickness * 0.5 ) * rotx( -90 );
+    
+    def buf = [];
+    def vy = vecy( width * 0.5 );
+    
+    buf.push(    cyl * ( radius + thickness * 0.5 ) );
+    buf.push( !( cyl * ( radius - thickness * 0.5 ) ) );
+    buf.push(  cov + vy );
+    buf.push( !cov - vy );
+    
+    cov = create_plane() * roty( -90 );
+    
+    def stop = !cov & ( cov * roty( angle ) );
+    def edge = tor & stop;
+    edge.set_auto_envelope();
+    buf.push( stop );
+    buf = [] : buf.create_inside_composite();
+    buf.push( edge + vy );
+    buf.push( edge - vy );
+    
+    def bar = buf.create_outside_composite();
+    bar.set_auto_envelope();
+    
+    def zoffs = { if( angle > 0 ) radius else -radius; }();
+    bar.move( vecz( zoffs ) );
+    bar *= roty( start.angle + 180 );
+    bar.move( start.pos );
+    def p0 = roty( start.angle ) * vecz( zoffs );
+    end.pos = start.pos + ( roty( angle ) * p0 ) - p0;
+    end.angle = start.angle + angle;
+
+    bar;
+};
+
+tools.create_edge = <-( map start, num thickness, num width ) *
+{
+    def th = thickness * 0.5;
+    def cov = create_plane() * rotx( 90 );
+    def cyl = create_cylinder( th, th ) * rotx( 90 );
+    def vy = vecy( width  * 0.5 );
+    def edge0 = cyl & !( cov + vy ) & ( cov - vy );
+    def sph = create_sphere( th );
+    def edge1 = edge0 | ( sph - vy ) | ( sph + vy );
+    edge1.set_auto_envelope();
+    edge1.move( start.pos );
+    edge1;    
+};
+
+def rval = 1234;
+
+def rand_sym = 
+{
+    rval = ( rval * 67261 + 1385791711 ) % 4294967296;
+    ( ( rval / 4294967296 ) - 0.5 ) * 2.0;
+};
+
+def create_tile = <-( clr, num w, num l, num r ) *
+{
+    def clr1 =  clr * ( 1.0 + rand_sym() * 0.1 );
+    def set_material = <-( obj ) *
+    {
+        obj.set_material( "diffuse_polished" );
+        obj.set_color( clr1 );
+        obj.set_surface_roughness( 0.0002 );
+        obj;
+    };
+
+    def wh = w * 0.5;
+    def lh = l * 0.5;
+    def pln = set_material( create_plane() );
+    def sph = set_material( create_sphere( r ) );
+    def cyl = set_material( create_cylinder( r, r ) );
+
+    def bar = <-( num l ) * { cyl & ( pln + vecz( l * 0.5 ) ) & ( pln * rotx( 180 ) - vecz( l * 0.5 ) ); };
+
+    def set = [];
+    
+    set.push( ( bar( l ) * rotx( 90 ) ) - vecx( wh ) );
+    set.push( ( bar( l ) * rotx( 90 ) ) + vecx( wh ) );
+
+    set.push( ( bar( l ) * roty( 90 ) ) - vecy( lh ) );
+    set.push( ( bar( l ) * roty( 90 ) ) + vecy( lh ) );
+
+    set.push( ( ( sph + vecx( wh ) ) : ( sph - vecx( wh ) ) ) - vecy( lh ) );
+    set.push( ( ( sph + vecx( wh ) ) : ( sph - vecx( wh ) ) ) + vecy( lh ) );
+    
+    def cube = pln & ( ( ( pln * roty( 90 ) ) + vecx( wh ) ) & ( ( pln * roty( -90 ) ) - vecx( wh ) ) ) & 
+                     ( ( ( pln * rotx( 90 ) ) - vecy( lh ) ) & ( ( pln * rotx( -90 ) ) + vecy( lh ) ) );
+                     
+	cube.set_envelope( create_sphere( 1 ) * sqrt( ( wh * wh ) + ( lh * lh ) ) );
+    
+    set.push( cube + vecz( r ) );
+    
+    def out = set.create_compound();
+    out.set_envelope( create_sphere( 1 ) * sqrt( sqr( wh + r ) + sqr( lh + r ) ) );
+    out;
+};
+
+tools.create_tiled_plane = <-( clr, num tw, num tr, num th, num gw, num nw, num nl ) *
+{
+    def set_material = <-( obj ) *
+    {
+        obj.set_material( "diffuse" );
+        obj.set_color( color( 0.5, 0.5, 0.5 ) ); // fill material
+        obj;
+    };
+
+    def set = [];
+    def dx = tw;
+    def dy = tw;
+    
+	def j = 0;
+	while( j < nl )
+	{
+		def i = 0;
+		while( i < nw )
+		{
+			def tile = create_tile( clr, tw - 2 * tr + gw, tw - 2 * tr + gw, tr ) + vec( tw * 0.5, tw * 0.5, -tr );
+			set.push( tile + ( vecx( i * dx ) + vecy( j * dy ) ) );
+			i += 1;
+		}();
+	
+		j += 1;	
+	}();
+	
+	def pln = set_material( create_plane() );
+	
+	def w = tw * nw;
+	def l = tw * nl;
+
+    def cube = pln & ( ( ( pln * roty( 90 ) ) + vecx( w ) ) & ( ( pln * roty( -90 ) ) ) ) & 
+                     ( ( ( pln * rotx( 90 ) )             ) & ( ( pln * rotx( -90 ) ) + vecy( l ) ) );
+
+
+   set.push( cube - vecz( th ) );
+   
+   set.create_compound();
+
+};
+
+tools.create_tiled_ledge = <-( clr, num tw, num tr, num th, num nw, num nl, num nv, num nh ) *
+{    
+    def eps = 0.001 * tw;
+
+    def xoff = -nw * 0.5 * tw;
+    def yoff = -nl * 0.5 * tw;
+    
+    def plane_b = tools.create_tiled_plane( clr, tw, tr, th, 0, nw, nl )              + vec( xoff, yoff, 0 );
+    def plane_v = tools.create_tiled_plane( clr, tw, tr, th, 0, nw, nv ) * rotx( 90 ) + vec( xoff, yoff -th - eps, - nv * tw - th - eps );
+    def plane_h = tools.create_tiled_plane( clr, tw, tr, th, 0, nw, nh ) * rotx( 90 ) + vec( xoff, yoff + nl * tw, -th );
+    
+    plane_b : plane_v : plane_h;
+};
+
+tools;
