@@ -64,7 +64,7 @@ static spect_txm_s* spect_txm_s_create_from_self( const bcore_self_s* self )
 static bcore_self_s* spect_txm_s_create_self( void )
 {
     sc_t def = "spect_txm_s = spect { aware_t p_type; tp_t o_type; ... }";
-    bcore_self_s* self = bcore_self_s_build_parse_sc( def, sizeof( spect_txm_s ) );
+    bcore_self_s* self = BCORE_SELF_S_BUILD_PARSE_SC( def, spect_txm_s );
     bcore_self_s_push_ns_func( self, ( fp_t )spect_txm_s_create_from_self, "bcore_spect_fp_create_from_self", "create_from_self" );
     return self;
 }
@@ -109,7 +109,7 @@ cl_s txm_plain_clr( vc_t o )
 
 static bcore_self_s* txm_plain_s_create_self( void )
 {
-    bcore_self_s* self = bcore_self_s_build_parse_sc( txm_plain_s_def, sizeof( txm_plain_s ) );
+    bcore_self_s* self = BCORE_SELF_S_BUILD_PARSE_SC( txm_plain_s_def, txm_plain_s );
     bcore_self_s_push_ns_func( self, ( fp_t )txm_plain_s_init_a, "ap_t", "init" );
     bcore_self_s_push_ns_func( self, ( fp_t )txm_plain_s_clr, "clr_fp", "clr" );
     return self;
@@ -149,7 +149,7 @@ static cl_s txm_chess_s_clr( const txm_chess_s* o, vc_t obj, v3d_s pos )
 
 static bcore_self_s* txm_chess_s_create_self( void )
 {
-    bcore_self_s* self = bcore_self_s_build_parse_sc( txm_chess_s_def, sizeof( txm_chess_s ) );
+    bcore_self_s* self = BCORE_SELF_S_BUILD_PARSE_SC( txm_chess_s_def, txm_chess_s );
     bcore_self_s_push_ns_func( self, ( fp_t )txm_chess_s_clr, "clr_fp", "clr" );
     return self;
 }

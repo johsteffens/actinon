@@ -50,7 +50,7 @@ static void distance_sphere_s_init_a( vd_t nc )
 
 static bcore_self_s* distance_sphere_s_create_self( void )
 {
-    bcore_self_s* self = bcore_self_s_build_parse_sc( distance_sphere_s_def, sizeof( distance_sphere_s ) );
+    bcore_self_s* self = BCORE_SELF_S_BUILD_PARSE_SC( distance_sphere_s_def, distance_sphere_s );
     bcore_self_s_push_ns_func( self, ( fp_t )distance_sphere_s_init_a, "ap_t", "init" );
     return self;
 }
@@ -100,7 +100,7 @@ static void distance_torus_s_init_a( vd_t nc )
 
 static bcore_self_s* distance_torus_s_create_self( void )
 {
-    bcore_self_s* self = bcore_self_s_build_parse_sc( distance_torus_s_def, sizeof( distance_torus_s ) );
+    bcore_self_s* self = BCORE_SELF_S_BUILD_PARSE_SC( distance_torus_s_def, distance_torus_s );
     bcore_self_s_push_ns_func( self, ( fp_t )distance_torus_s_init_a, "ap_t", "init" );
     return self;
 }

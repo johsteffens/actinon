@@ -310,7 +310,7 @@ uz_t compound_s_side_count( const compound_s* o, v3d_s pos, s2_t side )
 
 static bcore_self_s* compound_s_create_self( void )
 {
-    bcore_self_s* self = bcore_self_s_build_parse_sc( compound_s_def, sizeof( compound_s ) );
+    bcore_self_s* self = BCORE_SELF_S_BUILD_PARSE_SC( compound_s_def, compound_s );
     return self;
 }
 
