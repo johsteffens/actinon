@@ -49,8 +49,8 @@ vd_t main_signal_handler( const bcore_signal_s* o )
 
 void run_selftest()
 {
-    bcore_register_signal_handler( bclos_signal_handler );
-    bcore_register_signal_handler( main_signal_handler );
+    bcore_register_signal_handler( bclos_signal_handler, 0 );
+    bcore_register_signal_handler( main_signal_handler, 0 );
     st_s_print_d( bcore_run_signal_selftest( typeof( "interpreter" ), NULL ) );
     bcore_down( false );
     exit( 0 );
@@ -58,8 +58,8 @@ void run_selftest()
 
 void run_quicktypes()
 {
-    bcore_register_signal_handler( bclos_signal_handler );
-    bcore_register_signal_handler( main_signal_handler );
+    bcore_register_signal_handler( bclos_signal_handler, 0 );
+    bcore_register_signal_handler( main_signal_handler, 0 );
     quicktypes_to_stdout( NULL );
     bcore_down( false );
     exit( 0 );
@@ -70,8 +70,8 @@ int main( int argc, const char** argv )
 //    run_selftest();
 //    run_quicktypes();
 
-    bcore_register_signal_handler( bclos_signal_handler );
-    bcore_register_signal_handler( main_signal_handler );
+    bcore_register_signal_handler( bclos_signal_handler, 0 );
+    bcore_register_signal_handler( main_signal_handler, 0 );
 
     bcore_msg( "ACTINON: Ray-tracer.\n" );
     bcore_msg( "Copyright (C) 2017 ... 2019 Johannes B. Steffens.\n\n" );
