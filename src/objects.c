@@ -267,7 +267,7 @@ f3_t obj_ray_hit( vc_t o, const ray_s* ray, v3d_s* p_nor )
     if( a < f3_inf && hdr->prp.surface_roughness > 0 && p_nor )
     {
         v3d_s n = *p_nor;
-        u2_t rv = v3d_s_random_seed( ray_s_pos( ray, a ), 1246 );
+        u3_t rv = v3d_s_random_seed( ray_s_pos( ray, a ), 1246 );
         f3_t f;
 
         f = f3_rnd0( &rv ) * 0.99;
@@ -320,7 +320,7 @@ envelope_s obj_estimate_envelope( vc_t o, uz_t samples, u2_t rseed, f3_t radius_
 
     v3d_s sum = v3d_s_zero();
 
-    u2_t rv = rseed;
+    u3_t rv = rseed;
     ray_s ray;
     ray.p = hdr->prp.pos;
     for( uz_t i = 0; i < samples; i++ )

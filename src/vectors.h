@@ -42,10 +42,10 @@
 // Note: generators xsg, xsg2 show strong hyper-structures on polar coordinates. No not use these for path tracing.
 
 /// random generator (range -1, 1)
-static inline f3_t f3_rnd0( u2_t* rv ) { return ( *rv = bcore_xsg1_u2( *rv ) ) * ( 2.0 / 0xFFFFFFFFu ) - 1.0; }
+static inline f3_t f3_rnd0( u3_t* rv ) { return ( *rv = bcore_lcg01_u3( *rv ) ) * ( 2.0 / 0xFFFFFFFFFFFFFFFFull ) - 1.0; }
 
 /// random generator (range 0, 1)
-static inline f3_t f3_rnd1( u2_t* rv ) { return ( *rv = bcore_xsg1_u2( *rv ) ) * ( 1.0 / 0xFFFFFFFFu ); }
+static inline f3_t f3_rnd1( u3_t* rv ) { return ( *rv = bcore_lcg01_u3( *rv ) ) * ( 1.0 / 0xFFFFFFFFFFFFFFFFull ); }
 
 /**********************************************************************************************************************/
 
@@ -175,9 +175,9 @@ static inline v3d_s v3d_s_con( v3d_s o )
 }
 
 /// computes a seed value from vector
-static inline u2_t v3d_s_random_seed( v3d_s o, u2_t rv )
+static inline u3_t v3d_s_random_seed( v3d_s o, u3_t rv )
 {
-    return o.x * bcore_lcg1_u2( rv ) + o.y * bcore_lcg2_u2( rv ) + o.z * bcore_lcg3_u2( rv );
+    return o.x * bcore_lcg00_u3( rv ) + o.y * bcore_lcg01_u3( rv ) + o.z * bcore_lcg02_u3( rv );
 }
 
 /** Random generators with even distribution over a spherical cap of height h.
@@ -185,7 +185,7 @@ static inline u2_t v3d_s_random_seed( v3d_s o, u2_t rv )
  *  Thanks to H Kong (http://www.bogotobogo.com/Algorithms/uniform_distribution_sphere.php)
  *  for pointing this out.
  */
-static inline v3d_s v3d_s_random_sphere_cap( u2_t* rv, f3_t h )
+static inline v3d_s v3d_s_random_sphere_cap( u3_t* rv, f3_t h )
 {
     v3d_s v;
     f3_t phi = 2.0 * M_PI * f3_rnd1( rv );
@@ -197,7 +197,7 @@ static inline v3d_s v3d_s_random_sphere_cap( u2_t* rv, f3_t h )
 }
 
 /// symmetric belt around unit-sphere (h indicates half-height of belt; h = 1: entire sphere)
-static inline v3d_s v3d_s_random_sphere_belt( u2_t* rv, f3_t h )
+static inline v3d_s v3d_s_random_sphere_belt( u3_t* rv, f3_t h )
 {
     v3d_s v;
     f3_t phi = 2.0 * M_PI * f3_rnd1( rv );

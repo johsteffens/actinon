@@ -532,7 +532,7 @@ cl_s scene_s_lum( const scene_s* scene,
         v3d_s ray_projection = v3d_s_of_length( v3d_s_orthogonal_projection( ray->d, surface.d ), 1.0 );
 
         /// random seed
-        u2_t rv = surface.p.x * 3294479285 +
+        u3_t rv = surface.p.x * 3294479285 +
                   surface.p.y * 7640304827 +
                   surface.p.z * 2434937345 +
                   surface.d.x * 3247146734 +
@@ -1027,7 +1027,7 @@ void scene_s_create_image_file( scene_s* o, sc_t file )
     lum_image_s_reset( lum_image, o->image_width, o->image_height );
     lum_image_s_push_arr( lum_image, lum_arr );
 
-    u2_t rv = 1234;
+    u3_t rv = 1234;
     uz_t rnd_samples = o->gradient_samples;
     f3_t sqr_gradient_theshold = f3_sqr( o->gradient_threshold );
 
