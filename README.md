@@ -2,13 +2,15 @@
 [<img align = "left" width = "640" height = "320" src = "https://raw.githubusercontent.com/johsteffens/actinon/master/image/hanging_lamp02.acn.640_360.jpg">](https://raw.githubusercontent.com/johsteffens/actinon/master/image/hanging_lamp02.acn.640_360.jpg "Image created with Actinon" )
 
 [<img align = "left" width = "300" height = "400" src = "https://raw.githubusercontent.com/johsteffens/actinon/master/image/paraffin_lamp_on_ledge.acn.png">](https://raw.githubusercontent.com/johsteffens/actinon/master/image/paraffin_lamp_on_ledge.acn.png "Image created with Actinon" )
-
 [<img width = "200" height = "200" src = "https://raw.githubusercontent.com/johsteffens/actinon/master/image/wine_glass.acn.png">](https://raw.githubusercontent.com/johsteffens/actinon/master/image/wine_glass.acn.png "Image created with Actinon" )
 
 [<img width = "200" height = "150" src = "https://raw.githubusercontent.com/johsteffens/actinon/master/image/diamond_video.acn.image_000049.png">](https://raw.githubusercontent.com/johsteffens/actinon/master/image/diamond_video.acn.image_000049.png "Image created with Actinon" )
 
+<br>
 
 ### [Find more examples here ...](https://github.com/johsteffens/actinon/wiki/Images)
+
+<br>
 
 ## What it is
 Actinon is a lightweight ray-tracing renderer and interpreter of a dedicated scripting language. It can render 3D scenes, employing techniques like distributed tracing, path tracing, anti-aliasing and others. It can visualize transparency, reflection, refraction, media-transition, diffuse-light, indirect-light and more. Various realistic surfaces are achieved by mixing fresnel-reflection, chromatic-reflection, (Oren-Nayar) diffuse-reflection and by simulating surface roughness. The rendering-engine is multi-threaded.
