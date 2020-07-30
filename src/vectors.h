@@ -42,10 +42,10 @@
 // Note: generators xsg, xsg2 show strong hyper-structures on polar coordinates. No not use these for path tracing.
 
 /// random generator (range -1, 1)
-static inline f3_t f3_rnd0( u3_t* rv ) { return ( *rv = bcore_lcg01_u3( *rv ) ) * ( 2.0 / 0xFFFFFFFFFFFFFFFFull ) - 1.0; }
+static inline f3_t f3_rnd0( u3_t* rv ) { return ( *rv = bcore_lcg00_u3( *rv ) ) * ( 2.0 / 0xFFFFFFFFFFFFFFFFull ) - 1.0; }
 
 /// random generator (range 0, 1)
-static inline f3_t f3_rnd1( u3_t* rv ) { return ( *rv = bcore_lcg01_u3( *rv ) ) * ( 1.0 / 0xFFFFFFFFFFFFFFFFull ); }
+static inline f3_t f3_rnd1( u3_t* rv ) { return ( *rv = bcore_lcg00_u3( *rv ) ) * ( 1.0 / 0xFFFFFFFFFFFFFFFFull ); }
 
 /**********************************************************************************************************************/
 

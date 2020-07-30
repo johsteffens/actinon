@@ -29,6 +29,8 @@
 #include "quicktypes.h"
 #include "distance.h"
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 vd_t main_signal_handler( const bcore_signal_s* o )
 {
     bcore_fp_signal_handler arr[] =
@@ -47,6 +49,8 @@ vd_t main_signal_handler( const bcore_signal_s* o )
     return bcore_signal_s_broadcast( o, arr, sizeof( arr ) / sizeof( bcore_fp_signal_handler ) );
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 void run_selftest()
 {
     bcore_register_signal_handler( bclos_general_signal_handler );
@@ -56,6 +60,8 @@ void run_selftest()
     exit( 0 );
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 void run_quicktypes()
 {
     bcore_register_signal_handler( bclos_general_signal_handler );
@@ -64,6 +70,8 @@ void run_quicktypes()
     bcore_down( false );
     exit( 0 );
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 int main( int argc, const char** argv )
 {
@@ -94,6 +102,10 @@ int main( int argc, const char** argv )
         {
             scene_s_overwrite_output_files_g = true;
         }
+        if( st_s_equal_sc( arg, "-r" ) )
+        {
+            scene_s_automatic_recover_g = true;
+        }
         else
         {
             bcore_arr_st_s_push_sc( interpreter_args_g, argv[ i ] );
@@ -108,3 +120,6 @@ int main( int argc, const char** argv )
     bcore_down( false );
     return 0;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+

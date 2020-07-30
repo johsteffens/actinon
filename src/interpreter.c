@@ -124,6 +124,8 @@ typedef struct mcode_s
     bclos_frame_s     local_frame; // local frame used by closures of mcode
 } mcode_s;
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 static sc_t mcode_s_def =
 "mcode_s = bcore_inst"
 "{"
@@ -138,6 +140,8 @@ static sc_t mcode_s_def =
 
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( mcode_s )
 BCORE_DEFINE_CREATE_SELF( mcode_s, mcode_s_def )
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 static void mcode_s_err_fv( const mcode_s* o, uz_t index, sc_t format, va_list args )
 {
@@ -164,10 +168,14 @@ static void mcode_s_err_fv( const mcode_s* o, uz_t index, sc_t format, va_list a
     }
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 void mcode_s_push_code( mcode_s* o, tp_t code )
 {
     bcore_arr_tp_s_push( &o->code, code );
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 void mcode_s_push_data( mcode_s* o, sr_s v )
 {
@@ -175,6 +183,8 @@ void mcode_s_push_data( mcode_s* o, sr_s v )
     mcode_s_push_code( o, o->data.size );
     bcore_arr_sr_s_push_sr( &o->data, v );
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 void mcode_s_push_name( mcode_s* o, sc_t name )
 {
@@ -184,11 +194,15 @@ void mcode_s_push_name( mcode_s* o, sc_t name )
     bcore_name_map_s_set( &o->names, n );
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 void mcode_s_push_src_index( mcode_s* o, sr_s* src )
 {
     bcore_arr_uz_s_push( &o->src_map, o->code.size );
     bcore_arr_uz_s_push( &o->src_map, bcore_source_r_get_index( src ) );
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
 {
@@ -496,6 +510,8 @@ void mcode_s_parse( mcode_s* o, const bcore_hmap_tptp_s* hmap_types, sr_s* src )
     bcore_life_s_discard( l );
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 static tp_t mcode_s_peek_code( const mcode_s* o, const uz_t* index )
 {
     if( *index < o->code.size )
@@ -505,11 +521,15 @@ static tp_t mcode_s_peek_code( const mcode_s* o, const uz_t* index )
     return 0;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 static tp_t mcode_s_get_code( const mcode_s* o, uz_t* index )
 {
     tp_t code = ( *index < o->code.size ) ? o->code.data[ ( *index )++ ] : 0;
     return code;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 /// if matching: consumes code and returns true; else returns false;
 static bl_t mcode_s_try_code( const mcode_s* o, uz_t* index, tp_t code )
@@ -521,6 +541,8 @@ static bl_t mcode_s_try_code( const mcode_s* o, uz_t* index, tp_t code )
     }
     return false;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 /// if matching: consumes code and returns true; else returns false;
 bl_t mcode_s_try_name( const mcode_s* o, uz_t* index, tp_t key )
@@ -538,12 +560,18 @@ bl_t mcode_s_try_name( const mcode_s* o, uz_t* index, tp_t key )
     return false;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 static bl_t mcode_s_end_code( const mcode_s* o, uz_t* index )
 {
     return ( *index == o->code.size ) ? true : false;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 /**********************************************************************************************************************/
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 typedef struct meval_s
 {
@@ -564,16 +592,22 @@ static sc_t meval_s_def =
 
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( meval_s )
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 static bcore_self_s* meval_s_create_self( void )
 {
     bcore_self_s* self = BCORE_SELF_S_BUILD_PARSE_SC( meval_s_def, meval_s );
     return self;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 void meval_s_err_fv( meval_s* o, sc_t format, va_list args )
 {
     mcode_s_err_fv( o->mcode, o->index, format, args );
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 void meval_s_err_fa( meval_s* o, sc_t format, ... )
 {
@@ -583,26 +617,36 @@ void meval_s_err_fa( meval_s* o, sc_t format, ... )
     va_end( args );
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 sr_s* meval_s_get_obj( const meval_s* o, tp_t key )
 {
     return bclos_frame_s_get( o->frame, key );
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 sr_s* meval_s_get_local_obj( const meval_s* o, tp_t key )
 {
     return bclos_frame_s_get_local( o->frame, key );
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 sr_s* meval_s_set_obj( meval_s* o, tp_t key, sr_s obj )
 {
     return bclos_frame_s_set( o->frame, key, obj );
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 sc_t meval_s_get_name( const meval_s* o, tp_t key )
 {
     bcore_name_s* name = bcore_name_map_s_get( &o->mcode->names, key );
     return name ? name->name : NULL;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 static sr_s meval_s_mul( meval_s* o, sr_s v1, sr_s v2 )
 {
@@ -740,6 +784,8 @@ static sr_s meval_s_mul( meval_s* o, sr_s v1, sr_s v2 )
     return r;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 static sr_s meval_s_mod( meval_s* o, sr_s v1, sr_s v2 )
 {
     tp_t t1 = sr_s_type( &v1 );
@@ -766,6 +812,8 @@ static sr_s meval_s_mod( meval_s* o, sr_s v1, sr_s v2 )
 
     return r;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 static sr_s meval_s_add( meval_s* o, sr_s v1, sr_s v2 )
 {
@@ -875,6 +923,8 @@ static sr_s meval_s_add( meval_s* o, sr_s v1, sr_s v2 )
     return r;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 /// comparison
 static s2_t meval_s_cmp( meval_s* o, sr_s v1, sr_s v2 )
 {
@@ -932,6 +982,8 @@ static s2_t meval_s_cmp( meval_s* o, sr_s v1, sr_s v2 )
     return r;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 static sr_s meval_s_inverse( meval_s* o, sr_s v1 )
 {
     tp_t t1 = sr_s_type( &v1 );
@@ -951,6 +1003,8 @@ static sr_s meval_s_inverse( meval_s* o, sr_s v1 )
 
     return r;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 static sr_s meval_s_logic_and( meval_s* o, sr_s v1, sr_s v2 )
 {
@@ -977,6 +1031,8 @@ static sr_s meval_s_logic_and( meval_s* o, sr_s v1, sr_s v2 )
     return r;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 static sr_s meval_s_logic_or( meval_s* o, sr_s v1, sr_s v2 )
 {
     sr_s r = sr_null();
@@ -1002,6 +1058,8 @@ static sr_s meval_s_logic_or( meval_s* o, sr_s v1, sr_s v2 )
     return r;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 static sr_s meval_s_logic_xor( meval_s* o, sr_s v1, sr_s v2 )
 {
     sr_s r = sr_null();
@@ -1020,6 +1078,8 @@ static sr_s meval_s_logic_xor( meval_s* o, sr_s v1, sr_s v2 )
 
     return r;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 static sr_s meval_s_logic_not( meval_s* o, sr_s v1 )
 {
@@ -1044,6 +1104,8 @@ static sr_s meval_s_logic_not( meval_s* o, sr_s v1 )
     return r;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 static sr_s meval_s_create_inside_composite( meval_s* o, sr_s v1 )
 {
     sr_s r = sr_null();
@@ -1062,6 +1124,8 @@ static sr_s meval_s_create_inside_composite( meval_s* o, sr_s v1 )
 
     return r;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 static sr_s meval_s_create_outside_composite( meval_s* o, sr_s v1 )
 {
@@ -1082,6 +1146,8 @@ static sr_s meval_s_create_outside_composite( meval_s* o, sr_s v1 )
     return r;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 static sr_s meval_s_create_compound( meval_s* o, sr_s v1 )
 {
     sr_s r = sr_null();
@@ -1100,6 +1166,8 @@ static sr_s meval_s_create_compound( meval_s* o, sr_s v1 )
 
     return r;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 static sr_s meval_s_set_auto_envelope( meval_s* o, sr_s v1 )
 {
@@ -1131,6 +1199,8 @@ static sr_s meval_s_set_auto_envelope( meval_s* o, sr_s v1 )
     return r;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 static sr_s meval_s_cat( meval_s* o, sr_s v1, sr_s v2 )
 {
     tp_t t1 = sr_s_type( &v1 );
@@ -1160,15 +1230,21 @@ static sr_s meval_s_cat( meval_s* o, sr_s v1, sr_s v2 )
     return r;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 tp_t meval_s_peek_code( const meval_s* o )
 {
     return mcode_s_peek_code( o->mcode, &o->index );
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 tp_t meval_s_get_code( meval_s* o )
 {
     return mcode_s_get_code( o->mcode, &o->index );
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 sr_s meval_s_get_data( meval_s* o )
 {
@@ -1178,20 +1254,28 @@ sr_s meval_s_get_data( meval_s* o )
     return sr_cw( o->mcode->data.data[ idx ] );
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 bl_t  meval_s_try_code( meval_s* o, tp_t code )
 {
     return mcode_s_try_code( o->mcode, &o->index, code );
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 bl_t  meval_s_try_name( meval_s* o, tp_t key )
 {
     return mcode_s_try_name( o->mcode, &o->index, key );
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 bl_t  meval_s_end_code( meval_s* o )
 {
     return mcode_s_end_code( o->mcode, &o->index );
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 void meval_s_expect_code( meval_s* o, tp_t code )
 {
@@ -1201,16 +1285,22 @@ void meval_s_expect_code( meval_s* o, tp_t code )
     }
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 uz_t meval_s_get_index( meval_s* o )
 {
     return o->index;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 void meval_s_jmp_to( meval_s* o, uz_t address )
 {
     if( address >= o->mcode->code.size ) meval_s_err_fa( o, "Target address out of range." );
     o->index = address;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 v3d_s meval_s_eval_v3d( meval_s* o )
 {
@@ -1222,6 +1312,8 @@ v3d_s meval_s_eval_v3d( meval_s* o )
     sr_down( vec );
     return ret;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 f3_t meval_s_eval_f3( meval_s* o )
 {
@@ -1241,12 +1333,16 @@ f3_t meval_s_eval_f3( meval_s* o )
     return ret;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 sr_s meval_s_eval_texture_field( meval_s* o )
 {
     sr_s val = meval_s_eval( o, sr_null() );
     if( !bcore_trait_is_of( sr_s_type( &val ), typeof( "spect_txm" ) ) ) meval_s_err_fa( o, "Texture map expected." );
     return val;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 bl_t meval_s_eval_bl( meval_s* o )
 {
@@ -1261,6 +1357,8 @@ bl_t meval_s_eval_bl( meval_s* o )
     return ret;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 m3d_s meval_s_eval_rot( meval_s* o )
 {
     sr_s mat = meval_s_eval( o, sr_null() );
@@ -1269,6 +1367,8 @@ m3d_s meval_s_eval_rot( meval_s* o )
     sr_down( mat );
     return ret;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 /// calls a closure
 sr_s meval_s_eval_call( meval_s* o, const sr_s* closure )
@@ -1305,6 +1405,8 @@ sr_s meval_s_eval_call( meval_s* o, const sr_s* closure )
     sr_down( sig_obj );
     return obj;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 /// evaluates an expression
 sr_s meval_s_eval( meval_s* o, sr_s front_obj )
@@ -1627,6 +1729,8 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
     return sr_fork( obj );
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 sr_s meval_s_execute( meval_s* o )
 {
     sr_s return_obj = sr_null();
@@ -1745,7 +1849,11 @@ sr_s meval_s_execute( meval_s* o )
     return return_obj;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 /**********************************************************************************************************************/
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 static sc_t mclosure_s_def =
 "mclosure_s = bclos_closure"
@@ -1758,12 +1866,16 @@ static sc_t mclosure_s_def =
 
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( mclosure_s )
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 static void mclosure_s_copy_a( vd_t nc )
 {
     struct { ap_t a; vc_t p; mclosure_s* dst; const mclosure_s* src; } * nc_l = nc;
     nc_l->a( nc ); // default
     nc_l->dst->lexical_frame = nc_l->src->lexical_frame;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 void mclosure_s_define( mclosure_s* o, bclos_frame_s* frame, bclos_signature_s* signature, mcode_s* mcode )
 {
@@ -1778,6 +1890,8 @@ void mclosure_s_define( mclosure_s* o, bclos_frame_s* frame, bclos_signature_s* 
         o->signature = bclos_signature_s_parse_from_sc( "root inlined()" );
     }
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 static sr_s mclosure_s_call( mclosure_s* o, bclos_frame_s* frame, const bclos_arguments_s* args )
 {
@@ -1808,10 +1922,14 @@ static sr_s mclosure_s_call( mclosure_s* o, bclos_frame_s* frame, const bclos_ar
     return return_obj;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 sr_s mclosure_s_signature( const mclosure_s* o )
 {
     return sr_twc( TYPEOF_bclos_signature_s, o->signature );
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
 {
@@ -1901,6 +2019,8 @@ sr_s mclosure_s_interpret( const mclosure_s* const_o, sr_s source )
     return return_obj;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 static bcore_self_s* mclosure_s_create_self( void )
 {
     bcore_self_s* self = BCORE_SELF_S_BUILD_PARSE_SC( mclosure_s_def, mclosure_s );
@@ -1912,6 +2032,8 @@ static bcore_self_s* mclosure_s_create_self( void )
     return self;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 st_s* mclosure_selftest()
 {
     st_s* log = st_s_create();
@@ -1920,7 +2042,11 @@ st_s* mclosure_selftest()
     return log;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 /**********************************************************************************************************************/
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 vd_t interpreter_signal_handler( const bcore_signal_s* o )
 {
@@ -1953,5 +2079,7 @@ vd_t interpreter_signal_handler( const bcore_signal_s* o )
     }
     return NULL;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 /**********************************************************************************************************************/

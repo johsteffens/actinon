@@ -114,7 +114,7 @@ def create_top_mount = <-( num radius, num thickness, func set_material ) *
     def cyl = create_cylinder( 1, 1 );
     def cov = create_plane();
     
-    def hbar = ( ( cyl * thickness * 0.4 ) & ( cov + vecz( radius * 0.5 ) ) & ( !cov - vecz( radius * 0.5 ) ) ) * rotx( 90 );
+    def hbar = ( ( cyl * thickness * 0.4 ) & ( cov + vecz( radius ) ) & ( !cov - vecz( radius ) ) ) * rotx( 90 );
     def vbar = ( ( cyl * thickness * 0.6 ) & ( cov + vecz( radius ) ) & ( !cov - vecz( radius ) ) ) + vecz( radius );
     
     def buf = top_ring : hbar : vbar : ( sph * thickness * 0.7 );

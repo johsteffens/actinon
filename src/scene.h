@@ -33,6 +33,7 @@ cl_s obj_color( vc_t o, v3d_s pos );
 /**********************************************************************************************************************/
 
 extern bl_t scene_s_overwrite_output_files_g;
+extern bl_t scene_s_automatic_recover_g;
 
 typedef struct image_cps_s image_cps_s;
 BCORE_DECLARE_FUNCTIONS_OBJ( image_cps_s )

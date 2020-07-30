@@ -108,9 +108,6 @@ def create_ceiling = <-( num zoffs ) *
     
     lamp.move( vecz( ceiling_offset - stand.zmax ) );
     
-    
-    
-    
     lamp;        
     scene.push( lamp * rotz( 20 ) );
 

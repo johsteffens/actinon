@@ -17,6 +17,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <signal.h>
 
 #include "bcore_threads.h"
 #include "bcore_sinks.h"
@@ -39,6 +40,7 @@
 /// globals
 
 bl_t scene_s_overwrite_output_files_g = false;
+bl_t scene_s_automatic_recover_g = false;
 
 /**********************************************************************************************************************/
 /// image_cps_s
@@ -171,7 +173,7 @@ typedef struct scene_s
 
     uz_t direct_samples;
     uz_t path_samples;
-    f3_t max_path_length;  // path rays longer than max_path_length obtain background color
+    f3_t max_path_length;  // path rays longer than max_path_length obtain background color (only for path tracing; does not apply to reflection)
 
     compound_s* light;  // light sources
     compound_s* matter; // passive objects
@@ -677,6 +679,8 @@ void scene_s_clear( scene_s* o )
     compound_s_clear( o->matter );
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 /**********************************************************************************************************************/
 
 // luminance at a given position
@@ -764,10 +768,24 @@ typedef struct lum_image_s
     uz_t width;
     uz_t height;
     lum_arr_s arr;
+    uz_t gradient_cycle;
+    u3_t rval;
 } lum_image_s;
 
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( lum_image_s )
-BCORE_DEFINE_CREATE_SELF( lum_image_s,  "lum_image_s = bcore_inst { aware_t _; uz_t width; uz_t height; lum_arr_s arr; }" )
+BCORE_DEFINE_CREATE_SELF
+(
+    lum_image_s,
+    "lum_image_s = bcore_inst"
+    "{"
+        "aware_t _;"
+        "uz_t width;"
+        "uz_t height;"
+        "lum_arr_s arr;"
+        "uz_t gradient_cycle;"
+        "u3_t rval;"
+    "}"
+)
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -782,6 +800,8 @@ void lum_image_s_reset( lum_image_s* o, uz_t width, uz_t height )
     }
     o->width = width;
     o->height = height;
+    o->gradient_cycle = 0;
+    o->rval = 21943294;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -869,7 +889,24 @@ void lum_image_s_create_image_file( const lum_image_s* o, sc_t file )
     image_cl_s_discard( image );
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 /**********************************************************************************************************************/
+// lum_machine
+
+/// This variable is to be polled to obtained the latest signal state
+static volatile sig_atomic_t signal_received_g = 0;
+
+static void signal_callabck( int signal_received )
+{
+    /** due to restrictions and inconsistent implementations
+     *  of signal processing, we do the absolute minimum that is
+     *  deemed supported on all platforms.
+     */
+    signal_received_g = signal_received;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 typedef struct lum_machine_s
 {
@@ -943,6 +980,8 @@ vd_t lum_machine_s_func( lum_machine_s* o )
     uz_t index;
     while( ( index = lum_machine_s_get_index( o ) ) < o->lum_arr->size )
     {
+        if( signal_received_g == SIGINT ) break;
+
         lum_s* lum = &o->lum_arr->data[ index ];
         f3_t monitor_y = lum->pos.y;
         f3_t monitor_x = lum->pos.x;
@@ -997,68 +1036,137 @@ void lum_machine_s_run( const scene_s* scene, lum_arr_s* lum_arr )
 
 void scene_s_create_image_file( scene_s* o, sc_t file )
 {
+    BLM_INIT();
+
     if( bcore_file_exists( file ) && !scene_s_overwrite_output_files_g )
     {
-        bcore_msg_fa( "File '#<sc_t>' exists. Overwrite it? [Y|N]:", file );
-        char buf[ 2 ];
-        if( fgets( buf, 2, stdin )[ 0 ] != 'Y' ) abort();
+        bcore_msg_fa( "Image file '#<sc_t>' exists. Overwrite it? [Y|N]:", file );
+        char buf[ 256 ];
+        if( fgets( buf, sizeof( buf ), stdin )[ 0 ] != 'Y' ) bcore_exit( 1 );
+
     }
 
-    bcore_life_s* l = bcore_life_s_create();
+    st_s* lum_image_tmp_file = BLM_CREATE( st_s );
+    st_s_push_fa( lum_image_tmp_file, "#<sc_t>.tmp.lum_image", file );
+
+    if( bcore_file_exists( lum_image_tmp_file->sc ) && !scene_s_overwrite_output_files_g )
+    {
+        bcore_msg_fa( "Recovery file '#<sc_t>' exists. Allow overwriting it with updates during processing? [Y|N]:", lum_image_tmp_file->sc );
+        char buf[ 256 ];
+        if( fgets( buf, sizeof( buf ), stdin )[ 0 ] != 'Y' ) bcore_exit( 1 );
+
+    }
 
     bcore_msg_fa( "Number of objects: #<uz_t>\n", scene_s_objects( o ) );
 
-    lum_arr_s* lum_arr = bcore_life_s_push_aware( l, lum_arr_s_create() );
+    lum_arr_s* lum_arr = BLM_A_PUSH( lum_arr_s_create() );
 
-    st_s_print_fa( "Rendering ...\n" );
-    clock_t time = clock();
-    st_s_print_fa( "\tmain image: " );
+    signal_received_g = 0;
+    signal( SIGINT, signal_callabck );
 
-    for( uz_t j = 0; j < o->image_height; j++ )
-    {
-        for( uz_t i = 0; i < o->image_width; i++ )
-        {
-            lum_arr_s_push_pos( lum_arr, ( v2d_s ){ i + 0.5, j + 0.5 } );
-        }
-    }
-
-    lum_machine_s_run( o, lum_arr );
-    lum_image_s* lum_image = bcore_life_s_push_aware( l, lum_image_s_create() );
-    lum_image_s_reset( lum_image, o->image_width, o->image_height );
-    lum_image_s_push_arr( lum_image, lum_arr );
-
-    u3_t rv = 1234;
     uz_t rnd_samples = o->gradient_samples;
     f3_t sqr_gradient_theshold = f3_sqr( o->gradient_threshold );
 
-    lum_image_s_create_image_file( lum_image, file );
-    for( uz_t k = 0; k < o->gradient_cycles; k++ )
+    lum_image_s* lum_image = BLM_A_PUSH( lum_image_s_create() );
+    bl_t reset_lum_image = true;
+
+    if( bcore_file_exists( lum_image_tmp_file->sc ) )
     {
-        st_s_print_fa( "\n\tgradient pass #pl3 {#<uz_t>}: ", k + 1 );
-        lum_arr_s_clear( lum_arr );
-        for( s3_t j = 0; j < o->image_height; j++ )
+        char buf[ 256 ];
+        bl_t recover = true;
+
+        if( !scene_s_automatic_recover_g )
         {
-            for( s3_t i = 0; i < o->image_width; i++ )
+            bcore_msg_fa( "Recover from file #<sc_t> ? [Y|N]:", lum_image_tmp_file->sc );
+            if( fgets( buf, sizeof( buf ), stdin )[ 0 ] != 'Y' ) recover = false;
+        }
+
+        if( recover )
+        {
+            bcore_bin_ml_a_from_file( lum_image, lum_image_tmp_file->sc );
+            if( lum_image->width != o->image_width || lum_image->height != o->image_height )
             {
-                if( lum_image_s_sqr_grad( lum_image, i, j ) > sqr_gradient_theshold )
+                bcore_msg_fa( "Image size has changed. Starting from cycle 0.\n", file );
+                reset_lum_image = true;
+            }
+            else
+            {
+                reset_lum_image = false;
+            }
+        }
+    }
+
+    if( reset_lum_image )
+    {
+        lum_image_s_reset( lum_image, o->image_width, o->image_height );
+    }
+
+    st_s_print_fa( "Rendering ...\n" );
+    clock_t time = clock();
+
+    u3_t rval = lum_image->rval;
+    for( uz_t gradient_cycle = lum_image->gradient_cycle; gradient_cycle <= o->gradient_cycles; gradient_cycle++ )
+    {
+        lum_image->rval = rval;
+        lum_image->gradient_cycle = gradient_cycle;
+
+        lum_arr_s_clear( lum_arr );
+
+        if( gradient_cycle == 0 )
+        {
+            st_s_print_fa( "\n\tmain image: " );
+            for( uz_t j = 0; j < o->image_height; j++ )
+            {
+                for( uz_t i = 0; i < o->image_width; i++ )
                 {
-                    for( uz_t k = 0; k < rnd_samples; k++ )
+                    lum_arr_s_push_pos( lum_arr, ( v2d_s ){ i + 0.5, j + 0.5 } );
+                }
+            }
+        }
+        else
+        {
+            st_s_print_fa( "\n\tgradient pass #pl3 {#<uz_t>}: ", gradient_cycle );
+            for( s3_t j = 0; j < o->image_height; j++ )
+            {
+                for( s3_t i = 0; i < o->image_width; i++ )
+                {
+                    if( lum_image_s_sqr_grad( lum_image, i, j ) > sqr_gradient_theshold )
                     {
-                        f3_t dx = f3_rnd1( &rv );
-                        f3_t dy = f3_rnd1( &rv );
-                        lum_arr_s_push_pos( lum_arr, ( v2d_s ){ i + dx, j + dy } );
+                        for( uz_t k = 0; k < rnd_samples; k++ )
+                        {
+                            f3_t dx = f3_rnd1( &rval );
+                            f3_t dy = f3_rnd1( &rval );
+                            lum_arr_s_push_pos( lum_arr, ( v2d_s ){ i + dx, j + dy } );
+                        }
                     }
                 }
             }
         }
+
         lum_machine_s_run( o, lum_arr );
-        lum_image_s_push_arr( lum_image, lum_arr );
-        lum_image_s_create_image_file( lum_image, file );
+
+        if( signal_received_g == SIGINT )
+        {
+            st_s_print_fa( "\n" );
+            st_s_print_fa( "SIGINT received\n" );
+            if( gradient_cycle > 0 )
+            {
+                st_s_print_fa( "Saving result from last gradient cycle to file #<sc_t>\n", lum_image_tmp_file->sc );
+                bcore_bin_ml_a_to_file( lum_image, lum_image_tmp_file->sc );
+            }
+            break;
+        }
+        else
+        {
+            lum_image_s_push_arr( lum_image, lum_arr );
+            lum_image_s_create_image_file( lum_image, file );
+        }
     }
     time = clock() - time;
     bcore_msg( "\n%5.3g cs\n", ( f3_t )time / ( CLOCKS_PER_SEC ) );
 
-    bcore_life_s_discard( l );
+    signal( SIGINT, SIG_DFL );
+    BLM_DOWN();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1085,6 +1193,8 @@ vd_t scene_signal_handler( const bcore_signal_s* o )
     }
     return NULL;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 /**********************************************************************************************************************/
 
