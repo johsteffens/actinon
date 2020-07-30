@@ -1,7 +1,10 @@
 # Actinon - Raytracer
 [<img align = "left" width = "640" height = "360" src = "https://raw.githubusercontent.com/johsteffens/actinon/master/image/hanging_lamp02.acn.640_360.jpg">](https://raw.githubusercontent.com/johsteffens/actinon/master/image/hanging_lamp02.acn.640_360.jpg "Image created with Actinon" )
+
 [<img align = "left" width = "300" height = "400" src = "https://raw.githubusercontent.com/johsteffens/actinon/master/image/paraffin_lamp_on_ledge.acn.png">](https://raw.githubusercontent.com/johsteffens/actinon/master/image/paraffin_lamp_on_ledge.acn.png "Image created with Actinon" )
+
 [<img width = "200" height = "200" src = "https://raw.githubusercontent.com/johsteffens/actinon/master/image/wine_glass.acn.png">](https://raw.githubusercontent.com/johsteffens/actinon/master/image/wine_glass.acn.png "Image created with Actinon" )
+
 [<img width = "200" height = "150" src = "https://raw.githubusercontent.com/johsteffens/actinon/master/image/diamond_video.acn.image_000049.png">](https://raw.githubusercontent.com/johsteffens/actinon/master/image/diamond_video.acn.image_000049.png "Image created with Actinon" )
 
 <br>
