@@ -53,8 +53,8 @@ static sc_t compound_s_def =
 "compound_s = bcore_inst"
 "{"
     "aware_t _;"
-    "envelope_s* envelope;"
-    "aware * [] object_arr;"
+    "envelope_s => envelope;"
+    "aware => [] object_arr;"
 "}";
 
 BCORE_DEFINE_FUNCTIONS_OBJ_INST( compound_s )

@@ -206,8 +206,8 @@ static sc_t scene_s_def =
     "uz_t path_samples        = 0;"  // requires trace_depth > 10
     "f3_t max_path_length     = 1E+30;"  // path rays longer than max_path_length obtain background color
 
-    "compound_s* light;"
-    "compound_s* matter;"
+    "compound_s => light;"
+    "compound_s => matter;"
 
     "s3_t experimental_level = 0;" // (default: 0 ) > 0 for experimental code; < 0 for deprecated code
 "}";

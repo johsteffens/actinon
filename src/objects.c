@@ -41,7 +41,6 @@ static sc_t envelope_s_def =
 
 BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_FLAT( envelope_s, envelope_s_def )
 
-
 void envelope_s_move( envelope_s* o, const v3d_s* vec )
 {
     v3d_s_o_add( &o->pos, *vec );
@@ -142,10 +141,10 @@ envelope_s envelope_of_pair( const envelope_s* env1, const envelope_s* env2 )
 static sc_t properties_s_def =
 "properties_s = bcore_inst"
 "{"
-    "v3d_s   pos;"
-    "m3d_s   rax;"
-    "aware * texture_field;"
-    "cl_s    color;"
+    "v3d_s    pos;"
+    "m3d_s    rax;"
+    "aware => texture_field;"
+    "cl_s     color;"
 
     "f3_t    radiance            = 0.0;"
     "f3_t    refractive_index    = 1.0;"
@@ -158,7 +157,7 @@ static sc_t properties_s_def =
 
     "cl_s transparency                ;" // residual energy taken by material transition
 
-    "envelope_s* envelope;" // optional envelope
+    "envelope_s => envelope;" // optional envelope
 
     "func ap_t init = properties_s_init_a;"
 "}";
@@ -859,7 +858,7 @@ static sc_t obj_distance_s_def =
     "properties_s prp;"
     "f3_t inv_scale = 1.0;"
     "uz_t cycles = 200;"
-    "aware* distance;"
+    "aware => distance;"
 
     "func projection_fp   projection      = obj_distance_s_projection;"
     "func ray_hit_fp      ray_hit         = obj_distance_s_ray_hit;"
@@ -995,8 +994,8 @@ static sc_t obj_pair_inside_s_def =
     "aware_t _;"
     "spect spect_obj_s -> p;"
     "properties_s prp;"
-    "aware* o1;"
-    "aware* o2;"
+    "aware => o1;"
+    "aware => o2;"
 
     "func fov_fp          fov             = obj_pair_inside_s_fov;"
     "func ray_hit_fp      ray_hit         = obj_pair_inside_s_ray_hit;"
@@ -1145,8 +1144,8 @@ static sc_t obj_pair_outside_s_def =
     "aware_t _;"
     "spect spect_obj_s -> p;"
     "properties_s prp;"
-    "aware* o1;"
-    "aware* o2;"
+    "aware => o1;"
+    "aware => o2;"
 
     "func fov_fp          fov             = obj_pair_outside_s_fov;"
     "func ray_hit_fp      ray_hit         = obj_pair_outside_s_ray_hit;"
@@ -1301,7 +1300,7 @@ static sc_t obj_neg_s_def =
     "aware_t _;"
     "spect spect_obj_s -> p;"
     "properties_s prp;"
-    "aware* o1;"
+    "aware => o1;"
 
     "func ray_hit_fp      ray_hit         = obj_neg_s_ray_hit;"
     "func side_fp         side            = obj_neg_s_side;"
@@ -1374,7 +1373,7 @@ static sc_t obj_scale_s_def =
     "spect spect_obj_s -> p;"
     "properties_s prp;"
     "v3d_s inv_scale;"
-    "aware* o1;"
+    "aware => o1;"
 
     "func ap_t            init            = obj_scale_s_init_a;"
     "func ray_hit_fp      ray_hit         = obj_scale_s_ray_hit;"
