@@ -13,43 +13,55 @@
 
 <br>
 
-## What it is
-Actinon is a lightweight ray-tracing renderer and interpreter of a dedicated scripting language. It can render 3D scenes, employing techniques like distributed tracing, path tracing, anti-aliasing and others. It can visualize transparency, reflection, refraction, media-transition, diffuse-light, indirect-light and more. Various realistic surfaces are achieved by mixing fresnel-reflection, chromatic-reflection, (Oren-Nayar) diffuse-reflection and by simulating surface roughness. The rendering-engine is multi-threaded.
+## Getting Started
 
-For scene-design a special language has been developed. It supports the composition of complex objects from simpler objects. Geometric operations on objects like translation, scaling and rotations can be applied easily and intuitively. Vectors and matrices have dedicated types with associated operators supporting arithmetic in a 3D vector space. The language also allows computing image sequences (e.g. for videos).
+```
+$ git clone https://github.com/johsteffens/beth
+$ git clone https://github.com/johsteffens/xoico
+$ git clone https://github.com/johsteffens/actinon
+$ cd actinon
+$ make
+
+# Run a quick rendering:
+$ bin/actinon src_acn/primitives.acn
+
+# Display result using gthumb:
+$ gthumb src_acn/primitives.acn.pnm
+```
+
+## What it is
+Actinon is a lightweight ray-tracing renderer and interpreter of a dedicated scripting language.
+It can render 3D scenes, employing techniques like distributed tracing, path tracing, anti-aliasing and others.
+It can visualize transparency, reflection, refraction, media-transition, diffuse-light,
+indirect-light and more.
+Various realistic surfaces are achieved by mixing fresnel-reflection, chromatic-reflection,
+(Oren-Nayar) diffuse-reflection and by simulating surface roughness. The rendering-engine is multi-threaded.
+
+For scene-design a special language has been developed.
+It supports the composition of complex objects from simpler objects.
+Geometric operations on objects like translation, scaling and rotations can be applied easily and intuitively.
+Vectors and matrices have dedicated types with associated operators supporting arithmetic in a 3D vector space.
+The language also allows computing image sequences (e.g. for videos).
 
 Actinon is based on project [beth](https://github.com/johsteffens/beth).
 
 ## How it works
 
-Actinon is a console-application. It takes a text-source file as argument and executes its content, which normally comprises of the scene design, virtual camera specifications, render specifications and instructions how to render one or more images.
+Actinon is a console-application. It takes a text-source file as argument and executes its content, 
+which normally comprises of the scene design, virtual camera specifications, render specifications 
+and instructions how to render one or more images.
 
-It will render the image in multiple passes, gradually improving quality. After each pass, the image file is updated such that progress can be monitored with an external image-viewing tool.
-
-## How to use it
-**Linux (or operating systems supporting POSIX):** Just follow suggestions below.
-
-**Windows:** [Set up a POSIX-environment first](https://github.com/johsteffens/beth/wiki/Requirements#how-to-setup-a-posix-environment-for-beth-on-windows). 
-
-### Requirements/Dependencies
-   * Project [beth](https://github.com/johsteffens/beth).
-   * gcc (or similar compiler suite) supporting the C11 standard.
-   * Library `pthread` of the POSIX.1c standard.
-
-### Build
-   * Clone [beth](https://github.com/johsteffens/beth) and [actinon](https://github.com/johsteffens/actinon):
-      * `git clone https://github.com/johsteffens/beth.git`
-      * `git clone https://github.com/johsteffens/actinon.git`
-      * *(Ensure both repositories have the same root folder)*
-   * In a terminal ...
-      * enter folder actinon/build: `cd actinon/build`.
-      * run: `make`. 
-      * This creates the executable binary file `actinon`.
+It will render the image in multiple passes, gradually improving quality.
+After each pass, the image file is updated such that progress can be monitored with an external image-viewing tool.
 
 ### First Trial
    * Pick a source file from folder [src_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
    * Run in a terminal: `actinon wine_glass.acn`
-   * After 1 ... 2 minutes, it will produce the image file `wine_glass.acn.pnm`. The file gets updated at intervals, gradually improving image-quality. After around 20 ... 60 min (depending on CPU speed), rendering should be completed. Interrupt any time with Ctl-C.
+   * After 1 ... 2 minutes, it will produce the image file `wine_glass.acn.pnm`. 
+   The file gets updated at intervals,
+   gradually improving image-quality.
+   After around 20 ... 60 min (depending on CPU speed), rendering should be completed.
+   Interrupt any time with Ctl-C. You can resume an incomplete image later.
    * You may want to convert the image to a more common format with netpbm or similar tool (e.g. `pnmtopng`).
 
 ### Next Steps
@@ -58,10 +70,10 @@ It will render the image in multiple passes, gradually improving quality. After 
    * **Tip**: While drafting and testing your scene, switch off path tracing `path_samples = 0` and set `direct_samples` to a low value. E.g.  `direct_samples = 10`. This will yield results in seconds.
    
 ## License
-The source code in this repository, including actinon source code, is licensed under the [Apache 2.0 License](https://github.com/johsteffens/actinon/blob/master/LICENSE).
-
-Images in this repository, depicting results of the raytracer, are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
-
+The source code in this repository, including actinon source code, is licensed under
+the [Apache 2.0 License](https://github.com/johsteffens/actinon/blob/master/LICENSE).
+Images in this repository, depicting results of the raytracer, are licensed under
+the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
 Images or videos you created with actinon from your own script sources are yours.
 
 ## Motivation
