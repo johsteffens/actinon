@@ -25,7 +25,7 @@ $ make
 # Run a quick rendering:
 $ bin/actinon src_acn/primitives.acn
 
-# Display result using gthumb:
+# Display result using gThumb:
 $ gthumb src_acn/primitives.acn.pnm
 ```
 
@@ -61,8 +61,10 @@ After each pass, the image file is updated such that progress can be monitored w
    The file gets updated at intervals,
    gradually improving image-quality.
    After around 20 ... 60 min (depending on CPU speed), rendering should be completed.
-   Interrupt any time with Ctl-C. You can resume an incomplete image later.
+   Interrupt any time with Ctl-C, which will save an intermediate result and terminate. 
+   You can resume from an incomplete image later.
    * You may want to convert the image to a more common format with netpbm or similar tool (e.g. `pnmtopng`).
+   * A nice tool to view the image is [gThumb](https://en.wikipedia.org/wiki/GThumb).
 
 ### Next Steps
    * Learn a bit about the Actinon Language: For the time being, you might want to glean some insight by examining [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn), which is inline-commented for that purpose. 
