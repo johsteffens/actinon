@@ -30,9 +30,9 @@ static sr_s create_vec_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments
 {
     ASSERT( args->size == 3 );
     sr_s ret = sr_create( TYPEOF_v3d_s );
-    ( ( v3d_s* )( ret.o ) )->x = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
-    ( ( v3d_s* )( ret.o ) )->y = sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) );
-    ( ( v3d_s* )( ret.o ) )->z = sr_f3_sr( bclos_arguments_s_get( args, 2, frm ) );
+    ( ( v3d_s* )( ret.o ) )->x = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
+    ( ( v3d_s* )( ret.o ) )->y = sr_to_f3( bclos_arguments_s_get( args, 1, frm ) );
+    ( ( v3d_s* )( ret.o ) )->z = sr_to_f3( bclos_arguments_s_get( args, 2, frm ) );
     return ret;
 }
 BCLOS_DEFINE_STD_CLOSURE( create_vec_s, "v3d_s create_vec_s( num x, num y, num z )", create_vec_s_call )
@@ -44,21 +44,21 @@ static sr_s vecx_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* ar
 {
     ASSERT( args->size == 1 );
     sr_s ret = sr_create( TYPEOF_v3d_s );
-    ( ( v3d_s* )ret.o )->x = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
+    ( ( v3d_s* )ret.o )->x = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
     return ret;
 }
 static sr_s vecy_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
     sr_s ret = sr_create( TYPEOF_v3d_s );
-    ( ( v3d_s* )ret.o )->y = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
+    ( ( v3d_s* )ret.o )->y = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
     return ret;
 }
 static sr_s vecz_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
     sr_s ret = sr_create( TYPEOF_v3d_s );
-    ( ( v3d_s* )ret.o )->z = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
+    ( ( v3d_s* )ret.o )->z = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
     return ret;
 }
 
@@ -73,21 +73,21 @@ static sr_s colr_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* ar
 {
     ASSERT( args->size == 1 );
     sr_s ret = sr_create( TYPEOF_cl_s );
-    ( ( cl_s* )ret.o )->x = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
+    ( ( cl_s* )ret.o )->x = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
     return ret;
 }
 static sr_s colg_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
     sr_s ret = sr_create( TYPEOF_cl_s );
-    ( ( cl_s* )ret.o )->y = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
+    ( ( cl_s* )ret.o )->y = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
     return ret;
 }
 static sr_s colb_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
     sr_s ret = sr_create( TYPEOF_cl_s );
-    ( ( cl_s* )ret.o )->z = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
+    ( ( cl_s* )ret.o )->z = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
     return ret;
 }
 
@@ -102,9 +102,9 @@ static sr_s create_color_s_call( vc_t o, bclos_frame_s* frm, const bclos_argumen
 {
     ASSERT( args->size == 3 );
     sr_s ret = sr_create( TYPEOF_cl_s );
-    ( ( cl_s* )( ret.o ) )->x = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
-    ( ( cl_s* )( ret.o ) )->y = sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) );
-    ( ( cl_s* )( ret.o ) )->z = sr_f3_sr( bclos_arguments_s_get( args, 2, frm ) );
+    ( ( cl_s* )( ret.o ) )->x = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
+    ( ( cl_s* )( ret.o ) )->y = sr_to_f3( bclos_arguments_s_get( args, 1, frm ) );
+    ( ( cl_s* )( ret.o ) )->z = sr_to_f3( bclos_arguments_s_get( args, 2, frm ) );
     return ret;
 }
 BCLOS_DEFINE_STD_CLOSURE( create_color_s, "v3d_s create_color_s( num x, num y, num z )", create_color_s_call )
@@ -116,21 +116,21 @@ static sr_s rotx_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* ar
 {
     ASSERT( args->size == 1 );
     sr_s ret = sr_create( TYPEOF_m3d_s );
-    *( m3d_s* )ret.o = m3d_s_rot_x( ( M_PI / 180.0 ) * sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) );
+    *( m3d_s* )ret.o = m3d_s_rot_x( ( M_PI / 180.0 ) * sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) );
     return ret;
 }
 static sr_s roty_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
     sr_s ret = sr_create( TYPEOF_m3d_s );
-    *( m3d_s* )ret.o = m3d_s_rot_y( ( M_PI / 180.0 ) * sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) );
+    *( m3d_s* )ret.o = m3d_s_rot_y( ( M_PI / 180.0 ) * sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) );
     return ret;
 }
 static sr_s rotz_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
     sr_s ret = sr_create( TYPEOF_m3d_s );
-    *( m3d_s* )ret.o = m3d_s_rot_z( ( M_PI / 180.0 ) * sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) );
+    *( m3d_s* )ret.o = m3d_s_rot_z( ( M_PI / 180.0 ) * sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) );
     return ret;
 }
 
@@ -191,7 +191,7 @@ BCLOS_DEFINE_STD_CLOSURE( string_to_num_s,    "string_to_num_s( st_s string )", 
 static sr_s sqrt_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( sqrt( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+    return sr_f3( sqrt( sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( sqrt_s, "f3_t sqrt_s( num val )", sqrt_s_call )
@@ -202,7 +202,7 @@ BCLOS_DEFINE_STD_CLOSURE( sqrt_s, "f3_t sqrt_s( num val )", sqrt_s_call )
 static sr_s sqr_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( f3_sqr( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+    return sr_f3( f3_sqr( sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( sqr_s, "f3_t sqr_s( num val )", sqr_s_call )
@@ -213,7 +213,7 @@ BCLOS_DEFINE_STD_CLOSURE( sqr_s, "f3_t sqr_s( num val )", sqr_s_call )
 static sr_s exp_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( exp( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+    return sr_f3( exp( sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( exp_s, "f3_t exp_s( num val )", exp_s_call )
@@ -224,7 +224,7 @@ BCLOS_DEFINE_STD_CLOSURE( exp_s, "f3_t exp_s( num val )", exp_s_call )
 static sr_s log_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( log( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+    return sr_f3( log( sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( log_s, "f3_t log_s( num val )", log_s_call )
@@ -235,7 +235,7 @@ BCLOS_DEFINE_STD_CLOSURE( log_s, "f3_t log_s( num val )", log_s_call )
 static sr_s to_deg_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) * 180.0 / M_PI );
+    return sr_f3( sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) * 180.0 / M_PI );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( to_deg_s, "f3_t to_deg_s( num val )", to_deg_s_call )
@@ -246,7 +246,7 @@ BCLOS_DEFINE_STD_CLOSURE( to_deg_s, "f3_t to_deg_s( num val )", to_deg_s_call )
 static sr_s to_rad_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) * M_PI / 180.0 );
+    return sr_f3( sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) * M_PI / 180.0 );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( to_rad_s, "f3_t to_rad_s( num val )", to_rad_s_call )
@@ -257,7 +257,7 @@ BCLOS_DEFINE_STD_CLOSURE( to_rad_s, "f3_t to_rad_s( num val )", to_rad_s_call )
 static sr_s sin_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( sin( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+    return sr_f3( sin( sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( sin_s, "f3_t sin_s( num val )", sin_s_call )
@@ -268,7 +268,7 @@ BCLOS_DEFINE_STD_CLOSURE( sin_s, "f3_t sin_s( num val )", sin_s_call )
 static sr_s cos_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( cos( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+    return sr_f3( cos( sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( cos_s, "f3_t cos_s( num val )", cos_s_call )
@@ -279,7 +279,7 @@ BCLOS_DEFINE_STD_CLOSURE( cos_s, "f3_t cos_s( num val )", cos_s_call )
 static sr_s tan_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( tan( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+    return sr_f3( tan( sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( tan_s, "f3_t tan_s( num val )", tan_s_call )
@@ -290,7 +290,7 @@ BCLOS_DEFINE_STD_CLOSURE( tan_s, "f3_t tan_s( num val )", tan_s_call )
 static sr_s sin_d_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( sin( M_PI * sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) / 180.0 ) );
+    return sr_f3( sin( M_PI * sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) / 180.0 ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( sin_d_s, "f3_t sin_d_s( num val )", sin_d_s_call )
@@ -301,7 +301,7 @@ BCLOS_DEFINE_STD_CLOSURE( sin_d_s, "f3_t sin_d_s( num val )", sin_d_s_call )
 static sr_s cos_d_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( cos( M_PI * sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) / 180.0 ) );
+    return sr_f3( cos( M_PI * sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) / 180.0 ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( cos_d_s, "f3_t cos_d_s( num val )", cos_d_s_call )
@@ -312,7 +312,7 @@ BCLOS_DEFINE_STD_CLOSURE( cos_d_s, "f3_t cos_d_s( num val )", cos_d_s_call )
 static sr_s tan_d_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( tan( M_PI * sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) / 180.0 ) );
+    return sr_f3( tan( M_PI * sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) / 180.0 ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( tan_d_s, "f3_t tan_d_s( num val )", tan_d_s_call )
@@ -323,7 +323,7 @@ BCLOS_DEFINE_STD_CLOSURE( tan_d_s, "f3_t tan_d_s( num val )", tan_d_s_call )
 static sr_s asin_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( asin( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+    return sr_f3( asin( sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( asin_s, "f3_t asin_s( num val )", asin_s_call )
@@ -334,7 +334,7 @@ BCLOS_DEFINE_STD_CLOSURE( asin_s, "f3_t asin_s( num val )", asin_s_call )
 static sr_s acos_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( acos( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+    return sr_f3( acos( sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( acos_s, "f3_t acos_s( num val )", acos_s_call )
@@ -345,7 +345,7 @@ BCLOS_DEFINE_STD_CLOSURE( acos_s, "f3_t acos_s( num val )", acos_s_call )
 static sr_s atan_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( atan( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+    return sr_f3( atan( sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( atan_s, "f3_t atan_s( num val )", atan_s_call )
@@ -356,7 +356,7 @@ BCLOS_DEFINE_STD_CLOSURE( atan_s, "f3_t atan_s( num val )", atan_s_call )
 static sr_s pow_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 2 );
-    return sr_f3( pow( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ), sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) ) ) );
+    return sr_f3( pow( sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ), sr_to_f3( bclos_arguments_s_get( args, 1, frm ) ) ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( pow_s, "f3_t pow_s( num base, num exp )", pow_s_call )
@@ -367,7 +367,7 @@ BCLOS_DEFINE_STD_CLOSURE( pow_s, "f3_t pow_s( num base, num exp )", pow_s_call )
 static sr_s ceiling_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( ceil( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+    return sr_f3( ceil( sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( ceiling_s, "f3_t ceiling_s( num val )", ceiling_s_call )
@@ -378,7 +378,7 @@ BCLOS_DEFINE_STD_CLOSURE( ceiling_s, "f3_t ceiling_s( num val )", ceiling_s_call
 static sr_s floor_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    return sr_f3( floor( sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) ) ) );
+    return sr_f3( floor( sr_to_f3( bclos_arguments_s_get( args, 0, frm ) ) ) );
 }
 
 BCLOS_DEFINE_STD_CLOSURE( floor_s, "f3_t floor_s( num val )", floor_s_call )
@@ -471,7 +471,7 @@ BCLOS_DEFINE_STD_CLOSURE( create_plane_s, "spect_obj create_plane_s()", create_p
 static sr_s create_sphere_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 1 );
-    f3_t radius = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
+    f3_t radius = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
     sr_s r = sr_create( typeof( "obj_sphere_s" ) );
     obj_sphere_s_set_radius( r.o, radius );
     return r;
@@ -484,10 +484,10 @@ BCLOS_DEFINE_STD_CLOSURE( create_sphere_s, "spect_obj create_sphere_s( num radiu
 static sr_s create_squaroid_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 4 );
-    f3_t a = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
-    f3_t b = sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) );
-    f3_t c = sr_f3_sr( bclos_arguments_s_get( args, 2, frm ) );
-    f3_t r = sr_f3_sr( bclos_arguments_s_get( args, 3, frm ) );
+    f3_t a = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
+    f3_t b = sr_to_f3( bclos_arguments_s_get( args, 1, frm ) );
+    f3_t c = sr_to_f3( bclos_arguments_s_get( args, 2, frm ) );
+    f3_t r = sr_to_f3( bclos_arguments_s_get( args, 3, frm ) );
     sr_s ret = sr_asd( obj_squaroid_s_create_squaroid( a, b, c, r ) );
     return ret;
 }
@@ -499,8 +499,8 @@ BCLOS_DEFINE_STD_CLOSURE( create_squaroid_s, "spect_obj create_squaroid_s( num a
 static sr_s create_cylinder_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 2 );
-    f3_t rx = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
-    f3_t ry = sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) );
+    f3_t rx = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
+    f3_t ry = sr_to_f3( bclos_arguments_s_get( args, 1, frm ) );
     sr_s r = sr_asd( obj_squaroid_s_create_cylinder( rx, ry ) );
     return r;
 }
@@ -512,9 +512,9 @@ BCLOS_DEFINE_STD_CLOSURE( create_cylinder_s, "spect_obj create_cylinder_s( num r
 static sr_s create_hyperboloid1_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 3 );
-    f3_t rx = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
-    f3_t ry = sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) );
-    f3_t rz = sr_f3_sr( bclos_arguments_s_get( args, 2, frm ) );
+    f3_t rx = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
+    f3_t ry = sr_to_f3( bclos_arguments_s_get( args, 1, frm ) );
+    f3_t rz = sr_to_f3( bclos_arguments_s_get( args, 2, frm ) );
     sr_s r = sr_asd( obj_squaroid_s_create_hyperboloid1( rx, ry, rz ) );
     return r;
 }
@@ -526,9 +526,9 @@ BCLOS_DEFINE_STD_CLOSURE( create_hyperboloid1_s, "spect_obj create_hyperboloid1_
 static sr_s create_hyperboloid2_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 3 );
-    f3_t rx = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
-    f3_t ry = sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) );
-    f3_t rz = sr_f3_sr( bclos_arguments_s_get( args, 2, frm ) );
+    f3_t rx = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
+    f3_t ry = sr_to_f3( bclos_arguments_s_get( args, 1, frm ) );
+    f3_t rz = sr_to_f3( bclos_arguments_s_get( args, 2, frm ) );
     sr_s r = sr_asd( obj_squaroid_s_create_hyperboloid2( rx, ry, rz ) );
     return r;
 }
@@ -540,9 +540,9 @@ BCLOS_DEFINE_STD_CLOSURE( create_hyperboloid2_s, "spect_obj create_hyperboloid2_
 static sr_s create_cone_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 3 );
-    f3_t rx = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
-    f3_t ry = sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) );
-    f3_t rz = sr_f3_sr( bclos_arguments_s_get( args, 2, frm ) );
+    f3_t rx = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
+    f3_t ry = sr_to_f3( bclos_arguments_s_get( args, 1, frm ) );
+    f3_t rz = sr_to_f3( bclos_arguments_s_get( args, 2, frm ) );
     sr_s r = sr_asd( obj_squaroid_s_create_cone( rx, ry, rz ) );
     return r;
 }
@@ -554,9 +554,9 @@ BCLOS_DEFINE_STD_CLOSURE( create_cone_s, "spect_obj create_cone_s( num radius_x,
 static sr_s create_ellipsoid_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 3 );
-    f3_t rx = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
-    f3_t ry = sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) );
-    f3_t rz = sr_f3_sr( bclos_arguments_s_get( args, 2, frm ) );
+    f3_t rx = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
+    f3_t ry = sr_to_f3( bclos_arguments_s_get( args, 1, frm ) );
+    f3_t rz = sr_to_f3( bclos_arguments_s_get( args, 2, frm ) );
     sr_s r = sr_asd( obj_squaroid_s_create_ellipsoid( rx, ry, rz ) );
     return r;
 }
@@ -568,8 +568,8 @@ BCLOS_DEFINE_STD_CLOSURE( create_ellipsoid_s, "spect_obj create_ellipsoid_s( num
 static sr_s create_torus_s_call( vc_t o, bclos_frame_s* frm, const bclos_arguments_s* args )
 {
     ASSERT( args->size == 2 );
-    f3_t radius1 = sr_f3_sr( bclos_arguments_s_get( args, 0, frm ) );
-    f3_t radius2 = sr_f3_sr( bclos_arguments_s_get( args, 1, frm ) );
+    f3_t radius1 = sr_to_f3( bclos_arguments_s_get( args, 0, frm ) );
+    f3_t radius2 = sr_to_f3( bclos_arguments_s_get( args, 1, frm ) );
     sr_s r = sr_create( typeof( "obj_distance_s" ) );
     {
         distance_torus_s* distance_torus = distance_torus_s_create();

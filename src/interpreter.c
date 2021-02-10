@@ -1435,7 +1435,7 @@ sr_s meval_s_eval( meval_s* o, sr_s front_obj )
             sr_s sr_index = meval_s_eval( o, sr_null() );
             meval_s_expect_code( o, CL_SQUARE_BRACKET_CLOSE );
             if( !bcore_trait_is_of( sr_s_type( &sr_index ), TYPEOF_num ) ) meval_s_err_fa( o, "Numeric index expected.\n" );
-            s3_t index = sr_s3_sr( sr_index );
+            s3_t index = sr_to_s3( sr_index );
             if( index < 0 ) meval_s_err_fa( o, "Index is negative.\n" );
             if( index >= arr->a.size )
             {
