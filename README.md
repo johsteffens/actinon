@@ -17,7 +17,6 @@
 
 ```
 $ git clone https://github.com/johsteffens/beth
-$ git clone https://github.com/johsteffens/xoico
 $ git clone https://github.com/johsteffens/actinon
 $ cd actinon
 $ make
