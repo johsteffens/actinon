@@ -18,7 +18,7 @@
 <mclosure_s></>
 
 def scene = scene_s;
-scene.threads = 10;
+scene.threads = 30;
 
 scene.image_width         = 400;
 scene.image_height        = 400;

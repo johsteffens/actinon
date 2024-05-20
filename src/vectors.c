@@ -34,8 +34,8 @@ BCORE_DEFINE_FUNCTIONS_SELF_OBJECT_FLAT( ray_cone_s, "ray_cone_s = bcore_inst { 
 /**********************************************************************************************************************/
 /// cl_s
 
-typedef void (*bcore_fp_copy_typed   )( vd_t o, tp_t type, vc_t src ); // deep conversion & copy
-void cl_s_copy_typed( cl_s* o, tp_t type, vc_t src )
+typedef er_t (*bcore_fp_copy_typed   )( vd_t o, tp_t type, vc_t src ); // deep conversion & copy
+er_t cl_s_copy_typed( cl_s* o, tp_t type, vc_t src )
 {
     if( type == TYPEOF_cl_s )
     {
@@ -47,8 +47,9 @@ void cl_s_copy_typed( cl_s* o, tp_t type, vc_t src )
     }
     else
     {
-        ERR( "Cannot convert '%s' to 'cl_s'.", ifnameof( type ) );
+        return bcore_error_push_fa( TYPEOF_conversion_error, "Cannot convert '%s' to 'cl_s'.", ifnameof( type ) );
     }
+    return 0;
 }
 
 BCORE_DEFINE_FUNCTIONS_OBJ_FLAT( cl_s )
