@@ -52,7 +52,7 @@
 
 // Keyword 'def' defines a new variable
 def scene = scene_s;
-scene.threads             = 30;
+scene.threads             = 64;
 
 // image parameters
 scene.image_width         = 400;

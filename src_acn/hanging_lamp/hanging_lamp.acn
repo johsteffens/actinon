@@ -21,7 +21,7 @@
 def draft = false;
 
 def scene = scene_s;
-scene.threads = 10;
+scene.threads = 64;
 
 scene.image_width         = 600;
 scene.image_height        = 800;
