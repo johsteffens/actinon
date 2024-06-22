@@ -83,7 +83,10 @@ Images or videos you created with actinon from your own script sources are yours
 One objective is demonstrating the capabilities of project '[beth](https://github.com/johsteffens/beth)', which is a foundation-library to develop advanced applications in 'C'.
 
 ### Sentiment
-I've always been fascinated by computer graphics. Particularly combining physics, mathematics and creativity to achieve realism. In the mid 1990s, as graduate student, I started by applying the physics of optics and Lambertian light distribution to software. I conceived and experimented with algorithms using rays casted in a virtual 3D scene. Back then I was not even aware that the technique was already well-known under the label "ray-tracing". Today, modern workstations are powerful enough to allow deep recursions into the rendering equation, making experimenting in this field even more fun and rewarding.
+I've always been fascinated by computer graphics. Particularly combining physics, mathematics and creativity to achieve realism. In the mid 1990s, as physics student, 
+I playfully experimented with simulating the optics and Lambertian light distribution and thus conceived algorithms using rays casted in a virtual 3D scene. Back then I was not even aware
+that the technique was already well-known under the label "ray-tracing". Today, modern workstations are powerful enough to allow 
+deep recursions into the rendering equation, making experimenting in this field even more fun and rewarding.
 
 ### About The Name
 Actinon is the name of the Radon-219 isotope, which is a radioactive gas. As project-name, it was inspired by a train of thought: ray-tracing -> radiation -> radon -> actinon.
