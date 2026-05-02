@@ -22,14 +22,14 @@
 def draft = false;
 
 def scene = scene_s;
-scene.threads = 64;
+scene.threads = 48;
 
 scene.image_width = 480; scene.image_height = 640;
 //scene.image_width = 240; scene.image_height = 320;
 
 scene.gamma               = 0.7;
 
-scene.gradient_cycles     = { if( draft ) 3 else 50; }();
+scene.gradient_cycles     = { if( draft ) 3 else 100; }();
 
 scene.gradient_samples    = 2;
 scene.gradient_threshold  = 0.03;

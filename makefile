@@ -7,7 +7,7 @@ DEPENDENCIES = \
   
 include $(BETH_DIR)/mk/app.mk
 
-# CFLAGS  +=
+CFLAGS  += -march=native
 # LDFLAGS +=
 # LIBS     +=
 # RUN_ARGS += 

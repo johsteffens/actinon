@@ -174,10 +174,19 @@ static inline v3d_s v3d_s_con( v3d_s o )
     return v3d_s_von( o, v );
 }
 
+static inline u3_t v3d_s_seed_from_f3( f3_t v )
+{
+    int exp = 0;
+    s3_t seed_s3 = frexp( v, &exp ) * 0x7FFFFFFFFFFFFFFF;
+    return seed_s3 *= 27362149; // some mixing
+}
+
 /// computes a seed value from vector
 static inline u3_t v3d_s_random_seed( v3d_s o, u3_t rv )
 {
-    return o.x * bcore_lcg00_u3( rv ) + o.y * bcore_lcg01_u3( rv ) + o.z * bcore_lcg02_u3( rv );
+    return v3d_s_seed_from_f3( o.x ) * bcore_lcg00_u3( rv ) +
+           v3d_s_seed_from_f3( o.y ) * bcore_lcg01_u3( rv ) +
+           v3d_s_seed_from_f3( o.z ) * bcore_lcg02_u3( rv );
 }
 
 /** Random generators with even distribution over a spherical cap of height h.
