@@ -534,12 +534,7 @@ cl_s scene_s_lum( const scene_s* scene,
         v3d_s ray_projection = v3d_s_of_length( v3d_s_orthogonal_projection( ray->d, surface.d ), 1.0 );
 
         /// random seed
-        u3_t rv = surface.p.x * 3294479285 +
-                  surface.p.y * 7640304827 +
-                  surface.p.z * 2434937345 +
-                  surface.d.x * 3247146734 +
-                  surface.d.y * 4304627463 +
-                  surface.d.z * 5210473891;
+        u3_t rv = v3d_s_random_seed( surface.p, 3294479285 ) + v3d_s_random_seed( surface.d, 3247146734 );
 
         cl_s lum_l = { 0, 0, 0 };
 
