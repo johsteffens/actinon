@@ -36,8 +36,7 @@ indirect-light and more.
 Various realistic surfaces are achieved by mixing fresnel-reflection, chromatic-reflection,
 (Oren-Nayar) diffuse-reflection and by simulating surface roughness. The rendering-engine is multi-threaded.
 
-For scene-design a special language has been developed.
-It supports the composition of complex objects from simpler objects.
+For scene-design I developed a special language. It supports the composition of complex objects from simpler objects.
 Geometric operations on objects like translation, scaling and rotations can be applied easily and intuitively.
 Vectors and matrices have dedicated types with associated operators supporting arithmetic in a 3D vector space.
 The language also allows computing image sequences (e.g. for videos).
