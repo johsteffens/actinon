@@ -43,6 +43,9 @@ The language also allows computing image sequences (e.g. for videos).
 
 Actinon is based on project [beth](https://github.com/johsteffens/beth).
 
+## No AI
+Actinon does not use any AI agent for rendering. Image cration is purely script-driven and thus the result of your own unique creativity.
+
 ## How it works
 
 Actinon is a console-application. It takes a text-source file as argument and executes its content, 
@@ -72,9 +75,9 @@ After each pass, the image file is updated such that progress can be monitored w
 ## License
 The source code in this repository, including actinon source code, is licensed under
 the [Apache 2.0 License](https://github.com/johsteffens/actinon/blob/master/LICENSE).
-Images in this repository, depicting results of the raytracer, are licensed under
+Example images in this repository, depicting results of the raytracer, are licensed under
 the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
-Images or videos you created with actinon from your own script sources are yours.
+Images or videos, which you designed yourself by your own creative work, are yours and you can distribute them under your own terms.
 
 ## Motivation
 
@@ -82,10 +85,7 @@ Images or videos you created with actinon from your own script sources are yours
 One objective is demonstrating the capabilities of project '[beth](https://github.com/johsteffens/beth)', which is a foundation-library to develop advanced applications in 'C'.
 
 ### Sentiment
-I've always been fascinated by computer graphics. Particularly combining physics, mathematics and creativity to achieve realism. In the mid 1990s, as physics student, 
-I playfully experimented with simulating the optics and Lambertian light distribution and thus conceived algorithms using rays casted in a virtual 3D scene. Back then I was not even aware
-that the technique was already well-known under the label "ray-tracing". Today, modern workstations are powerful enough to allow 
-deep recursions into the rendering equation, making experimenting in this field even more fun and rewarding.
+I've always been fascinated by computer graphics. Particularly combining physics, mathematics and creativity to achieve realism. In the mid 1990s I playfully experimented with simulating the optics and Lambertian light distribution and thus conceived algorithms using rays casted in a virtual 3D scene. Back then I was not yet aware that the technique was already well-known under the label "ray-tracing". Today, modern workstations are powerful enough to allow deep recursion into the rendering equation (path-tracing), making experimenting in this field even more fun and rewarding.
 
 ### About The Name
 Actinon is the name of the Radon-219 isotope, which is a radioactive gas. As project-name, it was inspired by a train of thought: ray-tracing -> radiation -> radon -> actinon.
