@@ -13,6 +13,21 @@
 
 <br>
 
+## What it is
+Actinon is a lightweight ray-tracing renderer and interpreter of a dedicated scripting language.
+It can render 3D scenes, employing techniques like distributed tracing, path tracing, anti-aliasing and others.
+It can handle transparency, reflection, refraction, media-transition, diffuse-light,
+indirect-light and more.
+Various realistic surfaces are achieved by mixing fresnel-reflection, chromatic-reflection,
+(Oren-Nayar) diffuse-reflection and by simulating surface roughness. The rendering-engine is multi-threaded.
+
+For scene-design I developed a special language. It supports the composition of complex objects from simpler objects.
+Geometric operations on objects like translation, scaling and rotations can be applied easily and intuitively.
+Vectors and matrices have dedicated types with associated operators supporting arithmetic in a 3D vector space.
+The language also allows computing image sequences (e.g. for videos).
+
+Actinon is based on project [beth](https://github.com/johsteffens/beth).
+
 ## Getting Started
 
 **Build**
@@ -47,26 +62,10 @@ sudo apt install netpbm
 pnmtopng src_acn/primitives.acn.pnm > src_acn/primitives.acn.png
 ```
 
-## What it is
-Actinon is a lightweight ray-tracing renderer and interpreter of a dedicated scripting language.
-It can render 3D scenes, employing techniques like distributed tracing, path tracing, anti-aliasing and others.
-It can handle transparency, reflection, refraction, media-transition, diffuse-light,
-indirect-light and more.
-Various realistic surfaces are achieved by mixing fresnel-reflection, chromatic-reflection,
-(Oren-Nayar) diffuse-reflection and by simulating surface roughness. The rendering-engine is multi-threaded.
-
-For scene-design I developed a special language. It supports the composition of complex objects from simpler objects.
-Geometric operations on objects like translation, scaling and rotations can be applied easily and intuitively.
-Vectors and matrices have dedicated types with associated operators supporting arithmetic in a 3D vector space.
-The language also allows computing image sequences (e.g. for videos).
-
-Actinon is based on project [beth](https://github.com/johsteffens/beth).
-
 ## No AI
 Actinon does not use any AI agent for rendering. Image creation is purely script-driven. Thus, the image is the result of your own unique creativity.
 
 ## How it works
-
 Actinon is a console-application. It takes a text-source file as argument and executes its content, 
 which normally comprises of the scene design, virtual camera specifications, render specifications 
 and instructions how to render one or more images.
@@ -95,11 +94,9 @@ The location and name of the target image is defined in the script file. The exa
    * **Tip**: While drafting and testing your scene, switch off path tracing `path_samples = 0` and set `direct_samples` to a low value. E.g.  `direct_samples = 10`. This will yield results in seconds.
    
 ## License
-The source code in this repository, including actinon source code, is licensed under
-the [Apache 2.0 License](https://github.com/johsteffens/actinon/blob/master/LICENSE).
-Example images in this repository, depicting results of the raytracer, are licensed under
-the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
-Images or videos, which you designed yourself by your own creative work, are yours and you can distribute them as you like under your own terms.
+* The source code in this repository, including actinon source code, is licensed under the [Apache 2.0 License](https://github.com/johsteffens/actinon/blob/master/LICENSE).
+* Example images in this repository, depicting results of the raytracer, are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
+* Images or videos, which you designed yourself by your own creative work, are yours and you can distribute them as you like under your own terms.
 
 ## Motivation
 
