@@ -15,17 +15,37 @@
 
 ## Getting Started
 
+Build actinon and do a quick example renedring.
+
+**Build**
 ```
-$ git clone https://github.com/johsteffens/beth
-$ git clone https://github.com/johsteffens/actinon
-$ cd actinon
-$ make
+git clone https://github.com/johsteffens/beth
+git clone https://github.com/johsteffens/actinon
+cd actinon
+make
+```
 
-# Run a quick rendering:
-$ bin/actinon src_acn/primitives.acn
+**Quick example rendering**
+```
+bin/actinon src_acn/primitives.acn
+```
+This will create the (pnm-format) image as `src_acn/primitives.acn.pnm`.
+Many image viewers can read that format directly. (e.g. `gthumb`).
 
-# Display result using gThumb:
-$ gthumb src_acn/primitives.acn.pnm
+**Viewing with `gthumb`:**
+```
+#if not already installed
+sudo apt install gthumb
+
+gthumb src_acn/primitives.acn.pnm
+```
+
+**Converting to another format with `netpbm`:**
+```
+#if not already installed
+sudo apt install netpbm
+
+nmtopng src_acn/primitives.acn.pnm > src_acn/primitives.acn.png
 ```
 
 ## What it is
@@ -54,6 +74,8 @@ and instructions how to render one or more images.
 
 It will render the image in multiple passes, gradually improving quality.
 After each pass, the image file is updated such that progress can be monitored with an external image-viewing tool.
+
+The location and name of the target image is defined in the script file. The example scripts use the path of script-file and simply append the extension `.pnm`.
 
 ### First Trial
    * Pick a source file from folder [src_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
