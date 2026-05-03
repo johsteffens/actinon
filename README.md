@@ -62,7 +62,7 @@ The language also allows computing image sequences (e.g. for videos).
 Actinon is based on project [beth](https://github.com/johsteffens/beth).
 
 ## No AI
-Actinon does not use any AI agent for rendering. Image creation is purely script-driven and thus the resulting image comes from your own unique creativity.
+Actinon does not use any AI agent for rendering. Image creation is purely script-driven. Thus, the image is the result of your own unique creativity.
 
 ## How it works
 
