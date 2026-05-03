@@ -1,0 +1,129 @@
+// Actinon source code
+
+/* Copyright 2018 Johannes Bernhard Steffens
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+def tools = { #parse "tools.acn"; }();
+def parts = map_s;
+
+parts.create_link = <-( num length, num width, num thickness ) *
+{
+    def r1 = ( width - thickness ) * 0.5;
+    def r2 = thickness * 0.5;
+    def ring = create_torus( r1, r2 );
+
+    ring.rotate( rotx( 90 ) );
+
+    def half_ring = ring & create_plane();
+
+    def gap = length - width;
+    def cyl = create_cylinder( r2, r2 );
+
+    def gapz = vecz( ( length - width ) / 2 );
+    def gapx = vecx( ( width - thickness ) / 2 );
+
+    def bar = cyl & ( create_plane() + gapz ) & !( ( create_plane() - gapz ) );
+
+    def link = ( ( half_ring - gapz ) | ( ( half_ring * rotx( 180 ) ) + gapz ) ) | ( ( bar + gapx ) | ( bar - gapx ) );
+    link.set_envelope( create_sphere( length * 0.5 ) );
+    link;
+};
+
+parts.create_ring = <-( num width, num thickness ) *
+{
+    def r1 = ( width - thickness ) * 0.5;
+    def r2 = thickness * 0.5;
+    def ring = create_torus( r1, r2 );
+
+    ring.rotate( rotx( 90 ) );
+
+    ring;
+};
+
+parts.create_chain = <-( num link_length, num link_width, num link_thickness, num links, num twist_angle, func set_material ) *
+{
+    def chain = [];
+    def i = 0;
+    def twist_step = 0;
+    if( links > 1 ) twist_step = twist_angle / ( links - 1 );
+
+    def inner_length_link = link_length - link_thickness * 2;
+
+    def start_point = vecz( -inner_length_link * 0.5 );
+    def end_point   = start_point;
+    while( i < links )
+    {
+        chain.rotate( rotz( 90 + twist_step ) );
+        chain.move( vecz( inner_length_link ) );
+        end_point += vecz( inner_length_link );
+        chain.push( parts.create_link( link_length, link_width, link_thickness ) );
+        i += 1;
+    }();
+
+    for a (in chain ) set_material( a );
+    
+    def ret = map_s;
+    ret.obj = chain;
+    ret.start_point = start_point;
+    ret.end_point   = end_point;
+    ret;
+};
+
+parts.create_ringed_chain = <-( num link_length, num link_width, num link_thickness, num links, num twist_angle, func set_material ) *
+{    
+    def ret = parts.create_chain( link_length, link_width, link_thickness, links, twist_angle * ( ( links - 1 ) / links ), set_material );
+    def ring = parts.create_ring( link_length, link_thickness );
+    set_material( ring );
+
+    def inner_length_link = link_length - link_thickness * 2;
+
+    ring.move( vecz( -inner_length_link * 0.5 ) );
+    ring.move( ret.start_point );
+    ret.start_point -= vecz( inner_length_link );
+
+    ret.obj.rotate( rotz( 90 + twist_angle * ( 1 / links ) ) );
+    ret.obj.push( ring );    
+    ret;
+};
+
+parts.create_acorn_nut = <-( num dome_radius ) *
+{
+    def r1 = dome_radius;
+    def r2 = dome_radius * 1.5;
+    def sph = create_sphere( 1 );
+    def cyl = create_cylinder( 1, 1 );
+    def cov = create_plane();
+    
+    def dome = sph * r1;
+    def dome_cyl = ( cyl * r1 ) & cov;
+    def hex_body_buf = [] : ( create_ellipsoid( r2, r2, r1 ) - vecz( dome_radius ) );
+    def hex_body_cut = ( cov * roty( 90 ) ) + vecx( dome_radius * 1.2 );
+    def i = 0;
+    while( i < 6 )
+    {
+        hex_body_buf.push( hex_body_cut );
+        hex_body_buf.rotate( rotz( 60 ) );
+        i += 1;
+    }();
+    
+    def hex_body = (@) ( (&) hex_body_buf );
+    
+    def nut = (@) ( ( hex_body | dome | dome_cyl ) & ( !cov - vecz( dome_radius * 1.7 ) ) );
+    nut.move( vecz( dome_radius * 1.7 ) );
+    nut;
+};
+
+
+parts;

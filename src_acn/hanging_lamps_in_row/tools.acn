@@ -1,0 +1,169 @@
+// Actinon source code
+
+/* Copyright 2018 Johannes Bernhard Steffens
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+def tools = map_s;
+
+tools.v3d_length = <-( v3d v ) * { sqrt( v * v ); };
+
+tools.spheroid_obj = <-( param ) * 
+{ 
+    def obj = create_squaroid( param.a, param.b, param.c, param.r );
+    obj.move( param.pos );
+    obj;
+};
+
+tools.spheroid_param = <-( pos, num sx, num sy, num sz, num r ) *
+{   
+    def param = map_s;
+    param.pos = pos;
+    param.a = sqr( 1.0 / sx );
+    param.b = sqr( 1.0 / sy );
+    param.c = sqr( 1.0 / sz );
+    param.r = r;
+    param;
+};
+
+tools.fused_spheroid_param = <-( map s, num dz, num sx, num r ) *
+{
+    def a0 = s.a;
+    def a1 = sqr( 1.0 / sx );
+    def c0 = s.c;
+    def r0 = s.r;
+    def r1 = r;
+    def z1 = dz;
+
+    def zm  = ( a0 * r1 - a1 * r0 ) / ( z1 * a1 * c0 );
+    def zm2 = zm * zm;
+    def xm2 = -( c0 * zm2 + r0 ) / a0;
+    def c1  = -( a1 * xm2 + r1 ) / ( sqr( zm - z1 ) );
+
+    def param = map_s;
+    param.pos = s.pos + vecz( dz );
+    param.a = a1;
+    param.b = a1 * ( s.b ) / ( s.a );
+    param.c = c1;
+    param.r = r1;
+    param.zm = zm + s.pos.z;
+    param;
+};
+
+tools.create_straight_bar = <-( map start, num thickness, num width, num length, map end ) *
+{
+    end.pos = start.pos + ( roty( start.angle ) * vecx( length ) );
+    end.angle = start.angle;
+    
+    def th = thickness * 0.5;
+
+    def cov = create_plane();
+    def cyl = create_cylinder( th, th ) * roty( 90 );
+    
+    def vz = vecz( th     );
+    def vx = vecx( length * 0.5 );
+    def vy = vecy( width  * 0.5 );
+
+    def buf = [];
+    buf.push(  cov + vz );
+    buf.push( !cov - vz );
+    
+    cov = create_plane() * roty(  90 );
+    buf.push(  cov + vx );
+    buf.push( !cov - vx );
+    def edge = cyl & ( cov + vx ) & !( cov - vx );
+    
+    cov = create_plane() * rotx( -90 );
+    buf.push(  cov + vy );
+    buf.push( !cov - vy );
+    
+    
+    buf = [] : buf.create_inside_composite();
+    buf.push( edge + vy );
+    buf.push( edge - vy );
+    
+    def bar = buf.create_outside_composite();
+    
+    bar.set_auto_envelope();
+    
+    bar.move( vecx( length * 0.5 ) );
+    bar *= roty( start.angle );
+    bar.move( start.pos );
+    
+    bar;
+};
+
+tools.create_curved_bar = <-( map start, num thickness, num width, num radius, num angle, map end ) *
+{
+    def cov = create_plane() * rotx( -90 );
+    def cyl = create_cylinder( 1, 1 ) * rotx( -90 );
+    def tor = create_torus( radius, thickness * 0.5 ) * rotx( -90 );
+    
+    def buf = [];
+    def vy = vecy( width * 0.5 );
+    
+    buf.push(    cyl * ( radius + thickness * 0.5 ) );
+    buf.push( !( cyl * ( radius - thickness * 0.5 ) ) );
+    buf.push(  cov + vy );
+    buf.push( !cov - vy );
+    
+    cov = create_plane() * roty( -90 );
+    
+    def stop = !cov & ( cov * roty( angle ) );
+    def edge = tor & stop;
+    edge.set_auto_envelope();
+    buf.push( stop );
+    buf = [] : buf.create_inside_composite();
+    buf.push( edge + vy );
+    buf.push( edge - vy );
+    
+    def bar = buf.create_outside_composite();
+    bar.set_auto_envelope();
+    
+    def zoffs = { if( angle > 0 ) radius else -radius; }();
+    bar.move( vecz( zoffs ) );
+    bar *= roty( start.angle + 180 );
+    bar.move( start.pos );
+    def p0 = roty( start.angle ) * vecz( zoffs );
+    end.pos = start.pos + ( roty( angle ) * p0 ) - p0;
+    end.angle = start.angle + angle;
+
+    bar;
+};
+
+tools.create_edge = <-( map start, num thickness, num width ) *
+{
+    def th = thickness * 0.5;
+    def cov = create_plane() * rotx( 90 );
+    def cyl = create_cylinder( th, th ) * rotx( 90 );
+    def vy = vecy( width  * 0.5 );
+    def edge0 = cyl & !( cov + vy ) & ( cov - vy );
+    def sph = create_sphere( th );
+    def edge1 = edge0 | ( sph - vy ) | ( sph + vy );
+    edge1.set_auto_envelope();
+    edge1.move( start.pos );
+    edge1;    
+};
+
+tools.create_cyl = <-( num radius, num length ) *
+{
+    def hl = length * 0.5;
+    def cov = create_plane();
+    def cyl = create_cylinder( radius, radius ) & ( cov + vecz( hl ) ) & ( !cov - vecz( hl ) );
+    def r_env = sqrt( sqr( radius ) + sqr( hl ) ) * 1.001;
+    cyl.set_envelope( create_sphere( r_env ) );
+    cyl;
+};
+
+tools;

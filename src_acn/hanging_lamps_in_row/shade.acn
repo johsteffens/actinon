@@ -1,0 +1,113 @@
+// Actinon source code
+
+/* Copyright 2018 Johannes Bernhard Steffens
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+def tools = { #parse "tools.acn" }();
+def shade = map_s;
+
+def create_band = <-( num radius, num height, num thick ) *
+{
+    def ro = radius;
+    def ri = radius - thick;
+    def sph = create_sphere ( 1 );
+    def cov = create_plane();
+    def dz = vecz( height * 0.5 );
+    
+    def band = 
+    (
+        ( sph * ro ) & !( sph * ri ) 
+    ) & 
+    (
+        ( cov + dz ) & !( cov - dz )
+    );
+   
+    band.set_envelope( sph * ro * 1.01 );
+    band.set_material( "mirror" );
+    band.set_color( color( 0.8, 0.8, 0.6 ) );
+    band.set_diffuse_reflectivity( 0 );
+    band.set_chromatic_reflectivity( 1.0 );
+    band.set_surface_roughness( 0.01 );
+    
+    band;
+};
+
+shade.create = <-() *
+{
+    def cov = create_plane();
+    def pos = vec( 0, 0, 0 );
+
+    def mid_radius  = 0.5;
+    def top_radius = 0.25;
+    def bot_radius = 0.4;
+    
+    def p0 = tools.spheroid_param( pos, mid_radius, mid_radius, 0.35, -1 );
+    def p1 = tools.fused_spheroid_param( p0, 0.340, 0.200, -1 );
+    def p2 = tools.fused_spheroid_param( p1, 0.035, 0.205, -1 );
+    def p3 = tools.fused_spheroid_param( p2, 0.035, 0.200, -1 );
+    def p4 = tools.fused_spheroid_param( p3, 0.150, top_radius, -1 );
+
+    def p10 = tools.spheroid_param( p0.pos, 0.5, 0.5, 0.15, -1 );
+    def p11 = tools.fused_spheroid_param( p10, -0.15, bot_radius, -1 );
+    
+    def buf = [];
+    
+    buf.push( tools.spheroid_obj( p0 ) & !cov );
+    buf.push( tools.spheroid_obj( p1 ) & !( cov + vecz( p1.zm ) ) & ( cov + vecz( p2.zm ) ) );
+    buf.push( tools.spheroid_obj( p2 ) );
+    buf.push( tools.spheroid_obj( p3 ) & !( cov + vecz( p3.zm ) ) & ( cov + vecz( p4.zm ) ) );
+    buf.push( tools.spheroid_obj( p4 ) & ( cov + p4.pos + vecz( 0.1 ) ) );
+
+    buf.push( tools.spheroid_obj( p10 ) );
+    buf.push( tools.spheroid_obj( p11 ) & ( cov + vecz( p11.zm ) ) & !( cov + p11.pos - vecz( 0.1 ) ) );
+    { def i = 0; while( i < buf.size() ) { buf[ i ].set_auto_envelope(); i+= 1; }(); }();
+    
+    def outer_hull = buf.create_outside_composite();
+    def inner_hull = outer_hull * vec( 0.9, 0.9, 0.95 );
+    def top_cover = cov + p4.pos;
+    def bottom_cover = !cov + p11.pos;
+
+    def shade_body = ( outer_hull & !inner_hull ) & ( top_cover & bottom_cover );
+    shade_body.set_auto_envelope();
+    
+    def ret = map_s;
+    
+    def zmin = p11.pos.z;
+    def zmax = p4.pos.z;
+    
+    shade_body.set_material( "diffuse_polished" );
+    shade_body.set_color( color( 0.60, 0.65, 0.7 ) );
+
+    def band_height = 0.05;
+    def top_band = create_band( top_radius * 1.01, band_height, 0.05 ) + vecz( zmax );
+    def bot_band = create_band( bot_radius * 1.01, band_height, 0.05 ) + vecz( zmin );
+    zmin -= band_height * 0.5;
+    
+    def shade = shade_body : top_band : bot_band;
+
+    ret.obj  = shade;
+    ret.zmin = zmin;
+    ret.zmax = zmax;
+    ret.xmin = -mid_radius;
+    ret.xmax =  mid_radius;
+    ret.ymin = -mid_radius;
+    ret.ymax =  mid_radius;
+    
+    ret.screw_radius = bot_radius * 0.95;
+    
+    ret;
+};
+
+shade;

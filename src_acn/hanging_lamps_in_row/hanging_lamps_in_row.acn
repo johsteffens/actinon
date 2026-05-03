@@ -1,0 +1,167 @@
+// Actinon source code
+
+/* Copyright 2018 Johannes Bernhard Steffens
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+<mclosure_s></>
+
+// set 'true' during drafting for quick results
+def draft = false;
+
+def scene = scene_s;
+scene.threads = 48;
+
+//scene.image_width         = 320;
+//scene.image_height        = 180;
+//scene.image_width         = 1600;
+//scene.image_height        =  900;
+scene.image_width         = 3200;
+scene.image_height        = 1800;
+scene.gamma               = 0.7;
+
+scene.gradient_cycles     = { if( draft ) 0 else 10; }();
+
+scene.gradient_samples    = 2;
+scene.gradient_threshold  = 0.02;
+
+scene.trace_depth         = 25;
+scene.trace_min_intensity = 0.03;
+scene.direct_samples      = { if( draft ) 10 else 30; }();
+scene.path_samples        = { if( draft )  0 else 30; }();
+scene.max_path_length     = 12; //50;
+
+def camera_position = vec( -4, -8, -2.4001 );
+
+scene.camera_position       = camera_position;
+scene.camera_view_direction = vec( 0, 0, -0.3 ) - camera_position;
+scene.camera_top_direction  = vec( 0, 0, 1 );
+scene.camera_focal_length   = 3.9;
+scene.background_color = color( 0.5, 0.5, 0.5 );
+
+def create_light = <-( lamp_radius, color, radiance ) *
+{
+    def sph = obj_sphere_s;
+    def light = sph * lamp_radius;
+    light.set_color( color );
+    light.set_radiance( radiance );
+    light;
+};
+
+def create_floor = <-( num zoffs ) *
+{
+    def plane = create_plane();
+    plane.set_material( "diffuse" );
+    plane.set_color( color( 0.8, 0.6, 0.5 ) );
+//    plane.set_refractive_index( 1.2 );
+    plane.move( vec( 0, 0, zoffs ) );
+    plane;
+};
+
+def create_ceiling = <-( num zoffs ) *
+{
+    def plane = create_plane() * rotx( 180 );
+    plane.set_material( "diffuse" );
+    plane.set_color( color( 0.6, 0.6, 0.6 ) );
+    //plane.set_refractive_index( 1.2 );
+    plane.move( vec( 0, 0, zoffs ) );
+    plane;
+};
+
+def create_right_wall = <-( num xoffs ) *
+{
+    def plane = create_plane() * roty( -90 );
+    plane.set_material( "diffuse" );
+    plane.set_color( color( 0.6, 0.5, 0.4 ) );
+//    plane.set_refractive_index( 1.2 );
+    plane.move( vec( xoffs, 0, 0 ) );
+    plane;
+};
+
+def create_back_wall = <-( num yoffs ) *
+{
+    def plane = create_plane() * rotx( 90 );
+    plane.set_material( "diffuse" );
+    plane.set_color( color( 0.8, 0.7, 0.6 ) );
+//    plane.set_refractive_index( 1.2 );
+    plane.move( vec( 0, yoffs, 0 ) );
+    plane;
+};
+
+{
+    def floor_offset      = -10;
+    def ceiling_offset    = 2.5;
+    def right_wall_offset = 8;
+    def back_wall_offset  = 45;
+
+    def lamp_line_dir = vec( 0, 4, 0 );
+    def light_pos     = vec( -6, -5, floor_offset + 3 );
+    def light_radius  = 1.0;
+
+    scene.clear();
+    scene.push( create_light( light_radius, vec( 1.0, 1.0, 1.0 ), 150 ) + light_pos + lamp_line_dir *  0 );
+    scene.push( create_light( light_radius, vec( 0.2, 0.3, 1.0 ), 200 ) + light_pos + lamp_line_dir *  5 );
+    scene.push( create_light( light_radius, vec( 1.0, 0.4, 0.2 ), 150 ) + light_pos + lamp_line_dir * 10 );
+
+    scene.push( create_floor( floor_offset ) );
+    scene.push( create_ceiling( ceiling_offset ) );
+    scene.push( create_right_wall( right_wall_offset ) );
+    scene.push( create_back_wall( back_wall_offset ) );
+
+    def Shade   = { #parse "shade.acn" }();
+    def Stand   = { #parse "stand.acn" }();
+    def OilLamp = { #parse "oil_lamp.acn" }();
+    def Parts   = { #parse "parts.acn" }();
+    
+    def stand    = Stand.create();
+    def shade    = Shade.create();
+    def oil_lamp = OilLamp.create();
+    
+    shade.obj.move( vecz( -shade.zmin ) );
+    shade.obj *= stand.screw_radius / shade.screw_radius;
+    
+    shade.obj.move( vecz( stand.plateau ) );
+    
+    oil_lamp.obj.move( vecz( -oil_lamp.mount_point ) );
+    oil_lamp.obj *= 0.31;
+    oil_lamp.obj.move( stand.lamp_mount_point );
+
+    def lamp = [];
+    
+    lamp.push( shade.obj );
+    lamp.push( stand.obj );
+    lamp.push( oil_lamp.obj );
+    
+    def lamp_compound = lamp.create_compound();
+    lamp_compound.set_auto_envelope();
+
+    lamp_compound.move( vecz( ceiling_offset - stand.zmax ) );
+    
+    def lamp_line = [];
+
+    // lamp;        
+    def first_pos = vec( 2.5, 0, 0 );
+    def i = 0;
+    def lamps = 10;
+    while( i < lamps )
+    {
+        scene.push( lamp_compound * rotz( 79.3 * i ) + lamp_line_dir * i + first_pos );
+        i = i + 1;
+    }();
+
+    def file_name = #source_file_name + ".pnm";
+    scene.create_image( file_name );
+}();
+
+
