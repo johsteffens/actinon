@@ -28,7 +28,8 @@ make
 bin/actinon src_acn/primitives.acn
 ```
 It creates [this image](https://raw.githubusercontent.com/johsteffens/actinon/master/image/primitives.acn.png) in pnm-format as `src_acn/primitives.acn.pnm`.
-Many image viewers can read that format directly. (e.g. `gthumb`).
+
+Many image viewers can read the pnm-format directly. (e.g. `gthumb`).
 
 **Viewing with `gthumb`:**
 ```
