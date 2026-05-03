@@ -23,7 +23,7 @@ cd actinon
 make
 ```
 
-**Quick example rendering**
+**Quick rendering example**
 ```
 bin/actinon src_acn/primitives.acn
 ```
@@ -38,7 +38,7 @@ sudo apt install gthumb
 gthumb src_acn/primitives.acn.pnm
 ```
 
-**Converting to another format with `netpbm`:**
+**Converting image format with `netpbm`:**
 ```
 #if not already installed
 sudo apt install netpbm
@@ -84,8 +84,9 @@ The location and name of the target image is defined in the script file. The exa
    After around 3 ... 30 min (depending on CPU speed and number of cores), rendering should be completed.
    Interrupt any time with Ctl-C, which will save an intermediate result and terminate. 
    You can resume from an incomplete image later.
-   * You may want to convert the image to a more common format with netpbm or similar tool (e.g. `pnmtopng`).
    * A nice tool to view the image is [gThumb](https://en.wikipedia.org/wiki/GThumb).
+   * A useful tool-set to convert the image to another format is [ntpbm](https://en.wikipedia.org/wiki/Netpbm).
+
 
 ### Next Steps
    * Learn a bit about the Actinon Language: For the time being, you might want to glean some insight by examining [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn), which is inline-commented for that purpose. 
