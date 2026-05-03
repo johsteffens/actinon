@@ -77,7 +77,7 @@ The source code in this repository, including actinon source code, is licensed u
 the [Apache 2.0 License](https://github.com/johsteffens/actinon/blob/master/LICENSE).
 Example images in this repository, depicting results of the raytracer, are licensed under
 the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
-Images or videos, which you designed yourself by your own creative work, are yours and you can distribute them under your own terms.
+Images or videos, which you designed yourself by your own creative work, are yours and you can distribute them as you like under your own terms.
 
 ## Motivation
 
