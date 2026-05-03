@@ -15,8 +15,6 @@
 
 ## Getting Started
 
-Build actinon and do a quick example renedring.
-
 **Build**
 ```
 git clone https://github.com/johsteffens/beth
