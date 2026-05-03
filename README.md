@@ -75,7 +75,7 @@ and instructions how to render one or more images.
 It will render the image in multiple passes, gradually improving quality.
 After each pass, the image file is updated such that progress can be monitored with an external image-viewing tool.
 
-The location and name of the target image is defined in the script file. The example scripts use the path of script-file and simply append the extension `.pnm`.
+The location and name of the target image is defined in the script file. The example scripts use the path of the script-file and simply append the extension `.pnm`.
 
 ### First Trial
    * Pick a source file from folder [src_acn](https://github.com/johsteffens/actinon/tree/master/src_acn). Maybe [wine_glass.acn](https://github.com/johsteffens/actinon/blob/master/src_acn/wine_glass.acn).
