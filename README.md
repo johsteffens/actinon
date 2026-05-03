@@ -45,7 +45,7 @@ gthumb src_acn/primitives.acn.pnm
 #if not already installed
 sudo apt install netpbm
 
-nmtopng src_acn/primitives.acn.pnm > src_acn/primitives.acn.png
+pnmtopng src_acn/primitives.acn.pnm > src_acn/primitives.acn.png
 ```
 
 ## What it is
