@@ -109,7 +109,7 @@ There is a set of basic predefined shapes, called 'primitives'. These are
 * Torus
 * Hyperboloid
 
-All other possible shapes are composites from these primitives. 
+All other possible shapes are compositions of primitives. 
 
 A new shape can be formed from multiple shapes as intersection of their respective 3D-areas. For example: A cube could be defined by combining 6 planes.
 There is no limit on how to combine multiple shapes to form new shapes.
