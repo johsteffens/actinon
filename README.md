@@ -115,15 +115,15 @@ A new shape can be formed from multiple shapes as intersection of their respecti
 There is no limit on how to combine multiple shapes to form new shapes.
 
 ### Surfaces
-Each shape has its own surface property covering
-* Color
+Each primitive shape has its own surface property covering
+* Albedo (Color)
 * Fresenel-Reflectivity
-* Chromatic-Reflectivity
+* Chromatic-Reflectivity (Metallic Surfaces)
 * Diffuse-Reflectivity
-* Sigma (Oren-Nayar-Reflectance-Model)
+* Sigma (from Oren-Nayar-Reflectance-Model)
 * Roughness
-* Transparancy
-* Radiance (for light sources)
+* Transparancy (Color)
+* Radiance (for Light Sources)
 
 ## License
 * The source code in this repository, including actinon source code, is licensed under the [Apache 2.0 License](https://github.com/johsteffens/actinon/blob/master/LICENSE).
