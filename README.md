@@ -65,7 +65,7 @@ pnmtopng src_acn/primitives.acn.pnm > src_acn/primitives.acn.png
 ## No AI
 Actinon does not use any AI agent for rendering. Image creation is purely script-driven. Thus, the image is the result of your own unique creativity.
 
-## How it works
+## How to use it
 Actinon is a console-application. It takes a text-source file as argument and executes its content, 
 which normally comprises of the scene design, virtual camera specifications, render specifications 
 and instructions how to render one or more images.
@@ -93,6 +93,38 @@ The location and name of the target image is defined in the script file. The exa
    * Experiment with [provided scenes](https://github.com/johsteffens/actinon/wiki/Images) or design your own scene.
    * **Tip**: While drafting and testing your scene, switch off path tracing `path_samples = 0` and set `direct_samples` to a low value. E.g.  `direct_samples = 10`. This will yield results in seconds.
    
+## How it works
+The script file defines objects in a virtual 3d vector space, the size of the resulting image and some more parameters affecting image quality and CPU load. 
+A scene is given by a collection of shapes, each with surface information such as reflectivity, luminosity, transparency, roughness. Objects with luminosity act as light source.
+
+### Shape
+A shape is a 3D Object with a well-defined surface, size, position and orientation. These specifcy the exact surface-area, which cuts the 3D space into two areas: The outside- and inside-area.
+Note that the outside or inside-area can either or both be of infinite expansion. In this context, a simple plane is a 3D shape, too, dividing the 3D space into two distinctive areas.
+
+There is a set of basic predefined shapes, called 'primitives'. These are
+* Plane
+* Sphere
+* Ellipsoid
+* Cylinder
+* Torus
+* Hyperboloid
+
+All other possible shapes are composites from these primitives. 
+
+A new shape can be formed from multiple shapes as intersection of their respective 3D-areas. For example: A cube could be defined by combining 6 planes.
+There is no limit on how to combine multiple shapes to form new shapes.
+
+### Surfaces
+Each shape has its own surface property covering
+* Color
+* Fresenel-Reflectivity
+* Chromatic-Reflectivity
+* Diffuse-Reflectivity
+* Sigma (Oren-Nayar-Reflectance-Model)
+* Roughness
+* Transparancy
+* Radiance (for light sources)
+
 ## License
 * The source code in this repository, including actinon source code, is licensed under the [Apache 2.0 License](https://github.com/johsteffens/actinon/blob/master/LICENSE).
 * Example images in this repository, depicting results of the raytracer, are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) License.
