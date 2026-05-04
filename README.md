@@ -96,7 +96,7 @@ The location and name of the target image is defined in the script file. The exa
    * **Tip**: While drafting and testing your scene, switch off path tracing `path_samples = 0` and set `direct_samples` to a low value. E.g.  `direct_samples = 10`. This will yield results in seconds.
    
 ## How it works
-The script file defines objects in a virtual 3d vector space, the size of the resulting image and some more parameters affecting image quality and CPU load. 
+The script file defines objects in a virtual 3D vector space, the size of the resulting image and some more parameters affecting image quality and CPU load. 
 A scene is given by a collection of shapes, each with surface information such as reflectivity, luminosity, transparency, roughness. Objects with luminosity act as light source.
 
 ### Shape
