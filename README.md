@@ -65,7 +65,7 @@ pnmtopng src_acn/primitives.acn.pnm > src_acn/primitives.acn.png
 ```
 
 ## No AI
-Actinon does not use any AI agent for rendering. Image creation is purely script-driven. Thus, the image is the result of your own unique creativity.
+Actinon does not use any AI agent for rendering. Image creation is purely script-driven. Thus, the image is the result of your own unique style and creativity.
 
 ## How to use it
 Actinon is a console-application. It takes a text-source file as argument and executes its content, 
